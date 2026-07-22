@@ -19,7 +19,10 @@ export const routes: RouteRecordRaw[] = [
 
 export const authenticationGuard: NavigationGuard = async (to): Promise<RouteLocationRaw | undefined> => {
     const authStore = useAuthStore(pinia);
-    await authStore.resolve();
+
+    if (to.meta.requiresAuth || (to.meta.guestOnly && authStore.status !== 'guest')) {
+        await authStore.resolve(true);
+    }
 
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
         authStore.setMessage('Your session has expired or authentication is required. Please sign in.');

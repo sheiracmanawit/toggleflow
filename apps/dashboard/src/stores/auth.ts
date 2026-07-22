@@ -15,8 +15,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     const isAuthenticated = computed(() => status.value === 'authenticated');
 
-    const resolve = async (): Promise<void> => {
-        if (status.value !== 'unknown') {
+    const resolve = async (force = false): Promise<void> => {
+        if (!force && status.value !== 'unknown') {
             return;
         }
 
@@ -53,6 +53,11 @@ export const useAuthStore = defineStore('auth', () => {
         status.value = 'guest';
     };
 
+    const expire = (): void => {
+        clear();
+        message.value = 'Your session has expired. Please sign in again.';
+    };
+
     const logout = async (): Promise<void> => {
         await authService.logout();
         clear();
@@ -84,6 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
         login,
         logout,
         clear,
+        expire,
         setMessage,
         consumeMessage,
         resetForTests,

@@ -20,6 +20,9 @@ return [
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
+    // Precomputed hash used to equalize unknown-account password verification.
+    'dummy_password_hash' => '$2y$12$3e5.snWHfQ7lltOqM3uHku3A7gxU.f62uZmq7chQR.wBCzP3TiNC6',
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards

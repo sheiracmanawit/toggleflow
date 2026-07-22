@@ -82,6 +82,18 @@ it('returns the same generic response for an unknown owner and a wrong password'
         ->assertExactJson($wrongPassword->json());
 });
 
+it('checks an unknown owner against a precomputed hash without generating one per request', function (): void {
+    Hash::spy();
+
+    $this->postJson('/dashboard/auth/session', [
+        'email' => 'missing@example.com',
+        'password' => 'wrong-password',
+    ])->assertUnauthorized();
+
+    Hash::shouldHaveReceived('check')->once();
+    Hash::shouldNotHaveReceived('make');
+});
+
 it('validates login structure without exposing account state', function (): void {
     $this->postJson('/dashboard/auth/session', [
         'email' => 'not-an-email',
