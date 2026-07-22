@@ -1,1 +1,5 @@
-// Cross-route Pinia stores belong here only when a feature demonstrates the need.
+import { createPinia } from 'pinia';
+
+export { useAuthStore } from './auth';
+
+export const pinia = createPinia();

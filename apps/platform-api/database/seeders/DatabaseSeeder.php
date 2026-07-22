@@ -15,11 +15,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        if (! config('toggleflow.demo.enabled')) {
+            return;
+        }
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        User::query()->updateOrCreate([
+            'email' => config('toggleflow.demo.email'),
+        ], [
+            'name' => config('toggleflow.demo.name'),
+            'password' => config('toggleflow.demo.password'),
         ]);
     }
 }

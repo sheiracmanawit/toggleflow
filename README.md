@@ -90,6 +90,7 @@ password or generated application key.
 
 ```bash
 php artisan migrate
+php artisan db:seed
 cd ../dashboard
 pnpm install --frozen-lockfile
 pnpm build
@@ -102,10 +103,21 @@ cd apps/platform-api && php artisan serve
 cd apps/dashboard && pnpm dev
 ```
 
-The SPA is available at `http://localhost:5173` and proxies `/api` and `/sanctum`
+The SPA is available at `http://localhost:5173` and proxies `/dashboard`, `/api`, and `/sanctum`
 to Laravel at `http://127.0.0.1:8000`. Laravel Sanctum's
-`/sanctum/csrf-cookie` endpoint is available for the authentication work delivered by
-TF-3.
+`/sanctum/csrf-cookie` endpoint initializes CSRF protection before sign-in.
+
+The default local configuration enables a deterministic demo owner after `php artisan
+db:seed`:
+
+```text
+Email: owner@toggleflow.test
+Password: toggleflow-demo
+```
+
+Demo seeding and credential display are restricted to local or explicit demo
+environments. Set `TOGGLEFLOW_DEMO_ENABLED=false` when local demo access is not
+required; production never enables it from this setting alone.
 
 ## Quality Checks
 
@@ -132,8 +144,9 @@ runs type checking, linting, formatting, Vitest, the production build, and Cypre
 
 - ToggleFlow is one monorepo, with `apps/platform-api` for the
   Laravel backend and `apps/dashboard` for the Vue SPA.
-- First-party management endpoints live below `/api/management` and will use Sanctum
-  cookie authentication.
+- First-party dashboard endpoints live below `/dashboard` and use Sanctum cookie and
+  CSRF authentication. Session creation, lookup, and deletion use
+  `/dashboard/auth/session`.
 - Public evaluation endpoints live below `/api/v1` and will use separate opaque,
   environment-scoped credentials in later tickets.
 - The Vue SPA owns dashboard navigation and consumes Laravel's JSON APIs. In

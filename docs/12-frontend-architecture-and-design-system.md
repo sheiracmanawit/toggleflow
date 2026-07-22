@@ -98,7 +98,7 @@ MVP routes should use stable identifiers and preserve project context:
 
 ```text
 /login
-/dashboard
+/app
 /projects
 /projects/:projectId
 /projects/:projectId/flags
@@ -110,6 +110,10 @@ MVP routes should use stable identifiers and preserve project context:
 
 Route guards redirect unauthenticated visitors to sign in. Server-side policies remain
 authoritative; client-side route guards are not an authorization boundary.
+
+The `/dashboard/*` URL namespace is reserved for Laravel's first-party JSON endpoints,
+so Vue navigation uses `/app` for the protected dashboard landing page and must not
+claim server endpoint paths.
 
 ## 6. Application Shell
 
@@ -287,8 +291,8 @@ errors.
 - Show a focused email and password form.
 - Use a narrow readable width and a clear primary action.
 - Provide inline validation and a non-sensitive invalid-credentials message.
-- In local or demo mode only, show documented seeded credentials without exposing
-  production secrets.
+- Keep local demo credentials in developer documentation; never retrieve or display
+  account passwords through the dashboard interface.
 - Redirect authenticated users away from the sign-in page.
 
 ### Dashboard
