@@ -1,0 +1,4 @@
+interface:
+  display_name: "ToggleFlow Review Change"
+  short_description: "Review ToggleFlow changes for project risks"
+  default_prompt: "Use $toggleflow-review-change to independently review a ToggleFlow change against its Jira ticket, architecture, security rules, and coding standards."

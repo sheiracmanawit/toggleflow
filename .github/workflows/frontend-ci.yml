@@ -1,0 +1,40 @@
+name: Frontend CI
+
+on: pull_request
+
+jobs:
+  frontend-quality:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: apps/dashboard/pnpm-lock.yaml
+      - run: composer install --no-interaction --prefer-dist --no-progress
+        working-directory: apps/platform-api
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/dashboard
+      - run: pnpm typecheck
+        working-directory: apps/dashboard
+      - run: pnpm lint
+        working-directory: apps/dashboard
+      - run: pnpm format:check
+        working-directory: apps/dashboard
+      - run: pnpm test
+        working-directory: apps/dashboard
+      - run: pnpm build
+        working-directory: apps/dashboard
+      - run: pnpm test:e2e
+        working-directory: apps/dashboard

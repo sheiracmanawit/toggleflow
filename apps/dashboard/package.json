@@ -1,0 +1,47 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "packageManager": "pnpm@11.9.0",
+    "engines": {
+        "node": ">=22.12.0 <25",
+        "pnpm": ">=10"
+    },
+    "scripts": {
+        "build": "vite build",
+        "cypress:run": "cypress run",
+        "dev": "vite",
+        "format": "prettier --write package.json src cypress cypress.config.ts index.html tsconfig.json eslint.config.js vite.config.js vitest.config.ts pnpm-workspace.yaml",
+        "format:check": "prettier --check package.json src cypress cypress.config.ts index.html tsconfig.json eslint.config.js vite.config.js vitest.config.ts pnpm-workspace.yaml",
+        "lint": "eslint . --max-warnings=0",
+        "serve:api:e2e": "cd ../platform-api && APP_NAME=ToggleFlow SESSION_COOKIE=toggleflow-session SESSION_DRIVER=file php artisan serve --host=127.0.0.1 --port=8000",
+        "serve:dashboard:e2e": "vite --host 127.0.0.1 --port=5173",
+        "test": "vitest run",
+        "test:e2e": "start-test \"pnpm serve:api:e2e\" http://127.0.0.1:8000/up \"pnpm serve:dashboard:e2e\" http://127.0.0.1:5173 \"pnpm cypress:run\"",
+        "typecheck": "vue-tsc --noEmit"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@tailwindcss/vite": "^4.3.3",
+        "@vitejs/plugin-vue": "^6.0.8",
+        "@vue/test-utils": "^2.4.11",
+        "axios": "^1.18.1",
+        "cypress": "^15.18.1",
+        "eslint": "^10.7.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-vue": "^10.10.0",
+        "happy-dom": "^20.11.0",
+        "prettier": "^3.9.5",
+        "start-server-and-test": "^3.0.11",
+        "tailwindcss": "^4.3.3",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.65.0",
+        "vite": "^7.0.7",
+        "vitest": "^4.1.10",
+        "vue-tsc": "^3.3.7"
+    },
+    "dependencies": {
+        "vue": "^3.5.40",
+        "vue-router": "^5.2.0"
+    }
+}

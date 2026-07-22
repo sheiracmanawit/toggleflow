@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - esbuild
+confirmModulesPurge: false
+nodeLinker: hoisted
+allowBuilds:
+  cypress: true
+  esbuild: true
