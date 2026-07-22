@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 
 class SessionController extends Controller
@@ -29,13 +28,12 @@ class SessionController extends Controller
             ], 429);
         }
 
-        $user = User::query()->where('email', $request->string('email')->toString())->first();
-        $passwordHash = $user instanceof User
-            ? $user->password
-            : (string) config('auth.dummy_password_hash');
-        $credentialsAreValid = Hash::check($request->string('password')->toString(), $passwordHash);
+        $credentialsAreValid = Auth::guard('web')->attempt([
+            'email' => $request->string('email')->toString(),
+            'password' => $request->string('password')->toString(),
+        ]);
 
-        if (! $user instanceof User || ! $credentialsAreValid) {
+        if (! $credentialsAreValid) {
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
 
             return response()->json([
@@ -44,8 +42,10 @@ class SessionController extends Controller
         }
 
         RateLimiter::clear($throttleKey);
-        Auth::guard('web')->login($user);
         $request->session()->regenerate();
+
+        /** @var User $user */
+        $user = Auth::guard('web')->user();
 
         return response()->json(['data' => $this->ownerData($user)]);
     }
