@@ -121,6 +121,11 @@ production, a reverse proxy should preferably expose both applications through o
 HTTPS origin. Server-side rendering is not required for MVP 0.1 because the
 management interface is private, interactive, and has no search-indexing requirement.
 
+First-party dashboard JSON endpoints use the `/dashboard` namespace and are registered
+from `routes/dashboard.php`. The public, versioned evaluation contract alone uses
+`/api/v1` and is registered from `routes/api.php`. The route files preserve distinct
+authentication, controller, response, and rate-limiting boundaries inside Laravel.
+
 ### Application Layer
 
 Use focused actions or services for operations such as:

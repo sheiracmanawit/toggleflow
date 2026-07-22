@@ -58,6 +58,9 @@ Sanctum session model.
   credentialed CORS configuration.
 - The dashboard HTTP client must request `/sanctum/csrf-cookie` before login and send
   cookies and the CSRF header with management requests.
+- First-party session and control endpoints use `/dashboard/*`; the public evaluation
+  API remains under `/api/v1/*`. Dashboard session creation, lookup, and deletion use
+  `/dashboard/auth/session`.
 - Do not solve a development-origin configuration issue by replacing cookie sessions
   with Passport, JWTs, or browser-stored bearer tokens.
 

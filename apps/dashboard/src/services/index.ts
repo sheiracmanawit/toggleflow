@@ -1,1 +1,1 @@
-// Typed management API operations will be exported here.
+export { authService, dashboardHttp } from './auth';

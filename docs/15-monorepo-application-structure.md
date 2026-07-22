@@ -91,7 +91,7 @@ flowchart LR
     browser["Browser"] --> proxy["HTTPS reverse proxy"]
     client["Client application"] --> proxy
     proxy -->|"/, dashboard assets"| dashboard["Static Vue dashboard build"]
-    proxy -->|"/api/management and /sanctum"| platform["Laravel platform API"]
+    proxy -->|"/dashboard and /sanctum"| platform["Laravel platform API"]
     proxy -->|"/api/v1"| platform
     platform --> mysql[("MySQL")]
 ```
@@ -99,6 +99,11 @@ flowchart LR
 One origin simplifies secure cookies, CSRF protection, CORS, and installation. The
 dashboard can be served by the reverse proxy as static assets; Laravel does not need
 to own the SPA source or Vite build.
+
+Laravel registers first-party owner operations from `routes/dashboard.php` beneath
+`/dashboard/*`. It registers the public feature-flag contract from `routes/api.php`
+beneath `/api/v1/*`. The Vue application uses `/app` rather than `/dashboard` for its
+protected landing page so same-origin proxy routing remains unambiguous.
 
 ## 7. Why There Is No `apps/evaluation-api` Yet
 

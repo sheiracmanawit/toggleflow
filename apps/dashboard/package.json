@@ -14,10 +14,11 @@
         "format": "prettier --write package.json src cypress cypress.config.ts index.html tsconfig.json eslint.config.js vite.config.js vitest.config.ts pnpm-workspace.yaml",
         "format:check": "prettier --check package.json src cypress cypress.config.ts index.html tsconfig.json eslint.config.js vite.config.js vitest.config.ts pnpm-workspace.yaml",
         "lint": "eslint . --max-warnings=0",
-        "serve:api:e2e": "cd ../platform-api && APP_NAME=ToggleFlow SESSION_COOKIE=toggleflow-session SESSION_DRIVER=file php artisan serve --host=127.0.0.1 --port=8000",
+        "prepare:e2e": "cd ../platform-api && php -r \"file_put_contents('database/e2e.sqlite', '');\" && APP_ENV=local DB_CONNECTION=sqlite DB_DATABASE=database/e2e.sqlite SESSION_DRIVER=file TOGGLEFLOW_DEMO_ENABLED=true php artisan migrate:fresh --force --seed",
+        "serve:api:e2e": "cd ../platform-api && APP_NAME=ToggleFlow APP_ENV=local DB_CONNECTION=sqlite DB_DATABASE=database/e2e.sqlite SESSION_COOKIE=toggleflow-session SESSION_DRIVER=file TOGGLEFLOW_DEMO_ENABLED=true php artisan serve --host=127.0.0.1 --port=8000",
         "serve:dashboard:e2e": "vite --host 127.0.0.1 --port=5173",
         "test": "vitest run",
-        "test:e2e": "start-test \"pnpm serve:api:e2e\" http://127.0.0.1:8000/up \"pnpm serve:dashboard:e2e\" http://127.0.0.1:5173 \"pnpm cypress:run\"",
+        "test:e2e": "pnpm prepare:e2e && start-test \"pnpm serve:api:e2e\" http://127.0.0.1:8000/up \"pnpm serve:dashboard:e2e\" http://127.0.0.1:5173 \"pnpm cypress:run\"",
         "typecheck": "vue-tsc --noEmit"
     },
     "devDependencies": {
