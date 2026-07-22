@@ -1,0 +1,4 @@
+interface:
+  display_name: "ToggleFlow Implement Ticket"
+  short_description: "Implement approved ToggleFlow Jira tickets"
+  default_prompt: "Use $toggleflow-implement-ticket to implement a Product Ready and architecture-reviewed ToggleFlow Jira ticket with tests and verification."

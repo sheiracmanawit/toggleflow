@@ -1,0 +1,4 @@
+interface:
+  display_name: "ToggleFlow Verify Ticket"
+  short_description: "Verify ToggleFlow acceptance criteria"
+  default_prompt: "Use $toggleflow-verify-ticket to verify a completed ToggleFlow Jira ticket against every acceptance criterion with evidence."
