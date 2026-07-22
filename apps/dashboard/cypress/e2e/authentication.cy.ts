@@ -25,10 +25,22 @@ describe('dashboard authentication', () => {
         cy.contains('h1', 'Dashboard').should('not.exist');
     });
 
-    it('returns an expired session to sign in without presenting protected state', () => {
+    it('returns an expired session to sign in on protected navigation without reloading', () => {
         signIn();
         cy.clearCookie('toggleflow-session');
-        cy.reload();
+        cy.contains('a', 'ToggleFlow').click();
+        cy.location('pathname').should('equal', '/');
+        cy.contains('a', 'Dashboard').click();
+
+        cy.location('pathname').should('equal', '/sign-in');
+        cy.contains('session has expired').should('be.visible');
+        cy.contains('h1', 'Dashboard').should('not.exist');
+    });
+
+    it('clears protected state when a dashboard action discovers an expired session', () => {
+        signIn();
+        cy.clearCookie('toggleflow-session');
+        cy.contains('button', 'Sign out').click();
 
         cy.location('pathname').should('equal', '/sign-in');
         cy.contains('session has expired').should('be.visible');

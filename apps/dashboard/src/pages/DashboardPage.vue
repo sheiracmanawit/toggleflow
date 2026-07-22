@@ -17,7 +17,9 @@ const signOut = async (): Promise<void> => {
         await authStore.logout();
         await router.replace('/sign-in');
     } catch {
-        signOutError.value = 'ToggleFlow could not sign you out. Please try again.';
+        if (authStore.isAuthenticated) {
+            signOutError.value = 'ToggleFlow could not sign you out. Please try again.';
+        }
     } finally {
         isSigningOut.value = false;
     }

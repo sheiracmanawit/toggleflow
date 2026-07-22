@@ -35,4 +35,26 @@ describe('DashboardPage', () => {
         expect(logout).toHaveBeenCalledOnce();
         expect(router.currentRoute.value.path).toBe('/sign-in');
     });
+
+    it('does not show a logout failure after centralized expiry handling clears the session', async () => {
+        authStore.status = 'authenticated';
+        authStore.owner = { id: 1, name: 'Demo Owner', email: 'owner@toggleflow.test' };
+        vi.spyOn(authStore, 'logout').mockImplementation(async () => {
+            authStore.expire();
+            throw new Error('Unauthenticated');
+        });
+        const router = createRouter({
+            history: createMemoryHistory(),
+            routes: [{ path: '/app', component: DashboardPage }],
+        });
+        await router.push('/app');
+        await router.isReady();
+        const wrapper = mount(DashboardPage, { global: { plugins: [pinia, router] } });
+
+        await wrapper.get('button').trigger('click');
+        await flushPromises();
+
+        expect(authStore.isAuthenticated).toBe(false);
+        expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    });
 });
