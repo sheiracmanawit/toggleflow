@@ -1,1 +1,1 @@
-export type { Credentials, DataResponse, DemoCredentials, Owner } from './auth';
+export type { Credentials, DataResponse, Owner } from './auth';

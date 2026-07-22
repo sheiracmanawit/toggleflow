@@ -1,7 +1,6 @@
 describe('dashboard authentication', () => {
     const signIn = () => {
         cy.visit('/sign-in');
-        cy.contains('Local demo account').should('be.visible');
         cy.get('input[name="email"]').type('owner@toggleflow.test');
         cy.get('input[name="password"]').type('toggleflow-demo', { log: false });
         cy.contains('button', 'Sign in').click();

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import type { Credentials, DataResponse, DemoCredentials, Owner } from '../types/auth';
+import type { Credentials, DataResponse, Owner } from '../types/auth';
 
 export const dashboardHttp = axios.create({
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -25,10 +25,5 @@ export const authService = {
 
     async logout(): Promise<void> {
         await dashboardHttp.delete('/dashboard/auth/session');
-    },
-
-    async demoCredentials(): Promise<DemoCredentials | null> {
-        const response = await dashboardHttp.get<DataResponse<DemoCredentials | null>>('/dashboard/auth/demo');
-        return response.data.data;
     },
 };

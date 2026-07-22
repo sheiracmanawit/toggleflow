@@ -2,7 +2,6 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { authService } from '../services/auth';
 import { pinia, useAuthStore } from '../stores';
 import SignInPage from './SignInPage.vue';
 
@@ -30,7 +29,6 @@ describe('SignInPage', () => {
     });
 
     it('associates client validation errors with persistent labels', async () => {
-        vi.spyOn(authService, 'demoCredentials').mockResolvedValue(null);
         const { wrapper } = await mountPage();
 
         await wrapper.get('form').trigger('submit');
@@ -42,7 +40,6 @@ describe('SignInPage', () => {
     });
 
     it('prevents duplicate submission and restores the intended safe destination', async () => {
-        vi.spyOn(authService, 'demoCredentials').mockResolvedValue(null);
         let finishLogin: (() => void) | undefined;
         const login = vi.spyOn(authStore, 'login').mockImplementation(
             () =>
@@ -64,17 +61,5 @@ describe('SignInPage', () => {
         await flushPromises();
 
         expect(router.currentRoute.value.path).toBe('/app');
-    });
-
-    it('shows credentials only when the backend enables demo mode', async () => {
-        vi.spyOn(authService, 'demoCredentials').mockResolvedValue({
-            email: 'owner@toggleflow.test',
-            password: 'toggleflow-demo',
-        });
-        const { wrapper } = await mountPage();
-
-        expect(wrapper.text()).toContain('Local demo account');
-        expect(wrapper.text()).toContain('owner@toggleflow.test');
-        expect(wrapper.text()).toContain('toggleflow-demo');
     });
 });

@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { nextTick, onMounted, reactive, ref } from 'vue';
+import { nextTick, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { safeRedirect } from '../router';
-import { authService } from '../services/auth';
 import { useAuthStore } from '../stores';
-import type { DemoCredentials } from '../types/auth';
 
 const route = useRoute();
 const router = useRouter();
@@ -15,7 +13,6 @@ const form = reactive({ email: '', password: '' });
 const errors = reactive<{ email?: string; password?: string }>({});
 const statusMessage = ref(authStore.consumeMessage());
 const isSubmitting = ref(false);
-const demoCredentials = ref<DemoCredentials | null>(null);
 const errorSummary = ref<{ focus: () => void } | null>(null);
 
 const validate = (): boolean => {
@@ -71,14 +68,6 @@ const submit = async (): Promise<void> => {
         isSubmitting.value = false;
     }
 };
-
-onMounted(async () => {
-    try {
-        demoCredentials.value = await authService.demoCredentials();
-    } catch {
-        demoCredentials.value = null;
-    }
-});
 </script>
 
 <template>
@@ -135,11 +124,5 @@ onMounted(async () => {
                 {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
             </button>
         </form>
-
-        <aside v-if="demoCredentials" class="mt-6 rounded-lg border border-slate-200 bg-slate-100 p-4 text-sm">
-            <h2 class="font-semibold">Local demo account</h2>
-            <p class="mt-2"><span class="font-medium">Email:</span> {{ demoCredentials.email }}</p>
-            <p><span class="font-medium">Password:</span> {{ demoCredentials.password }}</p>
-        </aside>
     </section>
 </template>

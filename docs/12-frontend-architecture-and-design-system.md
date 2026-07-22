@@ -291,8 +291,8 @@ errors.
 - Show a focused email and password form.
 - Use a narrow readable width and a clear primary action.
 - Provide inline validation and a non-sensitive invalid-credentials message.
-- In local or demo mode only, show documented seeded credentials without exposing
-  production secrets.
+- Keep local demo credentials in developer documentation; never retrieve or display
+  account passwords through the dashboard interface.
 - Redirect authenticated users away from the sign-in page.
 
 ### Dashboard

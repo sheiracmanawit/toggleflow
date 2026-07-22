@@ -9,11 +9,6 @@ export interface Credentials {
     password: string;
 }
 
-export interface DemoCredentials {
-    email: string;
-    password: string;
-}
-
 export interface DataResponse<T> {
     data: T;
 }
