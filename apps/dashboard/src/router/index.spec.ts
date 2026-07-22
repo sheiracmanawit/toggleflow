@@ -1,13 +1,15 @@
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { authStore } from '../stores/auth';
+import { pinia, useAuthStore } from '../stores';
 import { authenticationGuard, routes, safeRedirect } from './index';
 
 describe('dashboard routing', () => {
+    const authStore = useAuthStore(pinia);
+
     beforeEach(() => {
         authStore.resetForTests();
-        authStore.state.status = 'guest';
+        authStore.status = 'guest';
     });
 
     it('redirects protected routes to sign in and preserves the destination', async () => {
@@ -22,7 +24,7 @@ describe('dashboard routing', () => {
     });
 
     it('redirects authenticated owners away from sign in', async () => {
-        authStore.state.status = 'authenticated';
+        authStore.status = 'authenticated';
         const router = createRouter({ history: createMemoryHistory(), routes });
         router.beforeEach(authenticationGuard);
 

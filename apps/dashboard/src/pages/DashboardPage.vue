@@ -2,9 +2,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { authStore } from '../stores/auth';
+import { useAuthStore } from '../stores';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const isSigningOut = ref(false);
 const signOutError = ref('');
 

@@ -5,11 +5,12 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { safeRedirect } from '../router';
 import { authService } from '../services/auth';
-import { authStore } from '../stores/auth';
+import { useAuthStore } from '../stores';
 import type { DemoCredentials } from '../types/auth';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 const form = reactive({ email: '', password: '' });
 const errors = reactive<{ email?: string; password?: string }>({});
 const statusMessage = ref(authStore.consumeMessage());

@@ -3,7 +3,7 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { authService } from '../services/auth';
-import { authStore } from '../stores/auth';
+import { pinia, useAuthStore } from '../stores';
 import SignInPage from './SignInPage.vue';
 
 const mountPage = async (path = '/sign-in') => {
@@ -16,12 +16,14 @@ const mountPage = async (path = '/sign-in') => {
     });
     await router.push(path);
     await router.isReady();
-    const wrapper = mount(SignInPage, { global: { plugins: [router] } });
+    const wrapper = mount(SignInPage, { global: { plugins: [pinia, router] } });
     await flushPromises();
     return { router, wrapper };
 };
 
 describe('SignInPage', () => {
+    const authStore = useAuthStore(pinia);
+
     afterEach(() => {
         vi.restoreAllMocks();
         authStore.resetForTests();

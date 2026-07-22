@@ -6,7 +6,7 @@ import {
     type RouteRecordRaw,
 } from 'vue-router';
 
-import { authStore } from '../stores/auth';
+import { pinia, useAuthStore } from '../stores';
 import DashboardPage from '../pages/DashboardPage.vue';
 import FoundationPage from '../pages/FoundationPage.vue';
 import SignInPage from '../pages/SignInPage.vue';
@@ -18,6 +18,7 @@ export const routes: RouteRecordRaw[] = [
 ];
 
 export const authenticationGuard: NavigationGuard = async (to): Promise<RouteLocationRaw | undefined> => {
+    const authStore = useAuthStore(pinia);
     await authStore.resolve();
 
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
