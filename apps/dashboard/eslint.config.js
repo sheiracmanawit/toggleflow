@@ -11,7 +11,15 @@ export default tseslint.config(
     prettier,
     {
         files: ['src/**/*.{js,ts,vue}'],
-        languageOptions: { globals: { window: 'readonly', document: 'readonly' } },
+        languageOptions: {
+            globals: {
+                window: 'readonly',
+                document: 'readonly',
+                AbortController: 'readonly',
+                HTMLElement: 'readonly',
+                KeyboardEvent: 'readonly',
+            },
+        },
     },
     {
         files: ['cypress/**/*.ts', 'cypress.config.ts'],

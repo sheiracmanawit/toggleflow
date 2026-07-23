@@ -126,6 +126,14 @@ from `routes/dashboard.php`. The public, versioned evaluation contract alone use
 `/api/v1` and is registered from `routes/api.php`. The route files preserve distinct
 authentication, controller, response, and rate-limiting boundaries inside Laravel.
 
+For the MVP project lifecycle, the dashboard management boundary provides
+owner-scoped operations to list active projects, create a project, read project
+details, update mutable metadata, and archive a project through a deliberate command.
+Project resources expose intentional fields rather than raw Eloquent models. Project
+details include Development, Staging, and Production in stable order. The slug is
+immutable after creation, and archival retains environments and history while
+removing the project from ordinary active views.
+
 ### Application Layer
 
 Use focused actions or services for operations such as:

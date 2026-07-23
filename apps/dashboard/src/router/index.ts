@@ -9,12 +9,20 @@ import {
 import { pinia, useAuthStore } from '../stores';
 import DashboardPage from '../pages/DashboardPage.vue';
 import FoundationPage from '../pages/FoundationPage.vue';
+import ProjectOverviewPage from '../pages/ProjectOverviewPage.vue';
+import ProjectsPage from '../pages/ProjectsPage.vue';
 import SignInPage from '../pages/SignInPage.vue';
 
 export const routes: RouteRecordRaw[] = [
     { path: '/', component: FoundationPage },
     { path: '/sign-in', component: SignInPage, meta: { guestOnly: true } },
     { path: '/app', component: DashboardPage, meta: { requiresAuth: true } },
+    { path: '/projects', component: ProjectsPage, meta: { requiresAuth: true } },
+    {
+        path: '/projects/:projectId(\\d+)',
+        component: ProjectOverviewPage,
+        meta: { requiresAuth: true },
+    },
 ];
 
 export const authenticationGuard: NavigationGuard = async (to): Promise<RouteLocationRaw | undefined> => {

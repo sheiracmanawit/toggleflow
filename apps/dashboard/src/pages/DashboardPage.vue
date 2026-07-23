@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 
 import { useAuthStore } from '../stores';
 
@@ -46,8 +46,13 @@ const signOut = async (): Promise<void> => {
         </div>
         <p v-if="signOutError" class="mt-4 text-sm text-danger" role="alert">{{ signOutError }}</p>
         <div class="mt-8 rounded-xl border border-slate-200 bg-white p-6">
-            <h2 class="text-lg font-semibold">Secure owner access is ready</h2>
-            <p class="mt-2 text-slate-600">Project and feature management arrive in the next MVP stories.</p>
+            <h2 class="text-lg font-semibold">Manage application projects</h2>
+            <p class="mt-2 text-slate-600">
+                Create a project with isolated Development, Staging, and Production environments.
+            </p>
+            <RouterLink class="mt-4 inline-block font-semibold text-brand hover:underline" to="/projects">
+                View projects →
+            </RouterLink>
         </div>
     </section>
 </template>
