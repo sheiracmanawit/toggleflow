@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { projectService } from '../services';
+import { ProjectValidationError, projectService } from '../services';
 import type { Project } from '../types';
 import ProjectOverviewPage from './ProjectOverviewPage.vue';
 
@@ -81,6 +81,56 @@ describe('ProjectOverviewPage', () => {
         expect(wrapper.get('[role="alert"]').text()).toContain('last confirmed project information');
     });
 
+    it('renders and associates description validation errors', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        vi.spyOn(projectService, 'update').mockRejectedValue(
+            new ProjectValidationError({
+                description: ['The description field must not be greater than 1000 characters.'],
+            }),
+        );
+        const { wrapper } = await mountPage();
+
+        await wrapper.get('button').trigger('click');
+        await wrapper.get('#edit-project-description').setValue('x'.repeat(1001));
+        await wrapper.get('form').trigger('submit');
+        await flushPromises();
+
+        const description = wrapper.get('#edit-project-description');
+        expect(description.attributes('aria-invalid')).toBe('true');
+        expect(description.attributes('aria-describedby')).toBe('edit-project-description-error');
+        expect(wrapper.get('#edit-project-description-error').text()).toContain('must not be greater than 1000');
+    });
+
+    it('clears project-specific edit state when the detail route changes', async () => {
+        const secondProject: Project = {
+            ...project,
+            id: 2,
+            name: 'Payments',
+            slug: 'payments',
+            description: 'Payments release controls',
+        };
+        vi.spyOn(projectService, 'get').mockImplementation(async (projectId) =>
+            projectId === 1 ? project : secondProject,
+        );
+        const update = vi.spyOn(projectService, 'update');
+        const { router, wrapper } = await mountPage();
+
+        await wrapper.get('button').trigger('click');
+        await wrapper.get('#edit-project-name').setValue('Stale checkout name');
+        await router.push('/projects/2');
+        await flushPromises();
+
+        expect(wrapper.find('form').exists()).toBe(false);
+        expect(wrapper.get('h1').text()).toBe('Payments');
+
+        await wrapper.get('button').trigger('click');
+        expect((wrapper.get('#edit-project-name').element as HTMLInputElement).value).toBe('Payments');
+        expect((wrapper.get('#edit-project-description').element as HTMLTextAreaElement).value).toBe(
+            'Payments release controls',
+        );
+        expect(update).not.toHaveBeenCalled();
+    });
+
     it('requires confirmation and retains the project when archival fails', async () => {
         vi.spyOn(projectService, 'get').mockResolvedValue(project);
         vi.spyOn(projectService, 'archive').mockRejectedValue(new Error('Unavailable'));
@@ -98,6 +148,39 @@ describe('ProjectOverviewPage', () => {
         await flushPromises();
 
         expect(router.currentRoute.value.path).toBe('/projects/1');
+        expect(document.body.textContent).toContain('The project was not archived');
+        expect(wrapper.get('h1').text()).toBe('Checkout');
+    });
+
+    it('keeps archive confirmation and later failure visible while archival is pending', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        let rejectArchive: ((reason: Error) => void) | undefined;
+        vi.spyOn(projectService, 'archive').mockImplementation(
+            () =>
+                new Promise((_, reject) => {
+                    rejectArchive = reject;
+                }),
+        );
+        const { wrapper } = await mountPage();
+
+        const archiveButton = wrapper.findAll('button').find((button) => button.text() === 'Archive project');
+        await archiveButton?.trigger('click');
+        const confirmButton = Array.from(document.body.querySelectorAll('button')).find(
+            (button) => button.textContent === 'Archive project',
+        );
+        confirmButton?.click();
+        await flushPromises();
+
+        document.body
+            .querySelector('[role="dialog"]')
+            ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await flushPromises();
+
+        expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+
+        rejectArchive?.(new Error('Unavailable'));
+        await flushPromises();
+
         expect(document.body.textContent).toContain('The project was not archived');
         expect(wrapper.get('h1').text()).toBe('Checkout');
     });

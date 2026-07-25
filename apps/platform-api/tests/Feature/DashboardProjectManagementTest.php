@@ -10,8 +10,8 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use RuntimeException as AuditStorageFailure;
 
 uses(RefreshDatabase::class);
 
@@ -62,18 +62,17 @@ it('creates a project, its fixed environments, and its audit event atomically', 
 
 it('rolls back project creation when its audit event cannot be stored', function (): void {
     $owner = User::factory()->create();
-    DB::statement(<<<'SQL'
-        CREATE TRIGGER reject_project_created_audit
-        BEFORE INSERT ON audit_events
-        WHEN NEW.action = 'project.created'
-        BEGIN
-            SELECT RAISE(FAIL, 'audit unavailable');
-        END
-    SQL);
+    $eventName = 'eloquent.creating: '.AuditEvent::class;
+    $dispatcher = AuditEvent::getEventDispatcher();
+    $dispatcher?->listen($eventName, fn (): never => throw new AuditStorageFailure('audit unavailable'));
 
-    $this->actingAs($owner)
-        ->postJson('/dashboard/projects', ['name' => 'Checkout', 'slug' => 'checkout'])
-        ->assertServerError();
+    try {
+        $this->actingAs($owner)
+            ->postJson('/dashboard/projects', ['name' => 'Checkout', 'slug' => 'checkout'])
+            ->assertServerError();
+    } finally {
+        $dispatcher?->forget($eventName);
+    }
 
     expect(Project::query()->count())->toBe(0)
         ->and(Environment::query()->count())->toBe(0)
@@ -146,6 +145,33 @@ it('returns the same not found response for missing and other owner projects', f
         ->assertExactJson($missing->json());
 });
 
+it('does not disclose or mutate another owners project through update or archive commands', function (): void {
+    $owner = User::factory()->create();
+    $otherProject = Project::factory()->create(['name' => 'Other owner project']);
+
+    $missingUpdate = $this->actingAs($owner)->patchJson('/dashboard/projects/999999', [
+        'name' => 'Changed',
+        'description' => null,
+    ]);
+    $unauthorizedUpdate = $this->actingAs($owner)->patchJson("/dashboard/projects/{$otherProject->id}", [
+        'name' => 'Changed',
+        'description' => null,
+    ]);
+
+    $missingArchive = $this->actingAs($owner)->postJson('/dashboard/projects/999999/archive');
+    $unauthorizedArchive = $this->actingAs($owner)
+        ->postJson("/dashboard/projects/{$otherProject->id}/archive");
+
+    $unauthorizedUpdate->assertStatus($missingUpdate->getStatusCode())
+        ->assertExactJson($missingUpdate->json());
+    $unauthorizedArchive->assertStatus($missingArchive->getStatusCode())
+        ->assertExactJson($missingArchive->json());
+
+    expect($otherProject->refresh()->name)->toBe('Other owner project')
+        ->and($otherProject->statusValue())->toBe(ProjectStatus::Active)
+        ->and(AuditEvent::query()->count())->toBe(0);
+});
+
 it('shows fixed environments in their stable order and updates only mutable metadata', function (): void {
     $owner = User::factory()->create();
     $project = Project::factory()->for($owner, 'owner')->create([
@@ -207,18 +233,17 @@ it('archives idempotently, retains children, and records one transactional audit
 it('rolls back archival when the audit event cannot be stored', function (): void {
     $owner = User::factory()->create();
     $project = Project::factory()->for($owner, 'owner')->create();
-    DB::statement(<<<'SQL'
-        CREATE TRIGGER reject_project_archived_audit
-        BEFORE INSERT ON audit_events
-        WHEN NEW.action = 'project.archived'
-        BEGIN
-            SELECT RAISE(FAIL, 'audit unavailable');
-        END
-    SQL);
+    $eventName = 'eloquent.creating: '.AuditEvent::class;
+    $dispatcher = AuditEvent::getEventDispatcher();
+    $dispatcher?->listen($eventName, fn (): never => throw new AuditStorageFailure('audit unavailable'));
 
-    $this->actingAs($owner)
-        ->postJson("/dashboard/projects/{$project->id}/archive")
-        ->assertServerError();
+    try {
+        $this->actingAs($owner)
+            ->postJson("/dashboard/projects/{$project->id}/archive")
+            ->assertServerError();
+    } finally {
+        $dispatcher?->forget($eventName);
+    }
 
     expect($project->refresh()->statusValue())->toBe(ProjectStatus::Active)
         ->and(AuditEvent::query()->where('action', 'project.archived')->count())->toBe(0);

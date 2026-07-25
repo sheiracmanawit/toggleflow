@@ -23,10 +23,24 @@ const archiveError = ref('');
 const form = reactive({ name: '', description: '' });
 let loadController: AbortController | null = null;
 
+const resetProjectInteractionState = (): void => {
+    isEditing.value = false;
+    isSaving.value = false;
+    saveError.value = '';
+    successMessage.value = '';
+    validationErrors.value = {};
+    form.name = '';
+    form.description = '';
+    showArchiveDialog.value = false;
+    isArchiving.value = false;
+    archiveError.value = '';
+};
+
 const load = async (): Promise<void> => {
     loadController?.abort();
     loadController = new AbortController();
     const requestedId = Number(route.params.projectId);
+    resetProjectInteractionState();
     isLoading.value = true;
     loadError.value = '';
     project.value = null;
@@ -60,38 +74,62 @@ const startEditing = (): void => {
 
 const save = async (): Promise<void> => {
     if (!project.value || isSaving.value) return;
+    const projectId = project.value.id;
+    const input = { name: form.name, description: form.description };
     isSaving.value = true;
     saveError.value = '';
     validationErrors.value = {};
 
     try {
-        project.value = await projectService.update(project.value.id, form);
+        const updatedProject = await projectService.update(projectId, input);
+
+        if (Number(route.params.projectId) !== projectId) return;
+
+        project.value = updatedProject;
         isEditing.value = false;
         successMessage.value = 'Project changes saved.';
     } catch (error: unknown) {
+        if (Number(route.params.projectId) !== projectId) return;
+
         if (error instanceof ProjectValidationError) {
             validationErrors.value = error.errors;
         } else {
             saveError.value = 'Changes were not saved. The last confirmed project information is still shown.';
         }
     } finally {
-        isSaving.value = false;
+        if (Number(route.params.projectId) === projectId) {
+            isSaving.value = false;
+        }
+    }
+};
+
+const closeArchiveDialog = (): void => {
+    if (!isArchiving.value) {
+        showArchiveDialog.value = false;
     }
 };
 
 const archive = async (): Promise<void> => {
     if (!project.value || isArchiving.value) return;
+    const projectId = project.value.id;
     isArchiving.value = true;
     archiveError.value = '';
 
     try {
-        await projectService.archive(project.value.id);
+        await projectService.archive(projectId);
+
+        if (Number(route.params.projectId) !== projectId) return;
+
         showArchiveDialog.value = false;
         await router.replace('/projects');
     } catch {
+        if (Number(route.params.projectId) !== projectId) return;
+
         archiveError.value = 'The project was not archived. It remains active.';
     } finally {
-        isArchiving.value = false;
+        if (Number(route.params.projectId) === projectId) {
+            isArchiving.value = false;
+        }
     }
 };
 
@@ -182,7 +220,18 @@ onBeforeUnmount(() => loadController?.abort());
                             id="edit-project-description"
                             v-model="form.description"
                             class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2"
+                            :aria-describedby="
+                                validationErrors.description ? 'edit-project-description-error' : undefined
+                            "
+                            :aria-invalid="Boolean(validationErrors.description)"
                         />
+                        <p
+                            v-if="validationErrors.description"
+                            id="edit-project-description-error"
+                            class="mt-1 text-sm text-danger"
+                        >
+                            {{ validationErrors.description[0] }}
+                        </p>
                     </div>
                     <p v-if="saveError" class="text-sm text-danger" role="alert">{{ saveError }}</p>
                     <div class="flex gap-3">
@@ -225,7 +274,7 @@ onBeforeUnmount(() => loadController?.abort());
             v-if="showArchiveDialog && project"
             :title="`Archive ${project.name}?`"
             description="This project will leave active project views. Its environments and audit history will be retained."
-            @cancel="showArchiveDialog = false"
+            @cancel="closeArchiveDialog"
         >
             <p v-if="archiveError" class="mb-4 text-sm text-danger" role="alert">{{ archiveError }}</p>
             <div class="flex flex-wrap justify-end gap-3">
@@ -233,7 +282,7 @@ onBeforeUnmount(() => loadController?.abort());
                     class="rounded-lg border border-slate-300 px-4 py-2 font-semibold"
                     type="button"
                     :disabled="isArchiving"
-                    @click="showArchiveDialog = false"
+                    @click="closeArchiveDialog"
                 >
                     Keep project
                 </button>
