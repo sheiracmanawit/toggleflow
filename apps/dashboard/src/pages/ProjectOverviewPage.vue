@@ -152,12 +152,25 @@ onBeforeUnmount(() => loadController?.abort());
             <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <p class="font-mono text-sm text-slate-500">{{ project.slug }}</p>
-                    <h1 id="project-heading" class="mt-1 text-3xl font-bold">{{ project.name }}</h1>
+                    <div class="mt-1 flex flex-wrap items-center gap-3">
+                        <h1 id="project-heading" class="text-3xl font-bold">{{ project.name }}</h1>
+                        <span
+                            v-if="project.status === 'archived'"
+                            class="rounded-full bg-slate-200 px-3 py-1 text-sm font-semibold text-slate-700"
+                        >
+                            Archived
+                        </span>
+                    </div>
                     <p class="mt-2 max-w-2xl text-slate-600">
                         {{ project.description || 'No project description yet.' }}
                     </p>
+                    <p v-if="project.status === 'archived'" class="mt-3 max-w-2xl text-sm text-slate-600">
+                        This project is archived. Its environments and history remain available for reference, but the
+                        project can no longer be edited.
+                    </p>
                 </div>
                 <button
+                    v-if="project.status === 'active'"
                     class="self-start rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
                     type="button"
                     @click="startEditing"
@@ -192,7 +205,7 @@ onBeforeUnmount(() => loadController?.abort());
             </section>
 
             <form
-                v-if="isEditing"
+                v-if="project.status === 'active' && isEditing"
                 class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
                 novalidate
                 @submit.prevent="save"
@@ -254,7 +267,11 @@ onBeforeUnmount(() => loadController?.abort());
                 </div>
             </form>
 
-            <section class="mt-10 rounded-2xl border border-red-200 bg-red-50 p-6" aria-labelledby="archive-heading">
+            <section
+                v-if="project.status === 'active'"
+                class="mt-10 rounded-2xl border border-red-200 bg-red-50 p-6"
+                aria-labelledby="archive-heading"
+            >
                 <h2 id="archive-heading" class="text-lg font-semibold text-danger">Archive project</h2>
                 <p class="mt-2 text-sm text-slate-700">
                     Archiving removes this project from active project views while retaining its environments and
@@ -271,7 +288,7 @@ onBeforeUnmount(() => loadController?.abort());
         </template>
 
         <AppDialog
-            v-if="showArchiveDialog && project"
+            v-if="showArchiveDialog && project?.status === 'active'"
             :title="`Archive ${project.name}?`"
             description="This project will leave active project views. Its environments and audit history will be retained."
             @cancel="closeArchiveDialog"

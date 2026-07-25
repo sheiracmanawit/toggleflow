@@ -67,6 +67,23 @@ describe('ProjectOverviewPage', () => {
         expect(wrapper.get('h1').text()).toBe('Checkout API');
     });
 
+    it('identifies an archived project and removes active-only mutation controls', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue({
+            ...project,
+            status: 'archived',
+        });
+        const update = vi.spyOn(projectService, 'update');
+        const archive = vi.spyOn(projectService, 'archive');
+        const { wrapper } = await mountPage();
+
+        expect(wrapper.text()).toContain('Archived');
+        expect(wrapper.text()).toContain('environments and history remain available for reference');
+        expect(wrapper.text()).not.toContain('Edit project');
+        expect(wrapper.text()).not.toContain('Archive project');
+        expect(update).not.toHaveBeenCalled();
+        expect(archive).not.toHaveBeenCalled();
+    });
+
     it('preserves confirmed project state when an update fails', async () => {
         vi.spyOn(projectService, 'get').mockResolvedValue(project);
         vi.spyOn(projectService, 'update').mockRejectedValue(new Error('Unavailable'));
