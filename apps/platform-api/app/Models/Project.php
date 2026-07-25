@@ -36,6 +36,12 @@ class Project extends Model
         return $this->hasMany(Environment::class)->orderBy('position');
     }
 
+    /** @return HasMany<FeatureFlag, $this> */
+    public function featureFlags(): HasMany
+    {
+        return $this->hasMany(FeatureFlag::class);
+    }
+
     /** @param Builder<Project> $query */
     public function scopeActive(Builder $query): void
     {

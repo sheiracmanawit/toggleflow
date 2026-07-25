@@ -1,0 +1,45 @@
+describe('boolean feature flag management', () => {
+    it('creates a disabled flag and changes environments safely on mobile', () => {
+        cy.viewport(390, 844);
+        cy.visit('/sign-in');
+        cy.get('input[name="email"]').type('owner@toggleflow.test');
+        cy.get('input[name="password"]').type('toggleflow-demo', { log: false });
+        cy.contains('button', 'Sign in').click();
+
+        cy.contains('a', 'Projects').click();
+        cy.contains('button', 'Create project').first().click();
+        cy.get('#project-name').type('Flag Controls');
+        cy.get('form').contains('button', 'Create project').click();
+        cy.contains('a', 'Manage feature flags').click();
+
+        cy.contains('button', 'Create flag').first().click();
+        cy.get('#flag-name').type('New checkout');
+        cy.get('#flag-key').should('have.value', 'new-checkout');
+        cy.contains('begin disabled in Development, Staging, and Production').should('be.visible');
+        cy.get('form').contains('button', 'Create flag').click();
+
+        cy.contains('Development').should('be.visible');
+        cy.contains('Staging').should('be.visible');
+        cy.contains('Production').should('be.visible');
+        cy.get('[aria-label="Enable New checkout in Development"]')
+            .should('have.attr', 'aria-checked', 'false')
+            .click();
+        cy.contains('Development is now enabled').should('be.visible');
+        cy.get('[aria-label="Disable New checkout in Development"]').should('have.attr', 'aria-checked', 'true');
+        cy.get('[aria-label="Enable New checkout in Production"]').should('have.attr', 'aria-checked', 'false');
+
+        cy.get('[aria-label="Enable New checkout in Production"]').focus().type('{enter}');
+        cy.get('[role="dialog"]')
+            .should('contain', 'will begin receiving true')
+            .and('contain', 'does not deploy application code');
+        cy.get('[role="dialog"]').contains('button', 'Enable in Production').click();
+        cy.contains('Production is now enabled').should('be.visible');
+        cy.get('[aria-label="Disable New checkout in Production"]').should('have.attr', 'aria-checked', 'true');
+
+        cy.contains('button', 'Archive flag').click();
+        cy.get('[role="dialog"]').should('contain', 'leave active flag views');
+        cy.get('[role="dialog"]').contains('button', 'Archive flag').click();
+        cy.location('pathname').should('match', /^\/projects\/\d+\/flags$/);
+        cy.contains('New checkout').should('not.exist');
+    });
+});
