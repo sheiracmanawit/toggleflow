@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { featureFlagService, projectService } from '../services';
+import { FeatureFlagValidationError, featureFlagService, projectService } from '../services';
 import type { Project } from '../types';
 import FeatureFlagsPage from './FeatureFlagsPage.vue';
 
@@ -79,5 +79,29 @@ describe('FeatureFlagsPage', () => {
 
         expect(wrapper.get('[role="alert"]').text()).toContain('do not have access');
         expect(wrapper.text()).not.toContain('Checkout');
+    });
+
+    it('associates create validation messages with their inputs', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        vi.spyOn(featureFlagService, 'list').mockResolvedValue([]);
+        vi.spyOn(featureFlagService, 'create').mockRejectedValue(
+            new FeatureFlagValidationError({
+                name: ['The name field is required.'],
+                key: ['The key has already been taken.'],
+                description: ['The description is too long.'],
+            }),
+        );
+        const { wrapper } = await mountPage();
+
+        await wrapper
+            .findAll('button')
+            .find((button) => button.text() === 'Create flag')
+            ?.trigger('click');
+        await wrapper.get('form').trigger('submit');
+        await flushPromises();
+
+        expect(wrapper.get('#flag-name').attributes('aria-describedby')).toBe('flag-name-error');
+        expect(wrapper.get('#flag-key').attributes('aria-describedby')).toBe('flag-key-error');
+        expect(wrapper.get('#flag-description').attributes('aria-describedby')).toBe('flag-description-error');
     });
 });

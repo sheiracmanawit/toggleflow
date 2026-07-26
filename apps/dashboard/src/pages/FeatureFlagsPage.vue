@@ -217,9 +217,10 @@ onBeforeUnmount(() => controller?.abort());
                             id="flag-name"
                             v-model="form.name"
                             class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                            :aria-describedby="validationErrors.name ? 'flag-name-error' : undefined"
                             :aria-invalid="Boolean(validationErrors.name)"
                         />
-                        <p v-if="validationErrors.name" class="mt-1 text-sm text-danger">
+                        <p v-if="validationErrors.name" id="flag-name-error" class="mt-1 text-sm text-danger">
                             {{ validationErrors.name[0] }}
                         </p>
                     </div>
@@ -230,13 +231,14 @@ onBeforeUnmount(() => controller?.abort());
                             v-model="form.key"
                             class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
                             autocomplete="off"
+                            :aria-describedby="validationErrors.key ? 'flag-key-error' : 'flag-key-help'"
                             :aria-invalid="Boolean(validationErrors.key)"
                             @input="keyWasEdited = true"
                         />
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p id="flag-key-help" class="mt-1 text-xs text-slate-500">
                             Lowercase letters, numbers, and hyphens. The key cannot be changed after creation.
                         </p>
-                        <p v-if="validationErrors.key" class="mt-1 text-sm text-danger">
+                        <p v-if="validationErrors.key" id="flag-key-error" class="mt-1 text-sm text-danger">
                             {{ validationErrors.key[0] }}
                         </p>
                     </div>
@@ -246,9 +248,14 @@ onBeforeUnmount(() => controller?.abort());
                             id="flag-description"
                             v-model="form.description"
                             class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2"
+                            :aria-describedby="validationErrors.description ? 'flag-description-error' : undefined"
                             :aria-invalid="Boolean(validationErrors.description)"
                         />
-                        <p v-if="validationErrors.description" class="mt-1 text-sm text-danger">
+                        <p
+                            v-if="validationErrors.description"
+                            id="flag-description-error"
+                            class="mt-1 text-sm text-danger"
+                        >
                             {{ validationErrors.description[0] }}
                         </p>
                     </div>

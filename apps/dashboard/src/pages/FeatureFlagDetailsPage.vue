@@ -227,9 +227,10 @@ onBeforeUnmount(() => controller?.abort());
                             id="edit-flag-name"
                             v-model="form.name"
                             class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                            :aria-describedby="validationErrors.name ? 'edit-flag-name-error' : undefined"
                             :aria-invalid="Boolean(validationErrors.name)"
                         />
-                        <p v-if="validationErrors.name" class="mt-1 text-sm text-danger">
+                        <p v-if="validationErrors.name" id="edit-flag-name-error" class="mt-1 text-sm text-danger">
                             {{ validationErrors.name[0] }}
                         </p>
                     </div>
@@ -241,7 +242,16 @@ onBeforeUnmount(() => controller?.abort());
                             id="edit-flag-description"
                             v-model="form.description"
                             class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2"
+                            :aria-describedby="validationErrors.description ? 'edit-flag-description-error' : undefined"
+                            :aria-invalid="Boolean(validationErrors.description)"
                         />
+                        <p
+                            v-if="validationErrors.description"
+                            id="edit-flag-description-error"
+                            class="mt-1 text-sm text-danger"
+                        >
+                            {{ validationErrors.description[0] }}
+                        </p>
                     </div>
                     <p v-if="saveError" class="text-sm text-danger" role="alert">{{ saveError }}</p>
                     <div class="flex gap-3">

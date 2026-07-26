@@ -304,3 +304,13 @@ it('enforces feature flag and environment state uniqueness in the database', fun
     expect(fn () => EnvironmentFlag::factory()->for($flag)->for($environment)->create())
         ->toThrow(QueryException::class);
 });
+
+it('rejects cross project environment and flag state records at the database boundary', function (): void {
+    $firstProject = projectWithEnvironments(User::factory()->create());
+    $secondProject = projectWithEnvironments(User::factory()->create());
+    $flag = FeatureFlag::factory()->for($firstProject)->create();
+    $otherEnvironment = $secondProject->environments()->firstOrFail();
+
+    expect(fn () => EnvironmentFlag::factory()->for($flag)->for($otherEnvironment)->create())
+        ->toThrow(QueryException::class);
+});

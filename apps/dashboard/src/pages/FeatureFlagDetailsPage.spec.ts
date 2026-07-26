@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { featureFlagService } from '../services';
+import { FeatureFlagValidationError, featureFlagService } from '../services';
 import type { FeatureFlag } from '../types';
 import FeatureFlagDetailsPage from './FeatureFlagDetailsPage.vue';
 
@@ -84,6 +84,29 @@ describe('FeatureFlagDetailsPage', () => {
         expect(wrapper.text()).toContain('Production is now enabled');
     });
 
+    it('confirms Production disable and cancels by keyboard without making a request', async () => {
+        const enabledFlag = structuredClone(flag);
+        enabledFlag.environment_states[2]!.enabled = true;
+        vi.spyOn(featureFlagService, 'get').mockResolvedValue(enabledFlag);
+        vi.spyOn(featureFlagService, 'setState');
+        const { wrapper } = await mountPage();
+        const productionSwitch = wrapper.get('[aria-label="Disable New checkout in Production"]');
+        (productionSwitch.element as HTMLElement).focus();
+
+        await productionSwitch.trigger('click');
+        await flushPromises();
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog?.textContent).toContain('will begin receiving false');
+        expect(document.activeElement?.textContent).toContain('Cancel');
+
+        document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await flushPromises();
+
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+        expect(featureFlagService.setState).not.toHaveBeenCalled();
+        expect(document.activeElement).toBe(productionSwitch.element);
+    });
+
     it('preserves the confirmed state and shows a persistent error when a mutation fails', async () => {
         vi.spyOn(featureFlagService, 'get').mockResolvedValue(structuredClone(flag));
         vi.spyOn(featureFlagService, 'setState').mockRejectedValue(new Error('Unavailable'));
@@ -96,6 +119,75 @@ describe('FeatureFlagDetailsPage', () => {
         expect(wrapper.get('[aria-label="Enable New checkout in Development"]').attributes('aria-checked')).toBe(
             'false',
         );
+    });
+
+    it('prevents duplicate environment commands while a mutation is pending', async () => {
+        vi.spyOn(featureFlagService, 'get').mockResolvedValue(structuredClone(flag));
+        let resolveState: ((value: FeatureFlag) => void) | undefined;
+        vi.spyOn(featureFlagService, 'setState').mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveState = resolve;
+                }),
+        );
+        const { wrapper } = await mountPage();
+
+        await wrapper.get('[aria-label="Enable New checkout in Development"]').trigger('click');
+        await wrapper.get('[aria-label="Enable New checkout in Staging"]').trigger('click');
+
+        expect(featureFlagService.setState).toHaveBeenCalledTimes(1);
+        expect(wrapper.get('[aria-label="Enable New checkout in Staging"]').attributes('disabled')).toBeDefined();
+
+        resolveState?.(structuredClone(flag));
+        await flushPromises();
+    });
+
+    it('associates edit validation errors and keeps the confirmed details visible', async () => {
+        vi.spyOn(featureFlagService, 'get').mockResolvedValue(structuredClone(flag));
+        vi.spyOn(featureFlagService, 'update').mockRejectedValue(
+            new FeatureFlagValidationError({
+                name: ['The name field is required.'],
+                description: ['The description is too long.'],
+            }),
+        );
+        const { wrapper } = await mountPage();
+
+        await wrapper.get('button:nth-of-type(1)').trigger('click');
+        await wrapper.get('#edit-flag-name').setValue('');
+        await wrapper.get('form').trigger('submit');
+        await flushPromises();
+
+        expect(wrapper.get('#edit-flag-name').attributes('aria-describedby')).toBe('edit-flag-name-error');
+        expect(wrapper.get('#edit-flag-description').attributes('aria-describedby')).toBe(
+            'edit-flag-description-error',
+        );
+        expect(wrapper.get('h1').text()).toBe('New checkout');
+    });
+
+    it('keeps an archive failure visible and navigates only after a successful retry', async () => {
+        vi.spyOn(featureFlagService, 'get').mockResolvedValue(structuredClone(flag));
+        vi.spyOn(featureFlagService, 'archive')
+            .mockRejectedValueOnce(new Error('Unavailable'))
+            .mockResolvedValueOnce({ ...structuredClone(flag), status: 'archived' });
+        const { wrapper, router } = await mountPage();
+
+        await wrapper
+            .findAll('button')
+            .find((button) => button.text() === 'Archive flag')
+            ?.trigger('click');
+        const archiveButton = (): HTMLButtonElement | undefined =>
+            Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
+                (button) => button.textContent === 'Archive flag',
+            );
+        archiveButton()?.click();
+        await flushPromises();
+
+        expect(document.body.textContent).toContain('The flag was not archived');
+        expect(router.currentRoute.value.path).toBe('/projects/1/flags/2');
+
+        archiveButton()?.click();
+        await flushPromises();
+        expect(router.currentRoute.value.path).toBe('/projects/1/flags');
     });
 
     it('shows a safe unavailable state without stale flag details', async () => {
