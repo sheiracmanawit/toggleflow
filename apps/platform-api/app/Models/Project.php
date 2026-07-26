@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Contracts\Auditable;
 use App\Enums\ProjectStatus;
+use App\Models\Concerns\HasAuditEvents;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,10 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Project extends Model
+class Project extends Model implements Auditable
 {
     /** @use HasFactory<ProjectFactory> */
-    use HasFactory;
+    use HasAuditEvents, HasFactory;
 
     /** @var list<string> */
     protected $fillable = [
@@ -40,6 +42,11 @@ class Project extends Model
     public function featureFlags(): HasMany
     {
         return $this->hasMany(FeatureFlag::class);
+    }
+
+    public function auditProjectId(): int
+    {
+        return $this->auditSubjectId();
     }
 
     /** @param Builder<Project> $query */

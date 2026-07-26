@@ -24,7 +24,7 @@ final class UpdateFeatureFlag
             $after = ['name' => $flag->name, 'description' => $flag->description];
 
             if ($before !== $after) {
-                $this->recordAuditEvent->forFeatureFlag($flag, $actor, AuditEventAction::FeatureFlagUpdated, [
+                $this->recordAuditEvent->record($flag, $actor, AuditEventAction::FeatureFlagUpdated, [
                     'before' => $before,
                     'after' => $after,
                 ]);

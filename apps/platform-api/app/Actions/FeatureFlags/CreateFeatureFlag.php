@@ -38,7 +38,7 @@ final class CreateFeatureFlag
                     fn ($environment): array => ['environment_id' => $environment->id, 'enabled' => false],
                 )->all());
 
-                $this->recordAuditEvent->forFeatureFlag($flag, $actor, AuditEventAction::FeatureFlagCreated, [
+                $this->recordAuditEvent->record($flag, $actor, AuditEventAction::FeatureFlagCreated, [
                     'after' => [
                         'name' => $flag->name,
                         'key' => $flag->key,

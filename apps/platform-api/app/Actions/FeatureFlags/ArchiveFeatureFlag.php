@@ -23,7 +23,7 @@ final class ArchiveFeatureFlag
 
         return DB::transaction(function () use ($flag, $actor): FeatureFlag {
             $flag->forceFill(['status' => FeatureFlagStatus::Archived])->save();
-            $this->recordAuditEvent->forFeatureFlag($flag, $actor, AuditEventAction::FeatureFlagArchived, [
+            $this->recordAuditEvent->record($flag, $actor, AuditEventAction::FeatureFlagArchived, [
                 'before' => ['status' => FeatureFlagStatus::Active->value],
                 'after' => ['status' => FeatureFlagStatus::Archived->value],
             ]);

@@ -59,6 +59,10 @@ it('creates a project, its fixed environments, and its audit event atomically', 
         'actor_id' => $owner->id,
         'action' => AuditEventAction::ProjectCreated->value,
     ]);
+
+    $event = $project->auditEvents()->sole();
+    expect($event->action)->toBe(AuditEventAction::ProjectCreated)
+        ->and($event->subject)->toBeInstanceOf(Project::class);
 });
 
 it('rolls back project creation when its audit event cannot be stored', function (): void {

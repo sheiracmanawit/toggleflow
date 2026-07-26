@@ -35,7 +35,7 @@ final class SetEnvironmentFlagState
                 $before = $state->enabled;
                 $state->update(['enabled' => $enabled]);
 
-                $this->recordAuditEvent->forFeatureFlag(
+                $this->recordAuditEvent->record(
                     $flag,
                     $actor,
                     $enabled ? AuditEventAction::FeatureFlagEnabled : AuditEventAction::FeatureFlagDisabled,

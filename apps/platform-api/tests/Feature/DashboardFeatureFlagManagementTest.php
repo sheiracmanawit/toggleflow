@@ -70,6 +70,8 @@ it('creates a flag with three disabled states and a safe audit event atomically'
 
     $event = AuditEvent::query()->where('action', AuditEventAction::FeatureFlagCreated->value)->sole();
     expect($event->action)->toBe(AuditEventAction::FeatureFlagCreated)
+        ->and($flag->auditEvents()->sole()->is($event))->toBeTrue()
+        ->and($event->subject)->toBeInstanceOf(FeatureFlag::class)
         ->and($event->metadata)->toHaveKeys(['after'])
         ->and(json_encode($event->metadata))->not->toContain('project_id');
 });

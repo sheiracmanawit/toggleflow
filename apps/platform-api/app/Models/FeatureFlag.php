@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Contracts\Auditable;
 use App\Enums\FeatureFlagStatus;
+use App\Models\Concerns\HasAuditEvents;
 use Database\Factories\FeatureFlagFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,10 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class FeatureFlag extends Model
+class FeatureFlag extends Model implements Auditable
 {
     /** @use HasFactory<FeatureFlagFactory> */
-    use HasFactory;
+    use HasAuditEvents, HasFactory;
 
     /** @var list<string> */
     protected $fillable = ['name', 'key', 'description'];
@@ -30,6 +32,11 @@ class FeatureFlag extends Model
     public function environmentStates(): HasMany
     {
         return $this->hasMany(EnvironmentFlag::class);
+    }
+
+    public function auditProjectId(): int
+    {
+        return (int) $this->getAttribute('project_id');
     }
 
     /** @param Builder<FeatureFlag> $query */
