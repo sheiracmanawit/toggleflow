@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Projects;
 
+use App\Enums\AuditEventAction;
 use App\Enums\ProjectStatus;
 use App\Models\AuditEvent;
 use App\Models\Project;
@@ -24,7 +25,7 @@ final class ArchiveProject
             AuditEvent::query()->create([
                 'project_id' => $project->id,
                 'actor_id' => $actor->id,
-                'action' => 'project.archived',
+                'action' => AuditEventAction::ProjectArchived,
                 'subject_type' => Project::class,
                 'subject_id' => $project->id,
                 'metadata' => [

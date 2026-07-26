@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\FeatureFlags;
 
 use App\Actions\Audit\RecordAuditEvent;
-use App\Enums\FeatureFlagAuditAction;
+use App\Enums\AuditEventAction;
 use App\Models\FeatureFlag;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +24,7 @@ final class UpdateFeatureFlag
             $after = ['name' => $flag->name, 'description' => $flag->description];
 
             if ($before !== $after) {
-                $this->recordAuditEvent->forFeatureFlag($flag, $actor, FeatureFlagAuditAction::Updated, [
+                $this->recordAuditEvent->forFeatureFlag($flag, $actor, AuditEventAction::FeatureFlagUpdated, [
                     'before' => $before,
                     'after' => $after,
                 ]);

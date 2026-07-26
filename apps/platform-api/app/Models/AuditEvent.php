@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AuditEventAction;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditEvent extends Model
@@ -23,6 +24,7 @@ class AuditEvent extends Model
     protected function casts(): array
     {
         return [
+            'action' => AuditEventAction::class,
             'metadata' => 'array',
         ];
     }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\Projects\CreateProject;
+use App\Enums\AuditEventAction;
 use App\Enums\ProjectStatus;
 use App\Models\AuditEvent;
 use App\Models\Environment;
@@ -56,7 +57,7 @@ it('creates a project, its fixed environments, and its audit event atomically', 
     $this->assertDatabaseHas('audit_events', [
         'project_id' => $project->id,
         'actor_id' => $owner->id,
-        'action' => 'project.created',
+        'action' => AuditEventAction::ProjectCreated->value,
     ]);
 });
 
@@ -220,7 +221,7 @@ it('archives idempotently, retains children, and records one transactional audit
 
     expect($project->refresh()->statusValue())->toBe(ProjectStatus::Archived)
         ->and($environment->fresh())->not->toBeNull()
-        ->and(AuditEvent::query()->where('action', 'project.archived')->count())->toBe(1);
+        ->and(AuditEvent::query()->where('action', AuditEventAction::ProjectArchived->value)->count())->toBe(1);
 
     $this->actingAs($owner)
         ->patchJson("/dashboard/projects/{$project->id}", [
@@ -246,7 +247,7 @@ it('rolls back archival when the audit event cannot be stored', function (): voi
     }
 
     expect($project->refresh()->statusValue())->toBe(ProjectStatus::Active)
-        ->and(AuditEvent::query()->where('action', 'project.archived')->count())->toBe(0);
+        ->and(AuditEvent::query()->where('action', AuditEventAction::ProjectArchived->value)->count())->toBe(0);
 });
 
 it('enforces environment keys and positions within each project at the database boundary', function (): void {

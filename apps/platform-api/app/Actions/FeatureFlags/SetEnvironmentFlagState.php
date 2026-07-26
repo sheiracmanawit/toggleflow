@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\FeatureFlags;
 
 use App\Actions\Audit\RecordAuditEvent;
-use App\Enums\FeatureFlagAuditAction;
+use App\Enums\AuditEventAction;
 use App\Models\Environment;
 use App\Models\EnvironmentFlag;
 use App\Models\FeatureFlag;
@@ -38,7 +38,7 @@ final class SetEnvironmentFlagState
                 $this->recordAuditEvent->forFeatureFlag(
                     $flag,
                     $actor,
-                    $enabled ? FeatureFlagAuditAction::Enabled : FeatureFlagAuditAction::Disabled,
+                    $enabled ? AuditEventAction::FeatureFlagEnabled : AuditEventAction::FeatureFlagDisabled,
                     [
                         'environment' => [
                             'id' => $environment->id,

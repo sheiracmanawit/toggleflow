@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Projects;
 
+use App\Enums\AuditEventAction;
 use App\Enums\ProjectStatus;
 use App\Models\AuditEvent;
 use App\Models\Project;
@@ -31,7 +32,7 @@ final class CreateProject
                 AuditEvent::query()->create([
                     'project_id' => $project->id,
                     'actor_id' => $owner->id,
-                    'action' => 'project.created',
+                    'action' => AuditEventAction::ProjectCreated,
                     'subject_type' => Project::class,
                     'subject_id' => $project->id,
                     'metadata' => [
