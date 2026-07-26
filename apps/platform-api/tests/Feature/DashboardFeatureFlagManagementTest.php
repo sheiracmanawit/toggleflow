@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\FeatureFlagAuditAction;
 use App\Enums\FeatureFlagStatus;
 use App\Models\AuditEvent;
 use App\Models\Environment;
@@ -67,7 +68,7 @@ it('creates a flag with three disabled states and a safe audit event atomically'
         ->and($flag->environmentStates()->count())->toBe(3)
         ->and($flag->environmentStates()->where('enabled', true)->count())->toBe(0);
 
-    $event = AuditEvent::query()->where('action', 'feature_flag.created')->sole();
+    $event = AuditEvent::query()->where('action', FeatureFlagAuditAction::Created->value)->sole();
     expect($event->metadata)->toHaveKeys(['after'])
         ->and(json_encode($event->metadata))->not->toContain('project_id');
 });
@@ -201,7 +202,7 @@ it('updates only mutable metadata and records changes without changing key or st
         ->assertJsonPath('data.status', 'active')
         ->assertJsonPath('data.environment_states.0.enabled', true);
 
-    expect(AuditEvent::query()->where('action', 'feature_flag.updated')->count())->toBe(1);
+    expect(AuditEvent::query()->where('action', FeatureFlagAuditAction::Updated->value)->count())->toBe(1);
 });
 
 it('changes one environment idempotently and rejects cross project combinations', function (): void {
@@ -219,7 +220,7 @@ it('changes one environment idempotently and rejects cross project combinations'
         ->assertJsonPath('data.environment_states.0.enabled', true)
         ->assertJsonPath('data.environment_states.2.enabled', false);
     $this->actingAs($owner)->putJson($path, ['enabled' => true])->assertOk();
-    expect(AuditEvent::query()->where('action', 'feature_flag.enabled')->count())->toBe(1)
+    expect(AuditEvent::query()->where('action', FeatureFlagAuditAction::Enabled->value)->count())->toBe(1)
         ->and(EnvironmentFlag::query()->where('environment_id', $production->id)->value('enabled'))->toBeFalse();
 
     $otherProject = projectWithEnvironments($owner);
@@ -262,7 +263,7 @@ it('archives idempotently, retains states, and prevents later mutations', functi
     $this->actingAs($owner)->postJson($path)->assertOk();
     expect($flag->refresh()->statusValue())->toBe(FeatureFlagStatus::Archived)
         ->and($state->fresh())->not->toBeNull()
-        ->and(AuditEvent::query()->where('action', 'feature_flag.archived')->count())->toBe(1);
+        ->and(AuditEvent::query()->where('action', FeatureFlagAuditAction::Archived->value)->count())->toBe(1);
 
     $this->actingAs($owner)->patchJson("/dashboard/projects/{$project->id}/flags/{$flag->id}", [
         'name' => 'Cannot update',
@@ -290,7 +291,7 @@ it('rolls back archival when the audit event cannot be stored', function (): voi
     }
 
     expect($flag->refresh()->statusValue())->toBe(FeatureFlagStatus::Active)
-        ->and(AuditEvent::query()->where('action', 'feature_flag.archived')->count())->toBe(0);
+        ->and(AuditEvent::query()->where('action', FeatureFlagAuditAction::Archived->value)->count())->toBe(0);
 });
 
 it('enforces feature flag and environment state uniqueness in the database', function (): void {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\FeatureFlags;
 
 use App\Actions\Audit\RecordAuditEvent;
+use App\Enums\FeatureFlagAuditAction;
 use App\Enums\FeatureFlagStatus;
 use App\Models\FeatureFlag;
 use App\Models\User;
@@ -22,7 +23,7 @@ final class ArchiveFeatureFlag
 
         return DB::transaction(function () use ($flag, $actor): FeatureFlag {
             $flag->forceFill(['status' => FeatureFlagStatus::Archived])->save();
-            $this->recordAuditEvent->forFeatureFlag($flag, $actor, 'feature_flag.archived', [
+            $this->recordAuditEvent->forFeatureFlag($flag, $actor, FeatureFlagAuditAction::Archived, [
                 'before' => ['status' => FeatureFlagStatus::Active->value],
                 'after' => ['status' => FeatureFlagStatus::Archived->value],
             ]);

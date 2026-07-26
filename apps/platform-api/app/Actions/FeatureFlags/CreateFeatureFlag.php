@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\FeatureFlags;
 
 use App\Actions\Audit\RecordAuditEvent;
+use App\Enums\FeatureFlagAuditAction;
 use App\Enums\FeatureFlagStatus;
 use App\Models\FeatureFlag;
 use App\Models\Project;
@@ -37,7 +38,7 @@ final class CreateFeatureFlag
                     fn ($environment): array => ['environment_id' => $environment->id, 'enabled' => false],
                 )->all());
 
-                $this->recordAuditEvent->forFeatureFlag($flag, $actor, 'feature_flag.created', [
+                $this->recordAuditEvent->forFeatureFlag($flag, $actor, FeatureFlagAuditAction::Created, [
                     'after' => [
                         'name' => $flag->name,
                         'key' => $flag->key,
