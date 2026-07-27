@@ -34,6 +34,9 @@ that preserves ToggleFlow's documented architecture.
 - Place local invariants and relationships on models; place multi-model workflows,
   transactions, injected collaborators, audit writes, and external side effects in
   focused application actions.
+- When route structure is in scope, group three or more routes with shared meaningful
+  configuration, cap nesting at two groups, and require blank-line separation for
+  logical families that remain flat.
 - Decompose implementation into Tasks or Subtasks that retain the vertical story.
 - Define required automated tests and important manual verification.
 - Link relevant architecture documents and write an ADR when the decision is

@@ -43,6 +43,8 @@ Create one row for every acceptance criterion. Add focused cases for relevant:
 - Rate limiting
 - Rate-limit key normalization, counted versus ignored responses, threshold,
   successful reset, JSON envelope, and standard retry headers
+- Route URI, middleware, parameter constraints, names where relevant, and response
+  behavior after route regrouping
 - Loading, empty, success, and failed mutation behavior
 - Keyboard access, focus, non-color state indicators, and responsive layouts
 

@@ -192,6 +192,11 @@ narrow mechanics without hidden orchestration; models own local behavior; and
 application actions own workflows, transactions, injected collaborators, audit
 writes, and external side effects.
 
+Group three or more routes when they share meaningful middleware, URI or name
+prefixes, constraints, or resource hierarchy. Keep route-group nesting to two levels;
+within the second group, leave additional route families flat and separate them with
+a blank line.
+
 Do not introduce a conflicting local convention silently. Propose material standards
 changes through documentation review and update all affected tooling in the same
 change.

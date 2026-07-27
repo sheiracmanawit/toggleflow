@@ -38,6 +38,9 @@ its product acceptance criteria and architecture review.
 - Prefer named Laravel `throttle` route middleware for HTTP rate limits. Use
   response-based counting for outcome-specific limits and centralize custom keys and
   successful resets rather than duplicating limiter branches in controllers.
+- Group three or more routes with shared meaningful configuration, keep nesting to
+  two route-group levels, and separate additional flat resource families with one
+  blank line.
 - Add or update automated tests in proportion to risk.
 - Run relevant quality checks locally before pushing.
 - Open or update the pull request with the Jira key, change summary, testing evidence,

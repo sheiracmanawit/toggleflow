@@ -63,6 +63,9 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
 - Check that endpoint rate limits use named route middleware where appropriate,
   count the intended response outcomes, normalize and segment keys safely, preserve
   standard headers, and reset successful login attempts when required.
+- Check that route refactors preserve URIs, names, middleware, constraints, and
+  bindings; apply the three-route grouping threshold, two-level nesting cap, and
+  blank-line separation convention.
 
 ## Must Not
 

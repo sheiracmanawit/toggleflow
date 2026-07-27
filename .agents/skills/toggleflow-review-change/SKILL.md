@@ -73,6 +73,9 @@ Check where relevant:
 - Named HTTP limiters are attached through route middleware, count the intended
   responses, use non-sensitive normalized keys, preserve rate-limit headers, and
   clear successful login failures when required.
+- Route declarations follow the three-route grouping threshold and two-level nesting
+  cap, visually separate remaining families, and preserve URI, name, middleware,
+  constraint, and binding contracts.
 
 ## Evidence Standard
 

@@ -209,6 +209,36 @@ composition is clearer than duplication.
 - Separate management controllers from `/api/v1` evaluation controllers.
 - Do not put domain rules in route closures.
 
+### Routes
+
+- Group three or more routes when they share meaningful middleware, URI prefixes,
+  name prefixes, parameter constraints, controller context, or parent-resource
+  hierarchy.
+- Count every enclosing route group toward a maximum nesting depth of two. Middleware
+  groups count as a level.
+- When another subgroup would exceed that depth, keep its routes flat within the
+  second group and retain the remaining relative path and route name explicitly.
+- Separate flat logical route families with one blank line. Do not insert blank lines
+  between every route in the same family.
+- Preserve the final URI, route name, middleware, parameter constraints, and binding
+  behavior when refactoring route declarations.
+- Do not create a group merely to remove a token from one or two routes.
+
+Example:
+
+```php
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::prefix('projects')->name('projects.')->group(function (): void {
+        Route::get('/', [ProjectController::class, 'index'])->name('index');
+        Route::post('/', [ProjectController::class, 'store'])->name('store');
+
+        Route::get('/{project}/flags', [FeatureFlagController::class, 'index'])
+            ->whereNumber('project')
+            ->name('flags.index');
+    });
+});
+```
+
 ### Application actions
 
 - Use focused actions for state-changing or reusable business operations.

@@ -79,6 +79,9 @@ behavior or architecture to unblock implementation.
 - Implement HTTP rate limits as named Laravel route limiters. Use response-based
   counting when only selected outcomes should consume attempts, and centralize shared
   key normalization, inspection, and clearing outside controllers.
+- Group three or more routes that share meaningful configuration. Cap route-group
+  nesting at two levels and separate additional flat logical families with one blank
+  line while preserving route contracts.
 - Preserve `/api/v1` response contracts.
 - Treat MySQL as authoritative; do not add Redis for correctness.
 - Use Vue 3 TypeScript and Tailwind without a large component framework.

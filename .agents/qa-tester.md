@@ -25,6 +25,8 @@ remains safe across important alternate, failure, authorization, and responsive 
   verify persisted scalar compatibility, hydrated behavior, relationships, visible
   transaction outcomes, and important failure rollback rather than testing class
   structure alone.
+- When routes are regrouped, verify the public URI, route name where relevant,
+  middleware, parameter constraints, and response behavior remain unchanged.
 - Verify keyboard, focus, responsive behavior, and non-color state indicators for UI
   changes.
 - Record concrete evidence and identify untested behavior.
