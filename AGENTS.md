@@ -71,7 +71,9 @@ ticket and documentation explicitly move that capability into scope.
   unconfigured flags.
 - Authentication errors must not reveal whether a key prefix, project, environment,
   or flag exists.
-- Apply rate limiting to evaluation requests.
+- Apply named Laravel route limiters to authentication and evaluation requests.
+  Use response-based counting when only specific outcomes should consume attempts,
+  and centralize custom key normalization and successful-reset behavior.
 - Client applications remain responsible for a local fallback when ToggleFlow cannot
   be reached.
 

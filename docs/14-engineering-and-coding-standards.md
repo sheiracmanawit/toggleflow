@@ -344,6 +344,25 @@ action open the transaction and call the model method.
 - Use status codes consistently and test important failures.
 - Avoid returning HTTP 200 for rejected authentication, authorization, or validation.
 
+### HTTP rate limiting
+
+- Define endpoint-specific limits with `RateLimiter::for()` and attach them through
+  named `throttle` route middleware.
+- Use `Limit::after()` when only selected response outcomes should consume attempts;
+  for login, count authentication `401` responses but not validation failures or
+  successful sessions.
+- Segment login attempts by normalized email plus IP without storing the plaintext
+  email in the cache key.
+- Centralize custom limiter names, thresholds, key normalization, inspection, and
+  clearing in a focused rate-limit class when multiple call sites must agree.
+- Clear accumulated login failures after successful authentication.
+- Return intentional JSON `429` responses while preserving Laravel's standard
+  rate-limit and retry headers.
+- Do not duplicate `tooManyAttempts()` and `hit()` branches in controllers when named
+  route middleware can enforce the HTTP boundary.
+- Test which responses count, normalization, threshold behavior, successful reset,
+  response envelope, and rate-limit headers.
+
 ## 8. Database and Migration Standards
 
 - Use plural snake_case table names and singular snake_case foreign keys.

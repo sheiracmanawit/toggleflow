@@ -70,6 +70,9 @@ Check where relevant:
 - Models own local relationships and invariants; application actions own multi-model
   workflows, transactions, audit writes, injected collaborators, and external
   effects.
+- Named HTTP limiters are attached through route middleware, count the intended
+  responses, use non-sensitive normalized keys, preserve rate-limit headers, and
+  clear successful login failures when required.
 
 ## Evidence Standard
 

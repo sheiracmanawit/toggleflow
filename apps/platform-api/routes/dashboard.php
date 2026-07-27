@@ -5,10 +5,14 @@ declare(strict_types=1);
 use App\Http\Controllers\Dashboard\Auth\SessionController;
 use App\Http\Controllers\Dashboard\FeatureFlagController;
 use App\Http\Controllers\Dashboard\ProjectController;
+use App\Http\RateLimiting\LoginRateLimit;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->name('auth.')->group(function (): void {
-    Route::post('/session', [SessionController::class, 'store'])->name('session.store');
+    Route::post('/session', [SessionController::class, 'store'])
+        ->middleware(ThrottleRequests::using(LoginRateLimit::NAME))
+        ->name('session.store');
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/session', [SessionController::class, 'show'])->name('session.show');

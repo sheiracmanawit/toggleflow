@@ -76,6 +76,9 @@ behavior or architecture to unblock implementation.
 - Keep model methods local to relationships, casts, predicates, and invariants. Put
   multi-model orchestration, transactions, injected collaborators, audit recording,
   and external side effects in application actions.
+- Implement HTTP rate limits as named Laravel route limiters. Use response-based
+  counting when only selected outcomes should consume attempts, and centralize shared
+  key normalization, inspection, and clearing outside controllers.
 - Preserve `/api/v1` response contracts.
 - Treat MySQL as authoritative; do not add Redis for correctness.
 - Use Vue 3 TypeScript and Tailwind without a large component framework.

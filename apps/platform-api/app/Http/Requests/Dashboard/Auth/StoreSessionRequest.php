@@ -23,11 +23,6 @@ class StoreSessionRequest extends FormRequest
         ];
     }
 
-    public function throttleKey(): string
-    {
-        return hash('sha256', $this->string('email')->lower()->toString()).'|'.$this->ip();
-    }
-
     protected function prepareForValidation(): void
     {
         $this->merge([

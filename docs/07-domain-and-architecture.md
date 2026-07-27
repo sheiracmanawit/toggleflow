@@ -231,7 +231,8 @@ models.
 - An environment key cannot select another project or environment.
 - API secrets are generated with cryptographically secure randomness.
 - Key comparison uses secure hashing and avoids storing plaintext.
-- Rate limiting applies to authentication and evaluation endpoints.
+- Named Laravel route limiters apply to authentication and evaluation endpoints.
+  Response-based limits count only the outcomes appropriate to each threat model.
 - Audit metadata uses an allowlist rather than serializing full models or requests.
 - Production errors do not expose stack traces or database details.
 - CORS is configured deliberately for browser consumers; it is not globally open by

@@ -35,6 +35,9 @@ its product acceptance criteria and architecture review.
 - Keep local relationships, casts, predicates, and invariants on models. Use focused
   application actions for multi-model workflows, transactions, audit writes,
   injected dependencies, and external side effects.
+- Prefer named Laravel `throttle` route middleware for HTTP rate limits. Use
+  response-based counting for outcome-specific limits and centralize custom keys and
+  successful resets rather than duplicating limiter branches in controllers.
 - Add or update automated tests in proportion to risk.
 - Run relevant quality checks locally before pushing.
 - Open or update the pull request with the Jira key, change summary, testing evidence,

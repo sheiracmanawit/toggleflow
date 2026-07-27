@@ -61,6 +61,14 @@ Sanctum session model.
 - First-party session and control endpoints use `/dashboard/*`; the public evaluation
   API remains under `/api/v1/*`. Dashboard session creation, lookup, and deletion use
   `/dashboard/auth/session`.
+- Dashboard session creation uses the named Laravel `login` route limiter. The
+  limiter is keyed by normalized email plus IP address, counts only `401`
+  authentication failures, ignores validation and successful responses, and returns
+  the stable JSON `429` envelope with standard rate-limit headers.
+- A successful login clears accumulated failures for the same key. Key normalization,
+  named-middleware storage-key handling, attempt inspection, and clearing remain
+  centralized in `LoginRateLimit`; controllers must not duplicate
+  `tooManyAttempts()` or `hit()` logic.
 - Do not solve a development-origin configuration issue by replacing cookie sessions
   with Passport, JWTs, or browser-stored bearer tokens.
 

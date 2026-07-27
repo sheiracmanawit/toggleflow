@@ -60,6 +60,9 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
   transactions, authorization, external effects, or multi-model writes.
 - Check that model methods remain local and application actions own orchestration,
   transactions, audit writes, injected collaborators, and external side effects.
+- Check that endpoint rate limits use named route middleware where appropriate,
+  count the intended response outcomes, normalize and segment keys safely, preserve
+  standard headers, and reset successful login attempts when required.
 
 ## Must Not
 
