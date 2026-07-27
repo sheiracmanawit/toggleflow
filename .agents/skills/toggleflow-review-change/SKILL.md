@@ -50,6 +50,10 @@ Check where relevant:
 - Complete API keys, hashes, passwords, and bearer headers are absent from storage,
   logs, audit metadata, errors, and later UI responses.
 - Flag state and required audit events commit or roll back together.
+- Audit names use the shared `AuditEventAction` enum; `AuditEvent.action` is enum
+  cast; subjects implement `Auditable` and use `HasAuditEvents`; and application
+  actions call `RecordAuditEvent::record()` within their transaction. Flag direct
+  `AuditEvent` creation and model- or observer-hidden audit writes.
 - Archived projects and flags follow documented evaluation and listing behavior.
 - `/api/v1` response fields, reason codes, status codes, and fallbacks remain stable.
 - Rate limiting is present on sensitive authentication and evaluation paths.
@@ -58,6 +62,14 @@ Check where relevant:
 - State is not communicated through color alone and keyboard behavior remains usable.
 - Tests cover important negative paths rather than only happy behavior.
 - No deferred roadmap capability or unnecessary abstraction entered the MVP.
+- Closed vocabularies use a single backed enum and relevant model cast; open,
+  user-defined, or third-party values are not artificially constrained by enums.
+- Interfaces describe capabilities required by callers, and traits reuse narrow
+  mechanics without hiding dependencies, authorization, transactions, or side
+  effects.
+- Models own local relationships and invariants; application actions own multi-model
+  workflows, transactions, audit writes, injected collaborators, and external
+  effects.
 
 ## Evidence Standard
 

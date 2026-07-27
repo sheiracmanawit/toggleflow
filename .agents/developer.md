@@ -21,9 +21,20 @@ its product acceptance criteria and architecture review.
 - Implement the complete vertical behavior, including authorization and failure paths.
 - Keep controllers and Vue pages thin; put business behavior in appropriate actions,
   services, policies, domain components, or composables.
+- For management auditing, add actions to `AuditEventAction`, cast through the
+  `AuditEvent` model, implement `Auditable` and use `HasAuditEvents` on audit
+  subjects, and call `RecordAuditEvent::record()` inside the owning application
+  transaction. Do not write audit events directly or from model methods or observers.
 - Apply the KISS and DRY rules in the engineering standards: check repeated code for
   shared intent, centralize repeated rules and security invariants, and avoid both
   copy-paste divergence and premature generic abstractions.
+- Use backed enums for approved closed vocabularies and cast the corresponding model
+  attributes. Use a small interface when callers need a shared capability and a
+  trait only for genuinely shared mechanics without hidden service resolution or
+  orchestration.
+- Keep local relationships, casts, predicates, and invariants on models. Use focused
+  application actions for multi-model workflows, transactions, audit writes,
+  injected dependencies, and external side effects.
 - Add or update automated tests in proportion to risk.
 - Run relevant quality checks locally before pushing.
 - Open or update the pull request with the Jira key, change summary, testing evidence,

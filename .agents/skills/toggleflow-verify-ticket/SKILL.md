@@ -32,6 +32,12 @@ Create one row for every acceptance criterion. Add focused cases for relevant:
 - Cross-owner, cross-project, and cross-environment isolation
 - Missing, archived, revoked, and failure states
 - Transaction rollback and audit consistency
+- Audit action enum casting, polymorphic subject resolution, and auditable-model
+  relationships when audit behavior changes
+- Persisted and serialized compatibility when a closed domain value moves to a
+  backed enum
+- Observable behavior and rollback across model methods, traits, and application
+  actions when those boundaries change
 - Public response fields, status codes, fallbacks, and reason codes
 - Secret storage, redaction, one-time display, rotation, and revocation
 - Rate limiting
@@ -46,6 +52,12 @@ Do not expand QA into deferred product features.
 2. Run focused tests that isolate the ticket behavior.
 3. Inspect persistence when a criterion concerns hashes, transactions, constraints,
    audit events, or isolation.
+   For audit changes, verify the stored enum backing value, hydrated
+   `AuditEventAction`, subject relation, subject `auditEvents` relation, allowlisted
+   metadata, and rollback behavior.
+   For other enum or model/action refactors, verify stable persisted and serialized
+   values plus the same successful and failing workflow outcomes; do not treat class
+   shape alone as QA evidence.
 4. Exercise HTTP contracts directly when API behavior is in scope.
 5. Use the available browser-testing capability for user-visible flows when the
    application can run locally.

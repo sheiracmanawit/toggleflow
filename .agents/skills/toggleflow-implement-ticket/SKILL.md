@@ -42,18 +42,21 @@ behavior or architecture to unblock implementation.
 2. Map every acceptance criterion and architect requirement to implementation and
    verification work.
 3. Inspect existing patterns before adding new abstractions.
-4. Implement the smallest complete vertical behavior.
-5. Enforce authorization, validation, isolation, failure behavior, transactions,
+4. Decide deliberately whether each domain value or behavior belongs in a backed
+   enum, interface, trait, model method, or application action using
+   `docs/14-engineering-and-coding-standards.md`.
+5. Implement the smallest complete vertical behavior.
+6. Enforce authorization, validation, isolation, failure behavior, transactions,
    auditing, and secret handling required by the change.
-6. Add tests for the happy path and important negative paths.
-7. Run focused checks during iteration, then all relevant ticket-level gates.
-8. Review the diff for unrelated changes, leaked secrets, debug code, and accidental
+7. Add tests for the happy path and important negative paths.
+8. Run focused checks during iteration, then all relevant ticket-level gates.
+9. Review the diff for unrelated changes, leaked secrets, debug code, and accidental
    contract changes.
-9. Update permanent documentation when delivered behavior, commands, architecture,
+10. Update permanent documentation when delivered behavior, commands, architecture,
    or API contracts change.
-10. Open or update the pull request when the user has authorized the Git and remote
+11. Open or update the pull request when the user has authorized the Git and remote
     workflow, then monitor required CI checks and fix failures until they pass.
-11. Report evidence against every acceptance criterion and architecture constraint.
+12. Report evidence against every acceptance criterion and architecture constraint.
 
 ## ToggleFlow Guardrails
 
@@ -63,6 +66,16 @@ behavior or architecture to unblock implementation.
 - Never persist, log, serialize, or render complete API keys after creation.
 - Scope management behavior through Laravel policies.
 - Commit state changes and required audit events atomically.
+- Define management audit names in `AuditEventAction`, cast `AuditEvent.action`, make
+  audit subjects implement `Auditable` and use `HasAuditEvents`, and record through
+  `RecordAuditEvent::record()` from the owning application transaction. Do not create
+  audit events directly or hide writes in model methods or observers.
+- Use backed enums only for closed domain vocabularies with stable scalar contracts.
+  Use small capability interfaces and narrow implementation traits only when real
+  callers or repeated mechanics justify them.
+- Keep model methods local to relationships, casts, predicates, and invariants. Put
+  multi-model orchestration, transactions, injected collaborators, audit recording,
+  and external side effects in application actions.
 - Preserve `/api/v1` response contracts.
 - Treat MySQL as authoritative; do not add Redis for correctness.
 - Use Vue 3 TypeScript and Tailwind without a large component framework.

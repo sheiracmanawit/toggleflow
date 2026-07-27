@@ -51,6 +51,11 @@ ticket and documentation explicitly move that capability into scope.
 - Treat MySQL as authoritative. Redis is a future cache, not required for correctness.
 - Store environment-specific state separately from flag metadata.
 - Commit release-state changes and their audit events in one transaction.
+- Define management audit action names in the shared string-backed
+  `AuditEventAction` enum and cast `AuditEvent.action` to that enum.
+- Make Eloquent audit subjects implement `Auditable` and use `HasAuditEvents`.
+  Record events through `RecordAuditEvent` from the owning application action; do
+  not hide audit writes behind model methods or observers.
 - Never persist or log plaintext API keys, passwords, bearer headers, or unfiltered
   sensitive request data.
 - Centralize authorization in Laravel policies. Client-side guards are not an
@@ -178,6 +183,12 @@ TypeScript, Tailwind, API, database, testing, security, Git, and documentation
 conventions. When the implementation introduces formatter, linter, type-checker, or
 static-analysis configuration, treat the checked-in configuration as executable
 enforcement of that document.
+
+Apply its design-selection rules consistently: backed enums represent closed domain
+vocabularies; small interfaces define capabilities needed by callers; traits reuse
+narrow mechanics without hidden orchestration; models own local behavior; and
+application actions own workflows, transactions, injected collaborators, audit
+writes, and external side effects.
 
 Do not introduce a conflicting local convention silently. Propose material standards
 changes through documentation review and update all affected tooling in the same

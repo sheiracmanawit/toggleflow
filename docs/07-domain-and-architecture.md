@@ -79,6 +79,16 @@ lookup prefix and secure hash, never the recoverable secret.
 Represents an append-only record of a meaningful management action. It references an
 actor when available, a project, and a polymorphic or explicit subject. Metadata must
 be filtered to prevent passwords, tokens, and complete API keys from being stored.
+The `action` attribute is cast to the shared string-backed `AuditEventAction` enum so
+application code uses one typed vocabulary while persisted values remain stable.
+
+Eloquent models that can be audit subjects implement the `Auditable` contract and
+use the `HasAuditEvents` trait. The contract exposes project and subject identity;
+the trait owns the polymorphic `auditEvents` relationship. Audit creation remains an
+application-layer responsibility: the owning action calls
+`RecordAuditEvent::record()` inside the same transaction as the business change.
+Models and observers must not hide the audit write behind methods such as
+`recordAuditEvent()`.
 
 ## 4. Suggested Relationships
 
@@ -152,6 +162,19 @@ State changes and their audit records should be committed in the same transactio
 Models, value objects, policies, and domain rules enforce invariants. Evaluation
 should return a result object containing the value, reason, and optional metadata,
 not just a raw boolean. That result can grow without changing the evaluator's role.
+
+Use string-backed enums for closed domain vocabularies whose persisted or published
+values must remain stable, such as lifecycle states, audit actions, and evaluation
+reasons. Use interfaces to name capabilities consumed across concrete types, and
+traits only when those types genuinely share a small, state-free implementation.
+An interface defines what callers may rely on; a trait is optional implementation
+reuse and must not become a substitute for an application service.
+
+Keep local relationships, casts, derived values, query scopes, and small invariants on
+models. Put multi-model workflows, transactions, audit recording, authorization-
+sensitive orchestration, and external side effects in focused application actions.
+This keeps model behavior useful without hiding business workflows behind Active
+Record methods.
 
 ### Infrastructure Layer
 
@@ -239,19 +262,30 @@ must prove that enabling or disabling a flag invalidates stale values.
 
 ## 11. Audit Strategy
 
-Audit events describe business actions, not raw HTTP requests. Recommended action
-names include:
+Audit events describe business actions, not raw HTTP requests. Action names are
+defined once in the shared `AuditEventAction` enum, and `AuditEvent.action` is cast
+to that enum. Current persisted values are:
 
 - `project.created`
-- `project.updated`
 - `project.archived`
 - `feature_flag.created`
 - `feature_flag.updated`
 - `feature_flag.archived`
 - `feature_flag.enabled`
 - `feature_flag.disabled`
-- `api_key.created`
-- `api_key.revoked`
+
+Add a new enum case whenever an approved management action introduces a new audit
+event. Expected future values such as `project.updated`, `api_key.created`, and
+`api_key.revoked` become part of the vocabulary only when their approved behavior is
+implemented. Do not repeat action-name string literals in actions, models, tests, or
+resources.
+
+Auditable Eloquent subjects implement `Auditable` and use `HasAuditEvents`.
+`RecordAuditEvent::record()` is the single audit persistence path. The application
+action supplies the actor, typed action, subject, and allowlisted metadata while
+retaining ownership of the database transaction. The trait provides identity and
+relationships only; it must not write audit events or resolve services through the
+application container.
 
 Evaluation requests should not be stored in the audit log. High-volume evaluation
 telemetry is a separate future concern with different retention requirements.
@@ -274,6 +308,8 @@ in policies so the migration does not require rewriting every controller.
 - Feature-test authentication, ownership, validation, and API responses.
 - Test that flags and API keys cannot cross project or environment boundaries.
 - Test audit records in the same scenarios that change state.
+- Test enum casting, polymorphic subject resolution, and the subject's
+  `auditEvents` relationship when adding a new auditable model.
 - Test secrets are shown once and not persisted in plaintext.
 - Add a small browser-level happy-path test only if time permits after backend feature
   coverage is reliable.

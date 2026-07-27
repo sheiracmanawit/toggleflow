@@ -43,12 +43,23 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
 - Resolve evaluation context only from the environment credential.
 - Never persist, serialize, log, or render complete API keys after creation.
 - Keep state changes and audit events transactionally consistent.
+- Confirm audit action names come from `AuditEventAction`, auditable subjects follow
+  the `Auditable` plus `HasAuditEvents` convention, and writes flow through
+  `RecordAuditEvent::record()` from the owning application transaction rather than
+  direct model creation, model write methods, or observers.
 - Preserve documented evaluation responses and safe fallbacks.
 - Confirm Production actions have deliberate UI protection.
 - Confirm failed mutations preserve confirmed state.
 - Look for missing authorization, validation, rate limiting, and negative tests.
 - Identify duplicated knowledge or rules that can diverge, while avoiding findings
   that demand abstraction solely because two code fragments look similar.
+- Check that closed domain vocabularies use one backed enum and appropriate model
+  casts, without forcing enums onto open or user-defined values.
+- Check that interfaces represent capabilities required by callers and traits contain
+  only genuinely shared mechanics. Flag traits that hide service resolution,
+  transactions, authorization, external effects, or multi-model writes.
+- Check that model methods remain local and application actions own orchestration,
+  transactions, audit writes, injected collaborators, and external side effects.
 
 ## Must Not
 
