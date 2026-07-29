@@ -13,4 +13,6 @@ enum AuditEventAction: string
     case FeatureFlagEnabled = 'feature_flag.enabled';
     case FeatureFlagDisabled = 'feature_flag.disabled';
     case FeatureFlagArchived = 'feature_flag.archived';
+    case ApiKeyCreated = 'api_key.created';
+    case ApiKeyRevoked = 'api_key.revoked';
 }

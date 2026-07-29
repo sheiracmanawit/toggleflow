@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Dashboard\ApiKeyController;
 use App\Http\Controllers\Dashboard\Auth\SessionController;
 use App\Http\Controllers\Dashboard\FeatureFlagController;
 use App\Http\Controllers\Dashboard\ProjectController;
@@ -53,6 +54,16 @@ Route::middleware('auth:sanctum')->group(function (): void {
             '/{project}/flags/{flag}/environments/{environment}',
             [FeatureFlagController::class, 'setState'],
         )->whereNumber(['project', 'flag', 'environment'])->name('flags.state');
+
+        Route::get('/{project}/api-keys', [ApiKeyController::class, 'index'])
+            ->whereNumber('project')
+            ->name('api-keys.index');
+        Route::post('/{project}/environments/{environment}/api-keys', [ApiKeyController::class, 'store'])
+            ->whereNumber(['project', 'environment'])
+            ->name('api-keys.store');
+        Route::post('/{project}/api-keys/{apiKey}/revoke', [ApiKeyController::class, 'revoke'])
+            ->whereNumber(['project', 'apiKey'])
+            ->name('api-keys.revoke');
     });
 });
 

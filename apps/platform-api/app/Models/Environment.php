@@ -34,4 +34,10 @@ class Environment extends Model
     {
         return $this->hasMany(EnvironmentFlag::class);
     }
+
+    /** @return HasMany<ApiKey, $this> */
+    public function apiKeys(): HasMany
+    {
+        return $this->hasMany(ApiKey::class);
+    }
 }
