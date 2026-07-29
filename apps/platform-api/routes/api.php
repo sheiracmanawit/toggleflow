@@ -2,12 +2,23 @@
 
 declare(strict_types=1);
 
+use App\Enums\EvaluationErrorCode;
+use App\Http\Controllers\Api\V1\EvaluationController;
+use App\Http\Middleware\AuthenticateEnvironmentApiKey;
+use App\Http\Middleware\ThrottleAuthenticatedEvaluationRequests;
+use App\Http\RateLimiting\EvaluationRateLimit;
+use App\Http\Responses\EvaluationErrorResponse;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
-// The public, versioned feature-flag evaluation API is delivered by a later ticket.
-Route::fallback(static fn () => response()->json([
-    'error' => [
-        'code' => 'NOT_FOUND',
-        'message' => 'The requested API resource was not found.',
-    ],
-], 404))->name('not-found');
+Route::get('/flags/{flagKey}', [EvaluationController::class, 'show'])
+    ->middleware([
+        ThrottleRequests::using(EvaluationRateLimit::INVALID_NAME),
+        AuthenticateEnvironmentApiKey::class,
+        ThrottleAuthenticatedEvaluationRequests::class,
+    ])
+    ->name('flags.show');
+
+Route::fallback(
+    static fn () => EvaluationErrorResponse::make(EvaluationErrorCode::EndpointNotFound),
+)->name('not-found');
