@@ -604,9 +604,11 @@ required by that workflow.
 ## 17. Code Review Standards
 
 Formal code review occurs on the pull request. The reviewer inspects the complete diff
-and discussion, leaves line-specific findings as inline comments, and records
-cross-cutting findings and the recommendation in the pull-request review summary.
-Reviewing only a local diff is preliminary and does not complete the review stage.
+and discussion, then emits line-specific actionable findings as Codex inline
+code-review comments in the current task. Cross-cutting observations, CI status,
+coverage assessment, residual risks, and the recommendation remain in the normal
+response. Reviewing only a local diff is preliminary and does not complete the review
+stage.
 
 Before approval, the reviewer must verify every required CI check passed for the
 current head commit. A result from an older commit is not sufficient. Failed,
@@ -626,6 +628,18 @@ Review in this order:
 Actionable findings require a priority, file and tight line range, concrete failure
 scenario, and explanation. Avoid blocking changes for unsupported stylistic preference
 when formatter and documented standards permit the code.
+
+Use one directive per actionable finding:
+
+```text
+::code-comment{title="[P1] Short issue title" body="Explanation and recommended fix." file="/absolute/path/File.php" start=268 end=274 priority=1}
+```
+
+The title starts with the matching priority label, the file path is absolute, the
+line range is exact and tight, and `priority` is `0`, `1`, `2`, or `3`. These
+annotations exist only in the current Codex task. They do not modify the file, post to
+GitHub, or submit a pull-request review. GitHub feedback is a separate external action
+that requires an explicit request.
 
 The reviewer must assess whether tests adequately cover the ticket's acceptance
 criteria, changed behavior, and credible regression paths. Inspect assertions for the

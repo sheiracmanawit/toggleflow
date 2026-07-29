@@ -104,7 +104,8 @@ ticket and documentation explicitly move that capability into scope.
    pass.
 4. The Code Reviewer reviews the actual change from its pull request, verifies the
    required CI checks passed, assesses whether the tests adequately cover the changed
-   behavior and important risks, and records actionable feedback on the pull request.
+   behavior and important risks, and records actionable findings as Codex inline
+   code-review comments in the current task.
 5. The QA Tester verifies every acceptance criterion and records Passed, Failed,
    Blocked, or Untested with evidence.
 6. The Developer addresses accepted findings before completion.

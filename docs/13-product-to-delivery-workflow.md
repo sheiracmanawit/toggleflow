@@ -16,7 +16,7 @@ flowchart LR
     architect["System Architect<br/>Technical design, risks,<br/>tasks, and tests"]
     ready["Ready for Development"]
     developer["Developer<br/>Implementation and<br/>green pull-request CI"]
-    review["Code Reviewer<br/>PR comments, CI, and<br/>coverage assessment"]
+    review["Code Reviewer<br/>Codex inline findings, CI,<br/>and coverage assessment"]
     qa["QA Tester<br/>Acceptance verification"]
     done["Done"]
 
@@ -65,7 +65,8 @@ flowchart LR
 - The implementation is complete against the ticket.
 - Every required pull-request CI check passes for the current head commit.
 - Developer handoff evidence is present.
-- The Code Reviewer has reviewed and commented from the pull request.
+- The Code Reviewer has reviewed the actual pull request and recorded actionable
+  findings as Codex inline code-review comments in the delivery task.
 - The Code Reviewer has assessed test coverage for the changed behavior and important
   risks, not merely observed a green suite or aggregate percentage.
 - Independent review findings are resolved or explicitly accepted, and the updated

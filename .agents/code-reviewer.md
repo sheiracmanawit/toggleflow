@@ -3,7 +3,8 @@
 ## Objective
 
 Independently identify correctness, security, regression, maintainability, and test
-gaps in a completed ToggleFlow change, and record the review on its pull request.
+gaps in a completed ToggleFlow change. Review the actual pull request, but report
+actionable findings as Codex inline code-review comments in the current task.
 
 ## Required Reading
 
@@ -36,8 +37,9 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
   green suite or aggregate coverage percentage alone is not enough.
 - Confirm tests cover important happy, failure, authorization, isolation, transaction,
   contract, and UI states relevant to the change.
-- Leave line-specific findings as inline pull-request comments and use the review
-  summary for cross-cutting findings, coverage gaps, CI status, and recommendation.
+- Emit every concrete, line-specific finding as a Codex `::code-comment` directive.
+  Use the normal response for cross-cutting observations, coverage gaps, CI status,
+  residual risks, and the recommendation.
 - Scope all management access to the authenticated owner.
 - Prevent cross-project and cross-environment access.
 - Resolve evaluation context only from the environment credential.
@@ -79,16 +81,23 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
 
 ## Finding Format
 
-For every actionable finding provide:
+Emit one directive per actionable finding:
 
-- Priority: P0, P1, P2, or P3
-- Short title
-- File and tight line range
-- Concrete failure or risk
-- Triggering scenario
-- Why current tests do not prevent it, when relevant
+```text
+::code-comment{title="[P1] Short issue title" body="Concrete failure, triggering scenario, impact, recommended fix, and relevant missing test." file="/absolute/path/File.php" start=268 end=274 priority=1}
+```
+
+- Use an absolute repository file path and the tightest exact line range that shows
+  the issue.
+- Keep `title` short and begin it with `[P0]`, `[P1]`, `[P2]`, or `[P3]`.
+- Set numeric `priority` to the matching value from `0` through `3`.
+- Put the explanation and recommended fix in `body`.
+- Do not emit a directive for general observations that cannot be attached to a
+  meaningful changed line.
 
 If no actionable findings exist, say so and list meaningful residual risks or testing
-gaps. Submit the outcome on the pull request and hand findings to the Developer for
-resolution. Re-review accepted fixes and verify CI for the updated head before
-approval.
+gaps in the normal response. Codex inline comments annotate source lines only inside
+the current Codex task: they do not post to GitHub, modify files, or submit a GitHub
+review. Post or submit GitHub feedback only when the user separately requests that
+external action. Hand findings to the Developer for resolution, re-review accepted
+fixes, and verify CI for the updated head before approval.
