@@ -175,10 +175,14 @@ onBeforeUnmount(() => controller?.abort());
                     <div class="mt-1 flex items-center gap-3">
                         <h1 id="flag-heading" class="text-3xl font-bold">{{ flag.name }}</h1>
                         <span
-                            v-if="flag.status === 'archived'"
-                            class="rounded-full bg-slate-200 px-3 py-1 text-sm font-semibold"
-                            >Archived</span
+                            class="rounded-full px-3 py-1 text-sm font-semibold"
+                            :class="
+                                flag.status === 'active' ? 'bg-emerald-100 text-enabled' : 'bg-slate-200 text-slate-700'
+                            "
+                            :aria-label="`Flag lifecycle: ${flag.status === 'active' ? 'Active' : 'Archived'}`"
                         >
+                            {{ flag.status === 'active' ? 'Active' : 'Archived' }}
+                        </span>
                     </div>
                     <p class="mt-2 text-slate-600">{{ flag.description || 'No flag description yet.' }}</p>
                 </div>

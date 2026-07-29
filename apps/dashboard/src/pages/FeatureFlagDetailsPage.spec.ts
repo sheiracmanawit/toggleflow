@@ -66,6 +66,13 @@ afterEach(() => {
 });
 
 describe('FeatureFlagDetailsPage', () => {
+    it('shows the active lifecycle explicitly', async () => {
+        vi.spyOn(featureFlagService, 'get').mockResolvedValue(structuredClone(flag));
+        const { wrapper } = await mountPage();
+
+        expect(wrapper.get('[aria-label="Flag lifecycle: Active"]').text()).toBe('Active');
+    });
+
     it('requires explicit impact confirmation before changing Production', async () => {
         vi.spyOn(featureFlagService, 'get').mockResolvedValue(structuredClone(flag));
         vi.spyOn(featureFlagService, 'setState').mockResolvedValue({

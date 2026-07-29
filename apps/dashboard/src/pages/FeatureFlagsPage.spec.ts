@@ -113,7 +113,7 @@ describe('FeatureFlagsPage', () => {
                 project_id: 1,
                 name: 'New checkout',
                 key: 'new-checkout',
-                description: null,
+                description: 'Controls the new checkout experience.',
                 status: 'active',
                 updated_at: '2026-07-26T00:00:00Z',
                 environment_states: [
@@ -144,10 +144,13 @@ describe('FeatureFlagsPage', () => {
             'Production',
         ]);
         expect(wrapper.findAll('tbody td').map((cell) => cell.text())).toEqual([
-            'New checkoutnew-checkout',
+            'New checkoutnew-checkoutControls the new checkout experience.',
             'Disabled',
             'Enabled',
             'Enabled',
         ]);
+        expect(
+            wrapper.findAll('p').filter((paragraph) => paragraph.text() === 'Controls the new checkout experience.'),
+        ).toHaveLength(2);
     });
 });

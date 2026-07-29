@@ -164,6 +164,9 @@ onBeforeUnmount(() => controller?.abort());
                                     {{ flag.name }}
                                 </RouterLink>
                                 <p class="mt-1 font-mono text-sm text-slate-500">{{ flag.key }}</p>
+                                <p v-if="flag.description" class="mt-2 max-w-md text-sm text-slate-600">
+                                    {{ flag.description }}
+                                </p>
                             </td>
                             <td v-for="environment in project.environments" :key="environment.id" class="px-5 py-4">
                                 <span
@@ -187,6 +190,9 @@ onBeforeUnmount(() => controller?.abort());
                             {{ flag.name }}
                         </RouterLink>
                         <p class="mt-1 break-all font-mono text-sm text-slate-500">{{ flag.key }}</p>
+                        <p v-if="flag.description" class="mt-2 text-sm text-slate-600">
+                            {{ flag.description }}
+                        </p>
                         <dl class="mt-4 grid gap-2">
                             <div
                                 v-for="state in flag.environment_states"
