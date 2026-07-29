@@ -283,6 +283,7 @@ sequenceDiagram
     participant API as Management API
     participant Policy as Project Policy
     participant Action as SetEnvironmentFlagState
+    participant Recorder as RecordAuditEvent
     participant DB as MySQL
 
     Owner->>UI: Enable new-checkout in Production
@@ -298,7 +299,8 @@ sequenceDiagram
         API->>Action: Set enabled = true
         Action->>DB: Begin transaction
         Action->>DB: Update environment flag
-        Action->>DB: Append feature_flag.enabled event
+        Action->>Recorder: record(flag, actor, FeatureFlagEnabled, metadata)
+        Recorder->>DB: Append feature_flag.enabled event
 
         alt Any write fails
             Action->>DB: Roll back transaction
@@ -313,6 +315,12 @@ sequenceDiagram
         end
     end
 ```
+
+`FeatureFlag` implements `Auditable` and uses `HasAuditEvents`; the same convention
+applies to every Eloquent model that can be an audit subject. `AuditEvent.action` is
+cast to the shared `AuditEventAction` enum. `RecordAuditEvent` centralizes
+persistence, but the application action owns the transaction so the state change and
+event remain visibly atomic.
 
 ## 9. Environment API Key Lifecycle
 

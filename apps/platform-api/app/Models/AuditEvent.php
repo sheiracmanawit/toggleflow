@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AuditEventAction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AuditEvent extends Model
 {
@@ -20,9 +22,16 @@ class AuditEvent extends Model
         'metadata',
     ];
 
+    /** @return MorphTo<Model, $this> */
+    public function subject(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
     protected function casts(): array
     {
         return [
+            'action' => AuditEventAction::class,
             'metadata' => 'array',
         ];
     }

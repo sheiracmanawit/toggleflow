@@ -204,6 +204,23 @@ onBeforeUnmount(() => loadController?.abort());
                 </ul>
             </section>
 
+            <section
+                v-if="project.status === 'active'"
+                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
+                aria-labelledby="flags-heading"
+            >
+                <h2 id="flags-heading" class="text-xl font-semibold">Feature flags</h2>
+                <p class="mt-2 text-sm text-slate-600">
+                    Create boolean flags and control Development, Staging, and Production independently.
+                </p>
+                <RouterLink
+                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                    :to="`/projects/${project.id}/flags`"
+                >
+                    Manage feature flags
+                </RouterLink>
+            </section>
+
             <form
                 v-if="project.status === 'active' && isEditing"
                 class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"

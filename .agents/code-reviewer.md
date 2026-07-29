@@ -3,7 +3,8 @@
 ## Objective
 
 Independently identify correctness, security, regression, maintainability, and test
-gaps in a completed ToggleFlow change, and record the review on its pull request.
+gaps in a completed ToggleFlow change. Review the actual pull request, but report
+actionable findings as Codex inline code-review comments in the current task.
 
 ## Required Reading
 
@@ -36,19 +37,37 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
   green suite or aggregate coverage percentage alone is not enough.
 - Confirm tests cover important happy, failure, authorization, isolation, transaction,
   contract, and UI states relevant to the change.
-- Leave line-specific findings as inline pull-request comments and use the review
-  summary for cross-cutting findings, coverage gaps, CI status, and recommendation.
+- Emit every concrete, line-specific finding as a Codex `::code-comment` directive.
+  Use the normal response for cross-cutting observations, coverage gaps, CI status,
+  residual risks, and the recommendation.
 - Scope all management access to the authenticated owner.
 - Prevent cross-project and cross-environment access.
 - Resolve evaluation context only from the environment credential.
 - Never persist, serialize, log, or render complete API keys after creation.
 - Keep state changes and audit events transactionally consistent.
+- Confirm audit action names come from `AuditEventAction`, auditable subjects follow
+  the `Auditable` plus `HasAuditEvents` convention, and writes flow through
+  `RecordAuditEvent::record()` from the owning application transaction rather than
+  direct model creation, model write methods, or observers.
 - Preserve documented evaluation responses and safe fallbacks.
 - Confirm Production actions have deliberate UI protection.
 - Confirm failed mutations preserve confirmed state.
 - Look for missing authorization, validation, rate limiting, and negative tests.
 - Identify duplicated knowledge or rules that can diverge, while avoiding findings
   that demand abstraction solely because two code fragments look similar.
+- Check that closed domain vocabularies use one backed enum and appropriate model
+  casts, without forcing enums onto open or user-defined values.
+- Check that interfaces represent capabilities required by callers and traits contain
+  only genuinely shared mechanics. Flag traits that hide service resolution,
+  transactions, authorization, external effects, or multi-model writes.
+- Check that model methods remain local and application actions own orchestration,
+  transactions, audit writes, injected collaborators, and external side effects.
+- Check that endpoint rate limits use named route middleware where appropriate,
+  count the intended response outcomes, normalize and segment keys safely, preserve
+  standard headers, and reset successful login attempts when required.
+- Check that route refactors preserve URIs, names, middleware, constraints, and
+  bindings; apply the three-route grouping threshold, two-level nesting cap, and
+  blank-line separation convention.
 
 ## Must Not
 
@@ -62,16 +81,23 @@ gaps in a completed ToggleFlow change, and record the review on its pull request
 
 ## Finding Format
 
-For every actionable finding provide:
+Emit one directive per actionable finding:
 
-- Priority: P0, P1, P2, or P3
-- Short title
-- File and tight line range
-- Concrete failure or risk
-- Triggering scenario
-- Why current tests do not prevent it, when relevant
+```text
+::code-comment{title="[P1] Short issue title" body="Concrete failure, triggering scenario, impact, recommended fix, and relevant missing test." file="/absolute/path/File.php" start=268 end=274 priority=1}
+```
+
+- Use an absolute repository file path and the tightest exact line range that shows
+  the issue.
+- Keep `title` short and begin it with `[P0]`, `[P1]`, `[P2]`, or `[P3]`.
+- Set numeric `priority` to the matching value from `0` through `3`.
+- Put the explanation and recommended fix in `body`.
+- Do not emit a directive for general observations that cannot be attached to a
+  meaningful changed line.
 
 If no actionable findings exist, say so and list meaningful residual risks or testing
-gaps. Submit the outcome on the pull request and hand findings to the Developer for
-resolution. Re-review accepted fixes and verify CI for the updated head before
-approval.
+gaps in the normal response. Codex inline comments annotate source lines only inside
+the current Codex task: they do not post to GitHub, modify files, or submit a GitHub
+review. Post or submit GitHub feedback only when the user separately requests that
+external action. Hand findings to the Developer for resolution, re-review accepted
+fixes, and verify CI for the updated head before approval.

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Http\RateLimiting\LoginRateLimit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    RateLimiter::clear(hash('sha256', 'owner@example.com').'|127.0.0.1');
-    RateLimiter::clear(hash('sha256', 'missing@example.com').'|127.0.0.1');
+    LoginRateLimit::clearFor('owner@example.com', '127.0.0.1');
+    LoginRateLimit::clearFor('missing@example.com', '127.0.0.1');
 });
 
 it('signs in an owner and exposes only the minimal session owner', function (): void {
@@ -111,15 +111,22 @@ it('invalidates the session on logout and denies later dashboard access', functi
     $this->getJson('/dashboard/auth/session')->assertUnauthorized();
 });
 
-it('rate limits repeated invalid login attempts and clears attempts after success', function (): void {
+it('uses route middleware to count only failed login attempts', function (): void {
     User::factory()->create([
         'email' => 'owner@example.com',
         'password' => 'correct-password',
     ]);
 
+    $this->postJson('/dashboard/auth/session', [
+        'email' => 'not-an-email',
+        'password' => '',
+    ])->assertUnprocessable();
+
+    expect(LoginRateLimit::attemptsFor('not-an-email', '127.0.0.1'))->toBe(0);
+
     foreach (range(1, 5) as $attempt) {
         $this->postJson('/dashboard/auth/session', [
-            'email' => 'owner@example.com',
+            'email' => ' OWNER@example.com ',
             'password' => 'wrong-password',
         ])->assertUnauthorized();
     }
@@ -127,18 +134,35 @@ it('rate limits repeated invalid login attempts and clears attempts after succes
     $this->postJson('/dashboard/auth/session', [
         'email' => 'owner@example.com',
         'password' => 'correct-password',
-    ])->assertTooManyRequests()->assertExactJson([
-        'message' => 'Too many sign-in attempts. Please try again later.',
+    ])->assertTooManyRequests()
+        ->assertHeader('X-RateLimit-Limit', '5')
+        ->assertHeader('Retry-After')
+        ->assertExactJson([
+            'message' => 'Too many sign-in attempts. Please try again later.',
+        ]);
+});
+
+it('clears accumulated failed login attempts after success', function (): void {
+    User::factory()->create([
+        'email' => 'owner@example.com',
+        'password' => 'correct-password',
     ]);
 
-    RateLimiter::clear(hash('sha256', 'owner@example.com').'|127.0.0.1');
+    foreach (range(1, 4) as $attempt) {
+        $this->postJson('/dashboard/auth/session', [
+            'email' => 'owner@example.com',
+            'password' => 'wrong-password',
+        ])->assertUnauthorized();
+    }
+
+    expect(LoginRateLimit::attemptsFor('owner@example.com', '127.0.0.1'))->toBe(4);
 
     $this->postJson('/dashboard/auth/session', [
         'email' => 'owner@example.com',
         'password' => 'correct-password',
     ])->assertOk();
 
-    expect(RateLimiter::attempts(hash('sha256', 'owner@example.com').'|127.0.0.1'))->toBe(0);
+    expect(LoginRateLimit::attemptsFor('owner@example.com', '127.0.0.1'))->toBe(0);
 });
 
 it('persists only a password hash for an owner', function (): void {

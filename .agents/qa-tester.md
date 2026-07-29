@@ -21,6 +21,12 @@ remains safe across important alternate, failure, authorization, and responsive 
   recovery behavior relevant to the change.
 - Verify project and environment isolation for sensitive behavior.
 - Verify API responses, fallback reasons, and secret handling where applicable.
+- When enums, capability interfaces, traits, or model/action boundaries change,
+  verify persisted scalar compatibility, hydrated behavior, relationships, visible
+  transaction outcomes, and important failure rollback rather than testing class
+  structure alone.
+- When routes are regrouped, verify the public URI, route name where relevant,
+  middleware, parameter constraints, and response behavior remain unchanged.
 - Verify keyboard, focus, responsive behavior, and non-color state indicators for UI
   changes.
 - Record concrete evidence and identify untested behavior.

@@ -145,6 +145,47 @@ The frontend organization is defined in
   `SetEnvironmentFlagState`, `IssueEnvironmentKey`, and `EvaluateFeatureFlag`.
 - Avoid vague names such as `Manager`, `Helper`, `Utility`, `process()`, or
   `handleData()` without a narrow, obvious responsibility.
+
+### Enums, interfaces, and traits
+
+Use a string-backed enum when a value belongs to a closed, named vocabulary and its
+stored or published representation must remain stable. Typical examples are
+lifecycle states, audit actions, evaluation reasons, and credential statuses.
+
+- Give enum cases domain names and keep backing values compatible with persistence
+  and API contracts.
+- Cast Eloquent attributes to their enum when hydrated application code should be
+  typed.
+- Use the enum at write sites and use its backing value only at persistence-query or
+  serialization boundaries that require a scalar.
+- Add a case through the same product and compatibility review required for changing
+  the underlying domain vocabulary.
+- Do not use an enum for user-defined values, extensible configuration, arbitrary
+  metadata, or an intentionally open set of third-party identifiers.
+- Do not leave duplicate string literals after introducing an enum for the same
+  concept.
+
+Use an interface when a caller needs one capability across multiple concrete types,
+or when it protects an external or architectural boundary. Name the capability
+directly, such as `Auditable`.
+
+- Keep contracts small and behavior-focused.
+- Do not create an interface for every concrete action or service.
+- Do not put methods on a contract merely because one implementation happens to have
+  them.
+
+Use a trait when multiple classes share the same narrow implementation and PHP
+composition is clearer than duplication.
+
+- Prefer traits for relationships, scopes, casts, or small capability mechanics that
+  do not need injected services.
+- Pair a trait with an interface when generic callers require a contract and the
+  implementing models also share mechanics.
+- Keep traits stateless where practical and make side effects explicit.
+- Do not resolve services from the container, own transactions, perform authorization,
+  or orchestrate multi-model writes from a trait.
+- Do not use a trait solely to avoid a few lines of intentionally different code.
+
 ### Error handling
 
 - Do not swallow exceptions or convert all failures into a generic success response.
@@ -168,6 +209,36 @@ The frontend organization is defined in
 - Separate management controllers from `/api/v1` evaluation controllers.
 - Do not put domain rules in route closures.
 
+### Routes
+
+- Group three or more routes when they share meaningful middleware, URI prefixes,
+  name prefixes, parameter constraints, controller context, or parent-resource
+  hierarchy.
+- Count every enclosing route group toward a maximum nesting depth of two. Middleware
+  groups count as a level.
+- When another subgroup would exceed that depth, keep its routes flat within the
+  second group and retain the remaining relative path and route name explicitly.
+- Separate flat logical route families with one blank line. Do not insert blank lines
+  between every route in the same family.
+- Preserve the final URI, route name, middleware, parameter constraints, and binding
+  behavior when refactoring route declarations.
+- Do not create a group merely to remove a token from one or two routes.
+
+Example:
+
+```php
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::prefix('projects')->name('projects.')->group(function (): void {
+        Route::get('/', [ProjectController::class, 'index'])->name('index');
+        Route::post('/', [ProjectController::class, 'store'])->name('store');
+
+        Route::get('/{project}/flags', [FeatureFlagController::class, 'index'])
+            ->whereNumber('project')
+            ->name('flags.index');
+    });
+});
+```
+
 ### Application actions
 
 - Use focused actions for state-changing or reusable business operations.
@@ -177,6 +248,20 @@ The frontend organization is defined in
 - Wrap multi-write invariants in a database transaction.
 - Record required audit events from the application action inside the same transaction
   as the state change.
+- Pass an `Auditable` subject and `AuditEventAction` to
+  `RecordAuditEvent::record()` rather than creating `AuditEvent` records directly.
+
+Choose an application action when the operation:
+
+- coordinates more than one model or persistence write;
+- owns a transaction, audit event, external side effect, or retry boundary;
+- enforces an application workflow used by controllers, commands, or jobs;
+- needs injected collaborators; or
+- has failure behavior that should remain visible and independently testable.
+
+An action may call model methods for local behavior, but the action retains ownership
+of orchestration and transaction boundaries. Do not create an action that merely
+renames one obvious Eloquent call without adding a business boundary.
 
 ### Models
 
@@ -187,7 +272,43 @@ The frontend organization is defined in
 - Avoid hiding security-sensitive or cross-model business operations in observers.
 - Protect mass assignment with explicit fillable or guarded decisions.
 - Cast lifecycle status, timestamps, booleans, and structured metadata deliberately.
+- Cast `AuditEvent.action` to the shared string-backed `AuditEventAction` enum.
+- Models that can be audit subjects implement `Auditable` and use
+  `HasAuditEvents`. Keep the trait limited to audit identity and the polymorphic
+  relationship; do not add a model-level `recordAuditEvent()` write method.
 - Use factories that create valid domain objects by default.
+
+Choose a model method when behavior is local to that model or aggregate and can be
+understood without request state, service resolution, authorization, or external
+effects. Good model methods include derived values, lifecycle predicates, local state
+transitions, relationship helpers, and invariant-preserving changes to the model
+itself.
+
+Model methods must not:
+
+- coordinate unrelated models or conceal required audit writes;
+- begin or commit application transactions;
+- resolve dependencies from Laravel's container;
+- inspect the authenticated request or make authorization decisions; or
+- call external services.
+
+When a local model transition participates in a larger workflow, let an application
+action open the transaction and call the model method.
+
+### Audit events
+
+- Define every management audit action in the shared `AuditEventAction` enum. Do not
+  repeat dot-separated action strings outside that enum.
+- Preserve enum backing values as the stable persistence contract.
+- Use `RecordAuditEvent::record()` as the single audit-event creation path.
+- Let the owning application action define the transaction boundary and call the
+  recorder within it.
+- Use the `Auditable` contract for project and subject identity and
+  `HasAuditEvents` for the polymorphic relationship.
+- Keep audit metadata allowlisted at the call site; never pass entire requests,
+  models, credentials, or unfiltered payloads.
+- Add tests for the action enum cast, subject relationship, required metadata, and
+  rollback when audit persistence fails.
 
 ### Dependency injection
 
@@ -252,6 +373,25 @@ The frontend organization is defined in
 - Make idempotency explicit where retries are likely.
 - Use status codes consistently and test important failures.
 - Avoid returning HTTP 200 for rejected authentication, authorization, or validation.
+
+### HTTP rate limiting
+
+- Define endpoint-specific limits with `RateLimiter::for()` and attach them through
+  named `throttle` route middleware.
+- Use `Limit::after()` when only selected response outcomes should consume attempts;
+  for login, count authentication `401` responses but not validation failures or
+  successful sessions.
+- Segment login attempts by normalized email plus IP without storing the plaintext
+  email in the cache key.
+- Centralize custom limiter names, thresholds, key normalization, inspection, and
+  clearing in a focused rate-limit class when multiple call sites must agree.
+- Clear accumulated login failures after successful authentication.
+- Return intentional JSON `429` responses while preserving Laravel's standard
+  rate-limit and retry headers.
+- Do not duplicate `tooManyAttempts()` and `hit()` branches in controllers when named
+  route middleware can enforce the HTTP boundary.
+- Test which responses count, normalization, threshold behavior, successful reset,
+  response envelope, and rate-limit headers.
 
 ## 8. Database and Migration Standards
 
@@ -464,9 +604,11 @@ required by that workflow.
 ## 17. Code Review Standards
 
 Formal code review occurs on the pull request. The reviewer inspects the complete diff
-and discussion, leaves line-specific findings as inline comments, and records
-cross-cutting findings and the recommendation in the pull-request review summary.
-Reviewing only a local diff is preliminary and does not complete the review stage.
+and discussion, then emits line-specific actionable findings as Codex inline
+code-review comments in the current task. Cross-cutting observations, CI status,
+coverage assessment, residual risks, and the recommendation remain in the normal
+response. Reviewing only a local diff is preliminary and does not complete the review
+stage.
 
 Before approval, the reviewer must verify every required CI check passed for the
 current head commit. A result from an older commit is not sufficient. Failed,
@@ -486,6 +628,18 @@ Review in this order:
 Actionable findings require a priority, file and tight line range, concrete failure
 scenario, and explanation. Avoid blocking changes for unsupported stylistic preference
 when formatter and documented standards permit the code.
+
+Use one directive per actionable finding:
+
+```text
+::code-comment{title="[P1] Short issue title" body="Explanation and recommended fix." file="/absolute/path/File.php" start=268 end=274 priority=1}
+```
+
+The title starts with the matching priority label, the file path is absolute, the
+line range is exact and tight, and `priority` is `0`, `1`, `2`, or `3`. These
+annotations exist only in the current Codex task. They do not modify the file, post to
+GitHub, or submit a pull-request review. GitHub feedback is a separate external action
+that requires an explicit request.
 
 The reviewer must assess whether tests adequately cover the ticket's acceptance
 criteria, changed behavior, and credible regression paths. Inspect assertions for the

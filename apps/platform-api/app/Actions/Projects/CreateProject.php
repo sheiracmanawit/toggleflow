@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions\Projects;
 
+use App\Actions\Audit\RecordAuditEvent;
+use App\Enums\AuditEventAction;
 use App\Enums\ProjectStatus;
-use App\Models\AuditEvent;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\QueryException;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 final class CreateProject
 {
+    public function __construct(private readonly RecordAuditEvent $recordAuditEvent) {}
+
     /** @param array{name: string, slug: string, description?: string|null} $attributes */
     public function execute(User $owner, array $attributes): Project
     {
@@ -28,13 +31,11 @@ final class CreateProject
                     ['name' => 'Production', 'key' => 'production', 'color' => '#7c3aed', 'position' => 3],
                 ]);
 
-                AuditEvent::query()->create([
-                    'project_id' => $project->id,
-                    'actor_id' => $owner->id,
-                    'action' => 'project.created',
-                    'subject_type' => Project::class,
-                    'subject_id' => $project->id,
-                    'metadata' => [
+                $this->recordAuditEvent->record(
+                    $project,
+                    $owner,
+                    AuditEventAction::ProjectCreated,
+                    [
                         'after' => [
                             'name' => $project->name,
                             'slug' => $project->slug,
@@ -42,7 +43,7 @@ final class CreateProject
                             'status' => ProjectStatus::Active->value,
                         ],
                     ],
-                ]);
+                );
 
                 return $project->load('environments');
             });

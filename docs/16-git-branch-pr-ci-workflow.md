@@ -292,9 +292,21 @@ The Code Reviewer performs the formal review from the pull request and must:
 - Map acceptance criteria and important risks to actual test assertions.
 - Check meaningful happy, failure, authorization, isolation, transaction, API, secret,
   accessibility, and UI-state coverage where relevant.
-- Leave line-specific findings as inline PR comments.
-- Put cross-cutting findings, CI status, coverage assessment, and recommendation in the
-  PR review summary.
+- Emit line-specific actionable findings as Codex inline code-review comments in the
+  current task.
+- Put cross-cutting observations, CI status, coverage assessment, residual risks, and
+  the recommendation in the normal response.
+
+Use one directive per actionable finding:
+
+```text
+::code-comment{title="[P1] Short issue title" body="Explanation and recommended fix." file="/absolute/path/File.php" start=268 end=274 priority=1}
+```
+
+Use the matching numeric priority from `0` through `3`, an absolute file path, and the
+tightest exact line range that demonstrates the issue. These annotations exist only
+inside the current Codex task. They do not post to GitHub, modify files, or submit a
+GitHub review. Post GitHub feedback only when the user separately requests it.
 
 A green suite or high aggregate coverage percentage does not prove sufficient test
 coverage. Reviewers evaluate whether the important behavior can regress without a
@@ -305,8 +317,9 @@ pending.
 
 ## 10. Address Review Findings
 
-The Developer evaluates each finding, fixes accepted findings, and replies on the
-corresponding PR thread with the resolution or evidence. After changes:
+The Developer evaluates each finding, fixes accepted findings, and reports the
+resolution or evidence in the delivery task. If the finding was also posted to
+GitHub, reply on the corresponding PR thread. After changes:
 
 ```bash
 git add path/to/changed-file path/to/test
@@ -315,9 +328,10 @@ git push
 gh pr checks --watch
 ```
 
-The Code Reviewer then reviews the new diff, confirms the updated CI run, and resolves
-or continues the discussion. Do not resolve substantive review comments merely to
-hide unresolved work.
+The Code Reviewer then reviews the new diff, confirms the updated CI run, and reports
+whether each Codex inline finding is resolved or remains actionable. If a finding was
+also posted to GitHub, keep that PR discussion open until it is substantively
+resolved.
 
 ## 11. Ready for QA and Merge
 
@@ -325,7 +339,8 @@ A pull request is Ready for QA only when:
 
 - Every acceptance criterion is implemented.
 - All required CI checks pass for the current head commit.
-- The Code Reviewer recorded the review on the pull request.
+- The Code Reviewer reviewed the actual pull request and recorded actionable findings
+  as Codex inline comments in the delivery task.
 - Accepted findings are fixed or explicitly accepted as visible risk.
 - Test coverage is adequate for the changed behavior and important risks.
 - Documentation matches the implementation.

@@ -51,6 +51,11 @@ ticket and documentation explicitly move that capability into scope.
 - Treat MySQL as authoritative. Redis is a future cache, not required for correctness.
 - Store environment-specific state separately from flag metadata.
 - Commit release-state changes and their audit events in one transaction.
+- Define management audit action names in the shared string-backed
+  `AuditEventAction` enum and cast `AuditEvent.action` to that enum.
+- Make Eloquent audit subjects implement `Auditable` and use `HasAuditEvents`.
+  Record events through `RecordAuditEvent` from the owning application action; do
+  not hide audit writes behind model methods or observers.
 - Never persist or log plaintext API keys, passwords, bearer headers, or unfiltered
   sensitive request data.
 - Centralize authorization in Laravel policies. Client-side guards are not an
@@ -66,7 +71,9 @@ ticket and documentation explicitly move that capability into scope.
   unconfigured flags.
 - Authentication errors must not reveal whether a key prefix, project, environment,
   or flag exists.
-- Apply rate limiting to evaluation requests.
+- Apply named Laravel route limiters to authentication and evaluation requests.
+  Use response-based counting when only specific outcomes should consume attempts,
+  and centralize custom key normalization and successful-reset behavior.
 - Client applications remain responsible for a local fallback when ToggleFlow cannot
   be reached.
 
@@ -97,7 +104,8 @@ ticket and documentation explicitly move that capability into scope.
    pass.
 4. The Code Reviewer reviews the actual change from its pull request, verifies the
    required CI checks passed, assesses whether the tests adequately cover the changed
-   behavior and important risks, and records actionable feedback on the pull request.
+   behavior and important risks, and records actionable findings as Codex inline
+   code-review comments in the current task.
 5. The QA Tester verifies every acceptance criterion and records Passed, Failed,
    Blocked, or Untested with evidence.
 6. The Developer addresses accepted findings before completion.
@@ -178,6 +186,17 @@ TypeScript, Tailwind, API, database, testing, security, Git, and documentation
 conventions. When the implementation introduces formatter, linter, type-checker, or
 static-analysis configuration, treat the checked-in configuration as executable
 enforcement of that document.
+
+Apply its design-selection rules consistently: backed enums represent closed domain
+vocabularies; small interfaces define capabilities needed by callers; traits reuse
+narrow mechanics without hidden orchestration; models own local behavior; and
+application actions own workflows, transactions, injected collaborators, audit
+writes, and external side effects.
+
+Group three or more routes when they share meaningful middleware, URI or name
+prefixes, constraints, or resource hierarchy. Keep route-group nesting to two levels;
+within the second group, leave additional route families flat and separate them with
+a blank line.
 
 Do not introduce a conflicting local convention silently. Propose material standards
 changes through documentation review and update all affected tooling in the same

@@ -23,7 +23,7 @@ review unless the user explicitly asks for fixes after receiving findings.
 
 If there is no accessible pull request, explain what evidence is missing and do not
 claim to have completed the Code Reviewer stage. A local diff can support preliminary
-feedback, but formal review and comments belong on the pull request.
+feedback, but formal review still requires the pull request as its source.
 
 ## Review Order
 
@@ -50,6 +50,10 @@ Check where relevant:
 - Complete API keys, hashes, passwords, and bearer headers are absent from storage,
   logs, audit metadata, errors, and later UI responses.
 - Flag state and required audit events commit or roll back together.
+- Audit names use the shared `AuditEventAction` enum; `AuditEvent.action` is enum
+  cast; subjects implement `Auditable` and use `HasAuditEvents`; and application
+  actions call `RecordAuditEvent::record()` within their transaction. Flag direct
+  `AuditEvent` creation and model- or observer-hidden audit writes.
 - Archived projects and flags follow documented evaluation and listing behavior.
 - `/api/v1` response fields, reason codes, status codes, and fallbacks remain stable.
 - Rate limiting is present on sensitive authentication and evaluation paths.
@@ -58,6 +62,20 @@ Check where relevant:
 - State is not communicated through color alone and keyboard behavior remains usable.
 - Tests cover important negative paths rather than only happy behavior.
 - No deferred roadmap capability or unnecessary abstraction entered the MVP.
+- Closed vocabularies use a single backed enum and relevant model cast; open,
+  user-defined, or third-party values are not artificially constrained by enums.
+- Interfaces describe capabilities required by callers, and traits reuse narrow
+  mechanics without hiding dependencies, authorization, transactions, or side
+  effects.
+- Models own local relationships and invariants; application actions own multi-model
+  workflows, transactions, audit writes, injected collaborators, and external
+  effects.
+- Named HTTP limiters are attached through route middleware, count the intended
+  responses, use non-sensitive normalized keys, preserve rate-limit headers, and
+  clear successful login failures when required.
+- Route declarations follow the three-route grouping threshold and two-level nesting
+  cap, visually separate remaining families, and preserve URI, name, middleware,
+  constraint, and binding contracts.
 
 ## Evidence Standard
 
@@ -73,9 +91,11 @@ when aggregate coverage is high.
 
 ## Pull Request and CI Gate
 
-- Leave line-specific findings as inline pull-request comments.
-- Put cross-cutting findings, acceptance gaps, test-coverage assessment, CI status,
-  and the recommendation in the submitted pull-request review summary.
+- Review the actual pull request, including its complete diff and discussion.
+- Emit line-specific actionable findings as Codex inline code-review comments in the
+  current task.
+- Put cross-cutting observations, acceptance gaps, test-coverage assessment, CI
+  status, residual risks, and the recommendation in the normal response.
 - Verify required checks belong to the current head commit, not an older revision.
 - Do not approve while a required check is failing, cancelled, missing, or pending.
 - After fixes, review the updated diff and confirm required CI passes before approval.
@@ -97,17 +117,16 @@ Do not report:
 
 ## Output Format
 
-Lead with findings ordered by priority. For each finding provide:
+Lead with findings ordered by priority. Emit one directive for each actionable
+finding:
 
 ```text
-[P1] Short actionable title
-File: absolute/path:line
-
-Concrete failure, triggering scenario, impact, and relevant missing test.
+::code-comment{title="[P1] Short issue title" body="Concrete failure, triggering scenario, impact, recommended fix, and relevant missing test." file="/absolute/path/File.php" start=268 end=274 priority=1}
 ```
 
-Use the application's inline code-comment directive when available and appropriate.
-Keep line ranges tight.
+Use an absolute path, an exact tight line range, and the matching numeric priority
+from `0` through `3`. Attach findings only to meaningful source lines. Keep general
+observations in the normal response.
 
 After findings, include:
 
@@ -121,6 +140,7 @@ After findings, include:
 If there are no actionable findings, say so explicitly and still report meaningful
 coverage gaps or residual risks.
 
-Record review comments on the pull request when review was requested and remote access
-is available. Do not merge, transition Jira, or implement fixes unless the user
-separately authorizes those actions.
+Codex inline comments exist only in the current Codex task. They do not post to
+GitHub, modify the annotated file, or submit a GitHub review. Post GitHub comments
+only when the user separately requests that external action. Do not merge, transition
+Jira, or implement fixes unless the user separately authorizes those actions.
