@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 import { FeatureFlagValidationError, featureFlagService, projectService } from '../services';
-import type { FeatureFlag, Project, ValidationErrors } from '../types';
+import type { EnvironmentFlagState, FeatureFlag, Project, ValidationErrors } from '../types';
 
 const route = useRoute();
 const router = useRouter();
@@ -19,6 +19,9 @@ const validationErrors = ref<ValidationErrors>({});
 const form = reactive({ name: '', key: '', description: '' });
 const keyWasEdited = ref(false);
 let controller: AbortController | null = null;
+
+const stateFor = (flag: FeatureFlag, environmentId: number): EnvironmentFlagState | undefined =>
+    flag.environment_states.find((state) => state.environment.id === environmentId);
 
 const suggestedKey = computed(() =>
     form.name
@@ -162,10 +165,15 @@ onBeforeUnmount(() => controller?.abort());
                                 </RouterLink>
                                 <p class="mt-1 font-mono text-sm text-slate-500">{{ flag.key }}</p>
                             </td>
-                            <td v-for="state in flag.environment_states" :key="state.environment.id" class="px-5 py-4">
-                                <span class="font-semibold" :class="state.enabled ? 'text-enabled' : 'text-disabled'">
-                                    {{ state.enabled ? 'Enabled' : 'Disabled' }}
+                            <td v-for="environment in project.environments" :key="environment.id" class="px-5 py-4">
+                                <span
+                                    v-if="stateFor(flag, environment.id)"
+                                    class="font-semibold"
+                                    :class="stateFor(flag, environment.id)?.enabled ? 'text-enabled' : 'text-disabled'"
+                                >
+                                    {{ stateFor(flag, environment.id)?.enabled ? 'Enabled' : 'Disabled' }}
                                 </span>
+                                <span v-else class="text-sm font-semibold text-danger">Unavailable</span>
                             </td>
                         </tr>
                     </tbody>

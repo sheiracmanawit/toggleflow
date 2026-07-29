@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Actions\FeatureFlags\ArchiveFeatureFlag;
+use App\Actions\FeatureFlags\SetEnvironmentFlagState;
 use App\Enums\AuditEventAction;
 use App\Enums\FeatureFlagStatus;
 use App\Models\AuditEvent;
@@ -10,6 +12,7 @@ use App\Models\EnvironmentFlag;
 use App\Models\FeatureFlag;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException as AuditStorageFailure;
@@ -276,6 +279,26 @@ it('archives idempotently, retains states, and prevents later mutations', functi
         "/dashboard/projects/{$project->id}/flags/{$flag->id}/environments/{$environment->id}",
         ['enabled' => true],
     )->assertForbidden();
+});
+
+it('rejects an authorized state command when archival commits before its transaction starts', function (): void {
+    $owner = User::factory()->create();
+    $project = projectWithEnvironments($owner);
+    $flag = FeatureFlag::factory()->for($project)->create();
+    $environment = $project->environments()->firstOrFail();
+    $state = EnvironmentFlag::factory()->for($flag)->for($environment)->create();
+    $authorizedFlag = $flag->fresh();
+
+    app(ArchiveFeatureFlag::class)->execute($flag, $owner);
+
+    expect(
+        fn (): FeatureFlag => app(SetEnvironmentFlagState::class)
+            ->execute($authorizedFlag, $environment, $owner, true),
+    )->toThrow(AuthorizationException::class);
+    expect($state->refresh()->enabled)->toBeFalse()
+        ->and(AuditEvent::query()->pluck('action')->all())->toBe([
+            AuditEventAction::FeatureFlagArchived,
+        ]);
 });
 
 it('rolls back archival when the audit event cannot be stored', function (): void {

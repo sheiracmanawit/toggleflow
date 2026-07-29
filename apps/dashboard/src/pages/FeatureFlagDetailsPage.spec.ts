@@ -33,6 +33,14 @@ const flag: FeatureFlag = {
     ],
 };
 
+const secondFlag: FeatureFlag = {
+    ...structuredClone(flag),
+    id: 3,
+    name: 'Search recommendations',
+    key: 'search-recommendations',
+    description: 'Controls recommendation ranking.',
+};
+
 const mountPage = async () => {
     const router = createRouter({
         history: createMemoryHistory(),
@@ -196,5 +204,58 @@ describe('FeatureFlagDetailsPage', () => {
 
         expect(wrapper.get('[role="alert"]').text()).toContain('could not be found or you do not have access');
         expect(wrapper.text()).not.toContain('New checkout');
+    });
+
+    it('resets open workflows when the route changes to another flag', async () => {
+        vi.spyOn(featureFlagService, 'get').mockImplementation((_projectId, flagId) =>
+            Promise.resolve(structuredClone(flagId === 2 ? flag : secondFlag)),
+        );
+        const { wrapper, router } = await mountPage();
+
+        await wrapper
+            .findAll('button')
+            .find((button) => button.text() === 'Edit details')
+            ?.trigger('click');
+        await wrapper.get('[aria-label="Enable New checkout in Production"]').trigger('click');
+        await flushPromises();
+        expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+        expect(wrapper.find('#edit-flag-name').exists()).toBe(true);
+
+        await router.push('/projects/1/flags/3');
+        await flushPromises();
+
+        expect(wrapper.get('h1').text()).toBe('Search recommendations');
+        expect(wrapper.find('#edit-flag-name').exists()).toBe(false);
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    });
+
+    it('discards a late mutation response after the route changes', async () => {
+        vi.spyOn(featureFlagService, 'get').mockImplementation((_projectId, flagId) =>
+            Promise.resolve(structuredClone(flagId === 2 ? flag : secondFlag)),
+        );
+        let resolveState: ((value: FeatureFlag) => void) | undefined;
+        vi.spyOn(featureFlagService, 'setState').mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveState = resolve;
+                }),
+        );
+        const { wrapper, router } = await mountPage();
+
+        await wrapper.get('[aria-label="Enable New checkout in Development"]').trigger('click');
+        await router.push('/projects/1/flags/3');
+        await flushPromises();
+        expect(wrapper.get('h1').text()).toBe('Search recommendations');
+
+        resolveState?.({
+            ...structuredClone(flag),
+            environment_states: flag.environment_states.map((state) =>
+                state.environment.key === 'development' ? { ...state, enabled: true } : state,
+            ),
+        });
+        await flushPromises();
+
+        expect(wrapper.get('h1').text()).toBe('Search recommendations');
+        expect(wrapper.text()).not.toContain('Development is now enabled');
     });
 });

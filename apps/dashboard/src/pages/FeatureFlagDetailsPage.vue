@@ -31,21 +31,44 @@ const ids = (): { projectId: number; flagId: number } => ({
     flagId: Number(route.params.flagId),
 });
 
+const isCurrent = (requested: { projectId: number; flagId: number }): boolean => {
+    const current = ids();
+
+    return current.projectId === requested.projectId && current.flagId === requested.flagId;
+};
+
+const resetWorkflowState = (): void => {
+    isEditing.value = false;
+    isSaving.value = false;
+    saveError.value = '';
+    successMessage.value = '';
+    validationErrors.value = {};
+    form.name = '';
+    form.description = '';
+    pendingEnvironmentId.value = null;
+    stateError.value = '';
+    confirmation.value = null;
+    showArchiveDialog.value = false;
+    isArchiving.value = false;
+    archiveError.value = '';
+};
+
 const load = async (): Promise<void> => {
     controller?.abort();
     controller = new AbortController();
     const requested = ids();
+    resetWorkflowState();
     isLoading.value = true;
     loadError.value = '';
     flag.value = null;
     try {
         const loaded = await featureFlagService.get(requested.projectId, requested.flagId, controller.signal);
-        if (ids().projectId === requested.projectId && ids().flagId === requested.flagId) flag.value = loaded;
+        if (isCurrent(requested)) flag.value = loaded;
     } catch (error: unknown) {
-        if (!axios.isCancel(error))
+        if (!axios.isCancel(error) && isCurrent(requested))
             loadError.value = 'This feature flag could not be found or you do not have access to it.';
     } finally {
-        if (ids().projectId === requested.projectId && ids().flagId === requested.flagId) isLoading.value = false;
+        if (isCurrent(requested)) isLoading.value = false;
     }
 };
 
@@ -65,14 +88,17 @@ const save = async (): Promise<void> => {
     validationErrors.value = {};
     saveError.value = '';
     try {
-        flag.value = await featureFlagService.update(requested.projectId, requested.flagId, form);
+        const updated = await featureFlagService.update(requested.projectId, requested.flagId, form);
+        if (!isCurrent(requested)) return;
+        flag.value = updated;
         isEditing.value = false;
         successMessage.value = 'Flag details saved.';
     } catch (error: unknown) {
+        if (!isCurrent(requested)) return;
         if (error instanceof FeatureFlagValidationError) validationErrors.value = error.errors;
         else saveError.value = 'Changes were not saved. The last confirmed flag information is still shown.';
     } finally {
-        isSaving.value = false;
+        if (isCurrent(requested)) isSaving.value = false;
     }
 };
 
@@ -89,18 +115,21 @@ const changeState = async (state: EnvironmentFlagState, enabled: boolean): Promi
     pendingEnvironmentId.value = state.environment.id;
     stateError.value = '';
     try {
-        flag.value = await featureFlagService.setState(
+        const updated = await featureFlagService.setState(
             requested.projectId,
             requested.flagId,
             state.environment.id,
             enabled,
         );
+        if (!isCurrent(requested)) return;
+        flag.value = updated;
         successMessage.value = `${state.environment.name} is now ${enabled ? 'enabled' : 'disabled'}.`;
         confirmation.value = null;
     } catch {
+        if (!isCurrent(requested)) return;
         stateError.value = `${state.environment.name} was not changed. The last confirmed state is still shown.`;
     } finally {
-        pendingEnvironmentId.value = null;
+        if (isCurrent(requested)) pendingEnvironmentId.value = null;
     }
 };
 
@@ -111,11 +140,11 @@ const archive = async (): Promise<void> => {
     archiveError.value = '';
     try {
         await featureFlagService.archive(requested.projectId, requested.flagId);
-        await router.replace(`/projects/${requested.projectId}/flags`);
+        if (isCurrent(requested)) await router.replace(`/projects/${requested.projectId}/flags`);
     } catch {
-        archiveError.value = 'The flag was not archived. It remains active.';
+        if (isCurrent(requested)) archiveError.value = 'The flag was not archived. It remains active.';
     } finally {
-        isArchiving.value = false;
+        if (isCurrent(requested)) isArchiving.value = false;
     }
 };
 

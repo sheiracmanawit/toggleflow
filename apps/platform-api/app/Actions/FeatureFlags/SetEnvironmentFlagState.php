@@ -9,7 +9,9 @@ use App\Enums\AuditEventAction;
 use App\Models\Environment;
 use App\Models\EnvironmentFlag;
 use App\Models\FeatureFlag;
+use App\Models\Project;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -20,9 +22,25 @@ final class SetEnvironmentFlagState
     public function execute(FeatureFlag $flag, Environment $environment, User $actor, bool $enabled): FeatureFlag
     {
         return DB::transaction(function () use ($flag, $environment, $actor, $enabled): FeatureFlag {
+            $project = Project::query()
+                ->active()
+                ->lockForUpdate()
+                ->find($flag->project_id);
+            if (! $project instanceof Project) {
+                throw new AuthorizationException;
+            }
+
+            $lockedFlag = $project->featureFlags()
+                ->active()
+                ->lockForUpdate()
+                ->find($flag->id);
+            if (! $lockedFlag instanceof FeatureFlag) {
+                throw new AuthorizationException;
+            }
+
             /** @var EnvironmentFlag|null $state */
             $state = EnvironmentFlag::query()
-                ->where('feature_flag_id', $flag->id)
+                ->where('feature_flag_id', $lockedFlag->id)
                 ->where('environment_id', $environment->id)
                 ->lockForUpdate()
                 ->first();
@@ -36,7 +54,7 @@ final class SetEnvironmentFlagState
                 $state->update(['enabled' => $enabled]);
 
                 $this->recordAuditEvent->record(
-                    $flag,
+                    $lockedFlag,
                     $actor,
                     $enabled ? AuditEventAction::FeatureFlagEnabled : AuditEventAction::FeatureFlagDisabled,
                     [
@@ -51,7 +69,7 @@ final class SetEnvironmentFlagState
                 );
             }
 
-            return $flag->refresh()->load('environmentStates.environment');
+            return $lockedFlag->refresh()->load('environmentStates.environment');
         });
     }
 }

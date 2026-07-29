@@ -104,4 +104,50 @@ describe('FeatureFlagsPage', () => {
         expect(wrapper.get('#flag-key').attributes('aria-describedby')).toBe('flag-key-error');
         expect(wrapper.get('#flag-description').attributes('aria-describedby')).toBe('flag-description-error');
     });
+
+    it('aligns populated state cells with environment headers by identity', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        vi.spyOn(featureFlagService, 'list').mockResolvedValue([
+            {
+                id: 2,
+                project_id: 1,
+                name: 'New checkout',
+                key: 'new-checkout',
+                description: null,
+                status: 'active',
+                updated_at: '2026-07-26T00:00:00Z',
+                environment_states: [
+                    {
+                        environment: project.environments[2]!,
+                        enabled: true,
+                        updated_at: '2026-07-26T00:00:00Z',
+                    },
+                    {
+                        environment: project.environments[1]!,
+                        enabled: true,
+                        updated_at: '2026-07-26T00:00:00Z',
+                    },
+                    {
+                        environment: project.environments[0]!,
+                        enabled: false,
+                        updated_at: '2026-07-26T00:00:00Z',
+                    },
+                ],
+            },
+        ]);
+        const { wrapper } = await mountPage();
+
+        expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual([
+            'Flag',
+            'Development',
+            'Staging',
+            'Production',
+        ]);
+        expect(wrapper.findAll('tbody td').map((cell) => cell.text())).toEqual([
+            'New checkoutnew-checkout',
+            'Disabled',
+            'Enabled',
+            'Enabled',
+        ]);
+    });
 });
