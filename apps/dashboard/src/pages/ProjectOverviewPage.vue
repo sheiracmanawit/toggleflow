@@ -221,6 +221,23 @@ onBeforeUnmount(() => loadController?.abort());
                 </RouterLink>
             </section>
 
+            <section
+                v-if="project.status === 'active'"
+                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
+                aria-labelledby="api-keys-heading"
+            >
+                <h2 id="api-keys-heading" class="text-xl font-semibold">API keys</h2>
+                <p class="mt-2 text-sm text-slate-600">
+                    Issue environment-scoped credentials for server-side flag evaluation.
+                </p>
+                <RouterLink
+                    class="mt-4 inline-flex rounded-lg border border-slate-300 px-4 py-2 font-semibold"
+                    :to="`/projects/${project.id}/api-keys`"
+                >
+                    Manage API keys
+                </RouterLink>
+            </section>
+
             <form
                 v-if="project.status === 'active' && isEditing"
                 class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
