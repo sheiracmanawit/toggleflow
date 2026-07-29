@@ -8,7 +8,9 @@ use App\Actions\Audit\RecordAuditEvent;
 use App\Data\IssuedEnvironmentKey;
 use App\Enums\AuditEventAction;
 use App\Models\Environment;
+use App\Models\Project;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -23,7 +25,22 @@ final class IssueEnvironmentKey
         $credential = "tf_env_{$prefix}_{$secret}";
 
         return DB::transaction(function () use ($environment, $actor, $name, $prefix, $secret, $credential): IssuedEnvironmentKey {
-            $apiKey = $environment->apiKeys()->create([
+            $project = Project::query()
+                ->active()
+                ->lockForUpdate()
+                ->find($environment->project_id);
+            if (! $project instanceof Project) {
+                throw new AuthorizationException;
+            }
+
+            $lockedEnvironment = $project->environments()
+                ->lockForUpdate()
+                ->find($environment->id);
+            if (! $lockedEnvironment instanceof Environment) {
+                throw new AuthorizationException;
+            }
+
+            $apiKey = $lockedEnvironment->apiKeys()->create([
                 'name' => $name,
                 'prefix' => $prefix,
                 'secret_hash' => Hash::make($secret),
@@ -32,7 +49,7 @@ final class IssueEnvironmentKey
             $this->recordAuditEvent->record($apiKey, $actor, AuditEventAction::ApiKeyCreated, [
                 'name' => $apiKey->name,
                 'prefix' => $apiKey->prefix,
-                'environment_id' => $environment->id,
+                'environment_id' => $lockedEnvironment->id,
             ]);
 
             return new IssuedEnvironmentKey($apiKey->load('environment'), $credential);

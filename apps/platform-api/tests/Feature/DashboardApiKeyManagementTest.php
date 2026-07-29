@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Actions\ApiKeys\IssueEnvironmentKey;
 use App\Actions\ApiKeys\RevokeEnvironmentKey;
+use App\Actions\Projects\ArchiveProject;
 use App\Enums\AuditEventAction;
 use App\Enums\ProjectStatus;
 use App\Models\ApiKey;
 use App\Models\AuditEvent;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException as AuditStorageFailure;
@@ -165,6 +168,28 @@ it('prevents issuance and revocation for an archived project', function (): void
     $this->actingAs($owner)->postJson(
         "/dashboard/projects/{$project->id}/api-keys/{$apiKey->id}/revoke",
     )->assertForbidden();
+});
+
+it('rejects authorized credential commands when project archival commits before their transactions start', function (): void {
+    $owner = User::factory()->create();
+    $project = apiKeyProject($owner);
+    $authorizedEnvironment = $project->environments()->firstOrFail();
+    $authorizedKey = ApiKey::factory()->for($authorizedEnvironment)->create();
+
+    app(ArchiveProject::class)->execute($project, $owner);
+
+    expect(
+        fn () => app(IssueEnvironmentKey::class)
+            ->execute($authorizedEnvironment, $owner, 'No longer allowed'),
+    )->toThrow(AuthorizationException::class);
+    expect(
+        fn (): ApiKey => app(RevokeEnvironmentKey::class)->execute($authorizedKey, $owner),
+    )->toThrow(AuthorizationException::class);
+    expect(ApiKey::query()->count())->toBe(1)
+        ->and($authorizedKey->refresh()->isRevoked())->toBeFalse()
+        ->and(AuditEvent::query()->pluck('action')->all())->toBe([
+            AuditEventAction::ProjectArchived,
+        ]);
 });
 
 it('rolls back issuance and revocation when audit storage fails', function (): void {
