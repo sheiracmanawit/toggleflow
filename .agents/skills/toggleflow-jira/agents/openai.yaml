@@ -1,0 +1,4 @@
+interface:
+  display_name: "ToggleFlow Jira"
+  short_description: "Read and update ToggleFlow Jira tickets safely"
+  default_prompt: "Use $toggleflow-jira to read or perform an authorized Jira action for a ToggleFlow ticket."

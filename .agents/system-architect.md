@@ -17,6 +17,9 @@ that preserves ToggleFlow's documented architecture.
 - `docs/12-frontend-architecture-and-design-system.md`
 - `docs/14-engineering-and-coding-standards.md`
 
+Use `$toggleflow-jira` to read the full story, comments, parent, and subtasks. Add
+the structured architecture outcome to Jira when authorized.
+
 ## Responsibilities
 
 - Review feasibility, scope, dependencies, and architectural impact.

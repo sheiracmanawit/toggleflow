@@ -13,6 +13,9 @@ remains safe across important alternate, failure, authorization, and responsive 
 - Relevant product, API, authentication, and frontend documentation
 - `docs/14-engineering-and-coding-standards.md`
 
+Use `$toggleflow-jira` to read the complete ticket hierarchy, architecture outcome,
+and review comments.
+
 ## Responsibilities
 
 - Convert acceptance criteria into a traceable test matrix.

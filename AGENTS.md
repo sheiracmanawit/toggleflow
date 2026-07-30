@@ -131,6 +131,8 @@ the role boundaries. Do not present an implementation self-review as independent
 
 Use the repository skills in `.agents/skills` for repeatable delivery stages:
 
+- `$toggleflow-jira` reads complete ToggleFlow ticket context and performs explicitly
+  authorized Jira actions through the project-local REST helper.
 - `$toggleflow-implement-ticket` implements an approved, architecture-reviewed Jira
   ticket with tests and acceptance evidence.
 - `$toggleflow-review-change` independently reviews a completed change and reports
@@ -145,6 +147,15 @@ security-sensitive or high-risk tickets.
 ## Jira Rules
 
 - Work from the ToggleFlow project `TF`.
+- Use `$toggleflow-jira` for complete ticket reads and Jira actions through the
+  project-local `scripts/jira` REST helper.
+- Credentials live only in the Git-ignored `.env.jira`; never print, log, commit, or
+  copy its contents.
+- Jira writes require explicit user authorization or a write explicitly required by
+  the current approved workflow step. Re-read the affected issue after every write.
+- If `.env.jira` is unavailable or Jira returns an authentication or authorization
+  failure, stop the Jira-dependent stage and report the exact failure rather than
+  guessing from stale context.
 - Preserve the parent epic and story hierarchy.
 - User-facing value belongs in Stories; implementation layers belong in Tasks or
   Subtasks.

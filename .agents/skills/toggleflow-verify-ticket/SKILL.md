@@ -19,6 +19,10 @@ match the implementation and do not silently fix defects during verification.
 6. Inspect the completed implementation, tests, developer handoff, and code-review
    outcome.
 
+Use `$toggleflow-jira` for the target, parents, comments, and subtasks. If Jira
+context cannot be retrieved, report the verification as Blocked with the concrete
+authentication, authorization, or API failure.
+
 If implementation or acceptance criteria are unavailable, report verification as
 Blocked rather than inventing expected behavior.
 

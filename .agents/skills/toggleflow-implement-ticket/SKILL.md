@@ -20,8 +20,9 @@ Before editing code:
 5. Read every repository document linked by the ticket or architecture review.
 6. Inspect the current worktree, relevant implementation, tests, and configuration.
 
-Use the Atlassian connector for Jira reads when available. If the ticket cannot be
-retrieved, stop and request its contents or restored access rather than guessing.
+Use `$toggleflow-jira` to fetch the target, parents, comments, and subtasks. If Jira
+cannot be retrieved, stop and report the concrete authentication, authorization, or
+API failure rather than guessing.
 
 ## Readiness Gate
 
