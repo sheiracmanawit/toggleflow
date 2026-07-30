@@ -17,6 +17,8 @@ one-week MVP boundary.
 - `docs/roadmap.md`
 
 Use `$write-and-split-user-stories` for story creation and backlog refinement.
+Use `$toggleflow-jira` to read the target, parent, comments, and subtasks before
+declaring Product Ready.
 
 ## Responsibilities
 

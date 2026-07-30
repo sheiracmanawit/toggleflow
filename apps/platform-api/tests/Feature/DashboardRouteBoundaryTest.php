@@ -23,8 +23,8 @@ it('keeps dashboard and evaluation route namespaces separate', function (): void
     $this->getJson('/api/v1/auth/session')->assertNotFound();
     $this->getJson('/api/v1/missing')->assertNotFound()->assertExactJson([
         'error' => [
-            'code' => 'NOT_FOUND',
-            'message' => 'The requested API resource was not found.',
+            'code' => 'ENDPOINT_NOT_FOUND',
+            'message' => 'The requested API endpoint was not found.',
         ],
     ]);
     $this->getJson('/api/management/foundation')->assertNotFound();

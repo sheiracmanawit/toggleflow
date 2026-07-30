@@ -17,6 +17,8 @@ actionable findings as Codex inline code-review comments in the current task.
 - `docs/14-engineering-and-coding-standards.md`
 - `docs/16-git-branch-pr-ci-workflow.md`
 
+Use `$toggleflow-jira` to read the complete ticket hierarchy and review comments.
+
 ## Review Priorities
 
 1. Security and data isolation

@@ -119,6 +119,36 @@ Demo seeding and credential display are restricted to local or explicit demo
 environments. Set `TOGGLEFLOW_DEMO_ENABLED=false` when local demo access is not
 required; production never enables it from this setting alone.
 
+## Evaluate a feature flag
+
+Create an environment API key in the dashboard, store the one-time credential in the
+client application's secret manager, and send it as a bearer token:
+
+```bash
+curl --fail-with-body \
+  --header "Accept: application/json" \
+  --header "Authorization: Bearer ${TOGGLEFLOW_API_KEY}" \
+  "http://127.0.0.1:8000/api/v1/flags/new-checkout"
+```
+
+A configured boolean flag returns its environment-specific value:
+
+```json
+{
+  "data": {
+    "key": "new-checkout",
+    "value": true,
+    "reason": "STATIC"
+  }
+}
+```
+
+Missing, archived, and unconfigured flags return `false` with a machine-readable
+reason. Client applications must still use a local fallback for network failures,
+server errors, and timeouts. Use a different environment key for each deployment,
+never ship server-side keys in public browser bundles, and redact bearer values from
+logs and error reports.
+
 ## Quality Checks
 
 ```bash
@@ -147,8 +177,8 @@ runs type checking, linting, formatting, Vitest, the production build, and Cypre
 - First-party dashboard endpoints live below `/dashboard` and use Sanctum cookie and
   CSRF authentication. Session creation, lookup, and deletion use
   `/dashboard/auth/session`.
-- Public evaluation endpoints live below `/api/v1` and will use separate opaque,
-  environment-scoped credentials in later tickets.
+- Public evaluation endpoints live below `/api/v1` and use separate opaque,
+  environment-scoped credentials.
 - The Vue SPA owns dashboard navigation and consumes Laravel's JSON APIs. In
   production, a reverse proxy should preferably expose the dashboard and API through
   one HTTPS origin even though they are independently built applications.

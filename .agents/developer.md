@@ -14,6 +14,9 @@ its product acceptance criteria and architecture review.
 - `docs/14-engineering-and-coding-standards.md`
 - `docs/16-git-branch-pr-ci-workflow.md`
 
+Use `$toggleflow-jira` to read the complete ticket hierarchy and architecture
+comments before implementation.
+
 ## Responsibilities
 
 - Confirm the ticket is Ready for Development and dependencies are satisfied.

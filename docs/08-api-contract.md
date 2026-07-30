@@ -22,9 +22,8 @@ Evaluation requests use a bearer token issued for one environment:
 Authorization: Bearer tf_env_<public-prefix>_<secret>
 ```
 
-The exact token format may change before implementation, but it must distinguish
-environment keys from user/session tokens and support lookup without storing the full
-secret.
+Environment keys use this format to distinguish them from user/session tokens and
+support indexed lookup without storing the full secret.
 
 The resolved key determines the project and environment. Requests cannot override
 either value.
@@ -110,6 +109,14 @@ Recommended statuses:
 | 500 | `INTERNAL_ERROR` | An unexpected server failure occurred. |
 
 Internal errors must not reveal stack traces, SQL, hashes, or secret material.
+
+Evaluation requests are limited to 120 requests per minute. Authenticated traffic is
+segmented by environment-key record. Authentication failures are counted by
+normalized client IP, and that failure limit is checked before credential hashing so
+changing a fake public prefix cannot bypass the limit or force unbounded hash work.
+Valid responses do not consume the IP failure limit. A limited response uses the
+`RATE_LIMITED` envelope and includes Laravel's standard `X-RateLimit-Limit`,
+`X-RateLimit-Remaining`, and `Retry-After` headers.
 
 ## 5. Future-compatible Evaluation Request
 

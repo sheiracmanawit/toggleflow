@@ -21,6 +21,10 @@ review unless the user explicitly asks for fixes after receiving findings.
 7. Inspect every required CI check for the current head commit. Read failed-check logs
    far enough to distinguish change failures from infrastructure failures.
 
+Use `$toggleflow-jira` for the target, parents, comments, and subtasks. If Jira
+context cannot be retrieved, identify the concrete failure and do not infer ticket
+requirements from the implementation.
+
 If there is no accessible pull request, explain what evidence is missing and do not
 claim to have completed the Code Reviewer stage. A local diff can support preliminary
 feedback, but formal review still requires the pull request as its source.

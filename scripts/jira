@@ -1,0 +1,244 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly JIRA_SITE="https://sheillc.atlassian.net"
+readonly JIRA_CLOUD_ID="95cc01f8-077b-4dcb-8611-9884ac71553a"
+readonly JIRA_SCOPED_API_BASE="https://api.atlassian.com/ex/jira/${JIRA_CLOUD_ID}"
+readonly KEYCHAIN_SERVICE="toggleflow-jira-api-token"
+readonly REPOSITORY_ROOT="$(git -C "$(dirname "$0")/.." rev-parse --show-toplevel)"
+readonly ENV_FILE="${REPOSITORY_ROOT}/.env.jira"
+
+usage() {
+    cat <<'EOF'
+Usage:
+  scripts/jira configure [email] [classic|scoped]
+  scripts/jira migrate-keychain
+  scripts/jira whoami
+  scripts/jira get ISSUE-KEY
+  scripts/jira search 'JQL'
+  scripts/jira comments ISSUE-KEY
+  scripts/jira comment ISSUE-KEY 'Markdown comment'
+  scripts/jira append-description ISSUE-KEY 'Text to append'
+  scripts/jira request METHOD /rest/api/3/PATH ['JSON body']
+
+Credentials are stored in the Git-ignored .env.jira file with user-only
+filesystem permissions.
+EOF
+}
+
+require_command() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "Required command not found: $1" >&2
+        exit 1
+    fi
+}
+
+configure() {
+    local email="${1:-$(git config user.email || true)}"
+    local mode="${2:-classic}"
+    local token
+
+    if [[ -z "$email" ]]; then
+        echo "Provide the Atlassian account email: scripts/jira configure you@example.com [classic|scoped]" >&2
+        exit 1
+    fi
+
+    if [[ "$email" != *@*.* ]]; then
+        echo "The first argument must be your Atlassian account email, not an API token." >&2
+        exit 1
+    fi
+
+    if [[ "$mode" != "classic" && "$mode" != "scoped" ]]; then
+        echo "Token type must be either classic or scoped." >&2
+        exit 1
+    fi
+
+    read -r -s -p "Jira API token for $email: " token
+    echo
+
+    write_env_file "$email" "$mode" "$token"
+
+    echo "Configured Jira REST access for $JIRA_SITE."
+}
+
+write_env_file() {
+    local email="$1"
+    local mode="$2"
+    local token="$3"
+
+    if [[ -z "$token" ]]; then
+        echo "The Jira API token cannot be empty." >&2
+        exit 1
+    fi
+
+    umask 077
+    {
+        printf 'JIRA_EMAIL=%q\n' "$email"
+        printf 'JIRA_TOKEN_TYPE=%q\n' "$mode"
+        printf 'JIRA_API_TOKEN=%q\n' "$token"
+    } >"$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+}
+
+migrate_keychain() {
+    local email
+    local mode
+    local token
+
+    email="$(git config --local jira.email || true)"
+    mode="$(git config --local jira.token-type || echo classic)"
+    token="$(security find-generic-password \
+        -a "$email" \
+        -s "$KEYCHAIN_SERVICE" \
+        -w 2>/dev/null || true)"
+
+    if [[ -z "$email" || -z "$token" ]]; then
+        echo "No complete Jira configuration was found in macOS Keychain." >&2
+        exit 1
+    fi
+
+    write_env_file "$email" "$mode" "$token"
+    echo "Migrated Jira credentials to $ENV_FILE."
+}
+
+credentials() {
+    if [[ ! -f "$ENV_FILE" ]]; then
+        echo "Jira is not configured. Run: scripts/jira configure [email] [classic|scoped]" >&2
+        exit 1
+    fi
+
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+
+    JIRA_EMAIL="${JIRA_EMAIL:-}"
+    JIRA_TOKEN_TYPE="${JIRA_TOKEN_TYPE:-classic}"
+    JIRA_TOKEN="${JIRA_API_TOKEN:-}"
+
+    if [[ -z "$JIRA_EMAIL" || -z "$JIRA_TOKEN" ]]; then
+        echo "$ENV_FILE is missing JIRA_EMAIL or JIRA_API_TOKEN." >&2
+        exit 1
+    fi
+
+    if [[ "$JIRA_TOKEN_TYPE" == "scoped" ]]; then
+        JIRA_API_BASE="$JIRA_SCOPED_API_BASE"
+    else
+        JIRA_API_BASE="$JIRA_SITE"
+    fi
+}
+
+jira_request() {
+    local method="$1"
+    local path="$2"
+    local body="${3:-}"
+    local curl_config
+
+    credentials
+    curl_config="$(mktemp)"
+    trap 'rm -f "$curl_config"' RETURN
+    chmod 600 "$curl_config"
+    printf 'user = "%s:%s"\n' "$JIRA_EMAIL" "$JIRA_TOKEN" >"$curl_config"
+
+    if [[ -n "$body" ]]; then
+        curl \
+            --silent \
+            --show-error \
+            --fail-with-body \
+            --request "$method" \
+            --config "$curl_config" \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --data "$body" \
+            "${JIRA_API_BASE}${path}"
+    else
+        curl \
+            --silent \
+            --show-error \
+            --fail-with-body \
+            --request "$method" \
+            --config "$curl_config" \
+            --header 'Accept: application/json' \
+            "${JIRA_API_BASE}${path}"
+    fi
+}
+
+require_command curl
+require_command git
+require_command jq
+
+command="${1:-}"
+shift || true
+
+case "$command" in
+    configure)
+        configure "${1:-}" "${2:-classic}"
+        ;;
+    migrate-keychain)
+        [[ $# -eq 0 ]] || { usage >&2; exit 1; }
+        require_command security
+        migrate_keychain
+        ;;
+    get)
+        [[ $# -eq 1 ]] || { usage >&2; exit 1; }
+        jira_request GET "/rest/api/3/issue/$1" | jq
+        ;;
+    whoami)
+        [[ $# -eq 0 ]] || { usage >&2; exit 1; }
+        jira_request GET "/rest/api/3/myself" | jq
+        ;;
+    search)
+        [[ $# -eq 1 ]] || { usage >&2; exit 1; }
+        jira_request POST "/rest/api/3/search/jql" \
+            "$(jq -n --arg jql "$1" '{jql: $jql, maxResults: 100}')" | jq
+        ;;
+    comments)
+        [[ $# -eq 1 ]] || { usage >&2; exit 1; }
+        jira_request GET "/rest/api/3/issue/$1/comment" | jq
+        ;;
+    comment)
+        [[ $# -eq 2 ]] || { usage >&2; exit 1; }
+        jira_request POST "/rest/api/3/issue/$1/comment" \
+            "$(jq -n --arg text "$2" '{
+                body: {
+                    type: "doc",
+                    version: 1,
+                    content: [{
+                        type: "paragraph",
+                        content: [{type: "text", text: $text}]
+                    }]
+                }
+            }')" | jq
+        ;;
+    append-description)
+        [[ $# -eq 2 ]] || { usage >&2; exit 1; }
+        issue="$(jira_request GET "/rest/api/3/issue/$1?fields=description")"
+        payload="$(jq -n \
+            --argjson description "$(jq '.fields.description' <<<"$issue")" \
+            --arg text "$2" \
+            '{
+                fields: {
+                    description: (
+                        $description
+                        | .content += [{
+                            type: "paragraph",
+                            content: [{type: "text", text: $text}]
+                        }]
+                    )
+                }
+            }')"
+        jira_request PUT "/rest/api/3/issue/$1" "$payload" >/dev/null
+        echo "Appended description text to $1."
+        ;;
+    request)
+        [[ $# -ge 2 && $# -le 3 ]] || { usage >&2; exit 1; }
+        [[ "$2" == /rest/api/3/* ]] || {
+            echo "Request path must begin with /rest/api/3/." >&2
+            exit 1
+        }
+        jira_request "$1" "$2" "${3:-}" | jq
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
