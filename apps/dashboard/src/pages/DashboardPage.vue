@@ -66,7 +66,11 @@ onBeforeUnmount(() => controller?.abort());
         </div>
 
         <div v-if="isLoading" class="mt-8 grid gap-4 sm:grid-cols-3" role="status" aria-label="Loading release state">
-            <div v-for="index in 3" :key="index" class="h-28 animate-pulse rounded-2xl bg-slate-200" />
+            <div
+                v-for="index in 3"
+                :key="index"
+                class="h-28 animate-pulse rounded-2xl bg-slate-200 motion-reduce:animate-none"
+            />
         </div>
 
         <div v-else-if="loadError" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6" role="alert">

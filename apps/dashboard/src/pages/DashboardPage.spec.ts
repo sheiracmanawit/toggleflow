@@ -52,6 +52,17 @@ const mountPage = async () => {
 describe('DashboardPage', () => {
     afterEach(() => vi.restoreAllMocks());
 
+    it('stops loading skeleton animation when reduced motion is requested', async () => {
+        vi.spyOn(dashboardService, 'getSummary').mockReturnValue(new Promise<DashboardSummary>(() => undefined));
+        const wrapper = await mountPage();
+
+        const skeletons = wrapper.get('[role="status"]').findAll('div');
+        expect(skeletons).toHaveLength(3);
+        skeletons.forEach((skeleton) => {
+            expect(skeleton.classes()).toContain('motion-reduce:animate-none');
+        });
+    });
+
     it('shows authoritative counts, project summaries, and recent activity', async () => {
         vi.spyOn(dashboardService, 'getSummary').mockResolvedValue(summary);
         const wrapper = await mountPage();
