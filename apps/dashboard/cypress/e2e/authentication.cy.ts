@@ -8,6 +8,13 @@ describe('dashboard authentication', () => {
         cy.contains('Signed in as Demo Owner').should('be.visible');
     };
 
+    const signInAndWaitForDashboard = () => {
+        cy.intercept('GET', '/dashboard/projects').as('dashboardProjects');
+        cy.intercept('GET', '/dashboard/summary').as('dashboardSummary');
+        signIn();
+        cy.wait(['@dashboardProjects', '@dashboardSummary']);
+    };
+
     it('signs in, persists the session, and signs out without restoring protected state', () => {
         cy.visit('/app');
         cy.location('pathname').should('equal', '/sign-in');
@@ -26,7 +33,7 @@ describe('dashboard authentication', () => {
     });
 
     it('returns an expired session to sign in on protected navigation without reloading', () => {
-        signIn();
+        signInAndWaitForDashboard();
         cy.clearCookie('toggleflow-session');
         cy.contains('a', 'ToggleFlow').click();
         cy.location('pathname').should('equal', '/');
@@ -38,7 +45,7 @@ describe('dashboard authentication', () => {
     });
 
     it('clears protected state when a dashboard action discovers an expired session', () => {
-        signIn();
+        signInAndWaitForDashboard();
         cy.clearCookie('toggleflow-session');
         cy.contains('button', 'Sign out').click();
 

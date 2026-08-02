@@ -6,7 +6,8 @@ describe('boolean feature flag management', () => {
         cy.get('input[name="password"]').type('toggleflow-demo', { log: false });
         cy.contains('button', 'Sign in').click();
 
-        cy.contains('a', 'Projects').click();
+        cy.get('button[aria-label="Open navigation"]').click();
+        cy.get('aside[aria-label="Mobile application navigation"]').contains('a', 'Projects').click();
         cy.contains('button', 'Create project').first().click();
         cy.get('#project-name').type('Flag Controls');
         cy.get('form').contains('button', 'Create project').click();

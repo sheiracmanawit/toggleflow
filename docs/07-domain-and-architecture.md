@@ -157,6 +157,19 @@ Use focused actions or services for operations such as:
 
 State changes and their audit records should be committed in the same transaction.
 
+The default Laravel request flow is Controller -> Action -> Eloquent models and query
+scopes -> Database, with typed results and API Resources at the response boundary.
+An action represents one application use case. A service is introduced only for a
+business capability genuinely shared by multiple actions; it is not a required
+pass-through layer.
+
+Do not place a repository layer over Eloquent by default. Eloquent models already own
+persistence mapping, relationships, and local query scopes. A repository is justified
+only by an approved, genuine persistence boundary such as interchangeable storage or
+composition across multiple persistence systems. Complex read projections may use a
+narrowly named query object when that improves ownership or reuse, while the action
+continues to own use-case orchestration.
+
 ### Domain Layer
 
 Models, value objects, policies, and domain rules enforce invariants. Evaluation

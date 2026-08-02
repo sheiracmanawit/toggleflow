@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 import { AppDialog } from '../components/ui';
-import { ProjectValidationError, projectService } from '../services';
-import type { Project, ValidationErrors } from '../types';
+import { featureFlagService, ProjectValidationError, projectService } from '../services';
+import { pinia, useProjectContextStore } from '../stores';
+import type { FeatureFlag, Project, ValidationErrors } from '../types';
 
 const route = useRoute();
 const router = useRouter();
+const projectContextStore = useProjectContextStore(pinia);
 const project = ref<Project | null>(null);
+const flags = ref<FeatureFlag[]>([]);
 const isLoading = ref(true);
 const loadError = ref('');
 const isEditing = ref(false);
@@ -22,6 +25,28 @@ const isArchiving = ref(false);
 const archiveError = ref('');
 const form = reactive({ name: '', description: '' });
 let loadController: AbortController | null = null;
+
+const releaseStateRows = computed(() =>
+    flags.value.map((flag) => ({
+        flag,
+        states: (project.value?.environments ?? []).map((environment) => {
+            const state = flag.environment_states.find((candidate) => candidate.environment.id === environment.id);
+
+            if (state === undefined) {
+                return {
+                    environment,
+                    label: 'Not configured',
+                    symbol: '?',
+                    classes: 'bg-amber-50 text-warning',
+                };
+            }
+
+            return state.enabled
+                ? { environment, label: 'Enabled', symbol: '●', classes: 'bg-emerald-50 text-enabled' }
+                : { environment, label: 'Disabled', symbol: '○', classes: 'bg-slate-100 text-disabled' };
+        }),
+    })),
+);
 
 const resetProjectInteractionState = (): void => {
     isEditing.value = false;
@@ -44,12 +69,17 @@ const load = async (): Promise<void> => {
     isLoading.value = true;
     loadError.value = '';
     project.value = null;
+    flags.value = [];
 
     try {
         const loaded = await projectService.get(requestedId, loadController.signal);
+        const loadedFlags =
+            loaded.status === 'active' ? await featureFlagService.list(requestedId, loadController.signal) : [];
 
         if (Number(route.params.projectId) === requestedId) {
             project.value = loaded;
+            flags.value = loadedFlags;
+            projectContextStore.updateProject(loaded);
         }
     } catch (error: unknown) {
         if (!axios.isCancel(error)) {
@@ -86,6 +116,7 @@ const save = async (): Promise<void> => {
         if (Number(route.params.projectId) !== projectId) return;
 
         project.value = updatedProject;
+        projectContextStore.updateProject(updatedProject);
         isEditing.value = false;
         successMessage.value = 'Project changes saved.';
     } catch (error: unknown) {
@@ -116,11 +147,12 @@ const archive = async (): Promise<void> => {
     archiveError.value = '';
 
     try {
-        await projectService.archive(projectId);
+        const archivedProject = await projectService.archive(projectId);
 
         if (Number(route.params.projectId) !== projectId) return;
 
         showArchiveDialog.value = false;
+        projectContextStore.updateProject(archivedProject);
         await router.replace('/projects');
     } catch {
         if (Number(route.params.projectId) !== projectId) return;
@@ -202,6 +234,104 @@ onBeforeUnmount(() => loadController?.abort());
                         <p class="mt-1 font-mono text-sm text-slate-500">{{ environment.key }}</p>
                     </li>
                 </ul>
+            </section>
+
+            <section v-if="project.status === 'active'" class="mt-8" aria-labelledby="release-state-heading">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <h2 id="release-state-heading" class="text-xl font-semibold">Release state</h2>
+                        <p class="mt-1 text-sm text-slate-600">
+                            Compare each active flag across Development, Staging, and Production.
+                        </p>
+                    </div>
+                    <RouterLink
+                        class="text-sm font-semibold text-brand hover:underline"
+                        :to="`/projects/${project.id}/flags`"
+                    >
+                        Manage flags
+                    </RouterLink>
+                </div>
+                <div v-if="flags.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-white p-6">
+                    <h3 class="font-semibold">No feature flags yet</h3>
+                    <p class="mt-2 text-sm text-slate-600">Create a flag to begin comparing environment state.</p>
+                </div>
+                <ul v-else class="mt-4 grid gap-4 sm:hidden" aria-label="Mobile release state">
+                    <li
+                        v-for="row in releaseStateRows"
+                        :key="row.flag.id"
+                        class="rounded-2xl border border-slate-200 bg-white p-5"
+                    >
+                        <RouterLink
+                            class="font-semibold text-brand hover:underline"
+                            :to="`/projects/${project.id}/flags/${row.flag.id}`"
+                        >
+                            {{ row.flag.name }}
+                        </RouterLink>
+                        <p class="mt-1 font-mono text-xs text-slate-500">{{ row.flag.key }}</p>
+                        <dl class="mt-4 grid gap-3">
+                            <div
+                                v-for="state in row.states"
+                                :key="state.environment.id"
+                                class="flex items-center justify-between gap-4"
+                            >
+                                <dt class="font-medium">{{ state.environment.name }}</dt>
+                                <dd>
+                                    <span
+                                        class="inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold"
+                                        :class="state.classes"
+                                    >
+                                        <span aria-hidden="true">{{ state.symbol }}</span>
+                                        {{ state.label }}
+                                    </span>
+                                </dd>
+                            </div>
+                        </dl>
+                    </li>
+                </ul>
+                <div
+                    v-if="flags.length > 0"
+                    class="mt-4 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white sm:block"
+                >
+                    <table class="min-w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold" scope="col">Flag</th>
+                                <th
+                                    v-for="environment in project.environments"
+                                    :key="environment.id"
+                                    class="px-4 py-3 font-semibold"
+                                    scope="col"
+                                >
+                                    {{ environment.name }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr v-for="row in releaseStateRows" :key="row.flag.id">
+                                <th class="px-4 py-4 font-medium" scope="row">
+                                    <RouterLink
+                                        class="text-brand hover:underline"
+                                        :to="`/projects/${project.id}/flags/${row.flag.id}`"
+                                    >
+                                        {{ row.flag.name }}
+                                    </RouterLink>
+                                    <span class="mt-1 block font-mono text-xs font-normal text-slate-500">
+                                        {{ row.flag.key }}
+                                    </span>
+                                </th>
+                                <td v-for="state in row.states" :key="state.environment.id" class="px-4 py-4">
+                                    <span
+                                        class="inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold"
+                                        :class="state.classes"
+                                    >
+                                        <span aria-hidden="true">{{ state.symbol }}</span>
+                                        {{ state.label }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <section

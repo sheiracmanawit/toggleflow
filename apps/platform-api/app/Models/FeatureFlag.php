@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Contracts\Auditable;
 use App\Enums\FeatureFlagStatus;
+use App\Enums\ProjectStatus;
 use App\Models\Concerns\HasAuditEvents;
 use Database\Factories\FeatureFlagFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,6 +44,14 @@ class FeatureFlag extends Model implements Auditable
     public function scopeActive(Builder $query): void
     {
         $query->where('status', FeatureFlagStatus::Active);
+    }
+
+    /** @param Builder<FeatureFlag> $query */
+    public function scopeForActiveProjectsOwnedBy(Builder $query, User $owner): void
+    {
+        $query->whereHas('project', fn (Builder $project) => $project
+            ->where('owner_id', $owner->id)
+            ->where('status', ProjectStatus::Active));
     }
 
     public function statusValue(): FeatureFlagStatus

@@ -1,9 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ProjectValidationError, projectService } from '../services';
-import type { Project } from '../types';
+import { featureFlagService, ProjectValidationError, projectService } from '../services';
+import { pinia, useProjectContextStore } from '../stores';
+import type { FeatureFlag, Project } from '../types';
 import ProjectOverviewPage from './ProjectOverviewPage.vue';
 
 const project: Project = {
@@ -39,9 +40,17 @@ const mountPage = async () => {
 };
 
 describe('ProjectOverviewPage', () => {
+    const projectContextStore = useProjectContextStore(pinia);
+
+    beforeEach(() => {
+        projectContextStore.resetForTests();
+        vi.spyOn(featureFlagService, 'list').mockResolvedValue([]);
+    });
+
     afterEach(() => {
         document.body.innerHTML = '';
         vi.restoreAllMocks();
+        projectContextStore.resetForTests();
     });
 
     it('shows fixed environments with text and saves server-confirmed metadata', async () => {
@@ -65,6 +74,61 @@ describe('ProjectOverviewPage', () => {
             description: 'Checkout release controls',
         });
         expect(wrapper.get('h1').text()).toBe('Checkout API');
+        expect(projectContextStore.projects[0]?.name).toBe('Checkout API');
+    });
+
+    it('compares each flag across all three environments with text labels', async () => {
+        const flag: FeatureFlag = {
+            id: 4,
+            project_id: 1,
+            name: 'New checkout',
+            key: 'new-checkout',
+            description: null,
+            status: 'active',
+            updated_at: '2026-07-23T00:00:00.000Z',
+            environment_states: project.environments.map((environment) => ({
+                environment,
+                enabled: environment.key !== 'production',
+                updated_at: '2026-07-23T00:00:00.000Z',
+            })),
+        };
+        vi.mocked(featureFlagService.list).mockResolvedValue([flag]);
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        const { wrapper } = await mountPage();
+
+        const table = wrapper.get('table');
+        expect(table.text()).toContain('Development');
+        expect(table.text()).toContain('Staging');
+        expect(table.text()).toContain('Production');
+        expect(table.text()).toContain('Enabled');
+        expect(table.text()).toContain('Disabled');
+        expect(table.text()).toContain('new-checkout');
+    });
+
+    it('shows missing environment state as not configured instead of disabled', async () => {
+        const flag: FeatureFlag = {
+            id: 4,
+            project_id: 1,
+            name: 'Partial checkout',
+            key: 'partial-checkout',
+            description: null,
+            status: 'active',
+            updated_at: '2026-07-23T00:00:00.000Z',
+            environment_states: project.environments.slice(0, 2).map((environment) => ({
+                environment,
+                enabled: true,
+                updated_at: '2026-07-23T00:00:00.000Z',
+            })),
+        };
+        vi.mocked(featureFlagService.list).mockResolvedValue([flag]);
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        const { wrapper } = await mountPage();
+
+        const mobileState = wrapper.get('[aria-label="Mobile release state"]');
+        const productionState = mobileState.findAll('dl > div').find((state) => state.text().includes('Production'));
+        expect(productionState?.text()).toContain('Not configured');
+        expect(productionState?.text()).not.toContain('Disabled');
+        expect(wrapper.get('table').text()).toContain('Not configured');
     });
 
     it('identifies an archived project and removes active-only mutation controls', async () => {
