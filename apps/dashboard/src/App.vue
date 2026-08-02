@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 
@@ -41,6 +41,12 @@ const closeDrawer = async (): Promise<void> => {
     drawerOpen.value = false;
     await nextTick();
     drawerButton.value?.focus();
+};
+
+const closeDrawerAtDesktopBreakpoint = (): void => {
+    if (window.innerWidth >= 768) {
+        drawerOpen.value = false;
+    }
 };
 
 const handleDrawerKeydown = (event: KeyboardEvent): void => {
@@ -88,7 +94,11 @@ const signOut = async (): Promise<void> => {
 watch([() => authStore.isAuthenticated, projectId], () => projectContextStore.load(authStore.isAuthenticated), {
     immediate: true,
 });
-onBeforeUnmount(projectContextStore.cancel);
+onMounted(() => window.addEventListener('resize', closeDrawerAtDesktopBreakpoint));
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', closeDrawerAtDesktopBreakpoint);
+    projectContextStore.cancel();
+});
 </script>
 
 <template>
