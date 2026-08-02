@@ -54,6 +54,8 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const expire = (): void => {
+        if (status.value === 'guest') return;
+
         clear();
         message.value = 'Your session has expired. Please sign in again.';
     };
