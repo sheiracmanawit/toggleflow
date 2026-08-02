@@ -4,12 +4,13 @@ import { onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 import { AppDialog } from '../components/ui';
-import { ProjectValidationError, projectService } from '../services';
-import type { Project, ValidationErrors } from '../types';
+import { featureFlagService, ProjectValidationError, projectService } from '../services';
+import type { FeatureFlag, Project, ValidationErrors } from '../types';
 
 const route = useRoute();
 const router = useRouter();
 const project = ref<Project | null>(null);
+const flags = ref<FeatureFlag[]>([]);
 const isLoading = ref(true);
 const loadError = ref('');
 const isEditing = ref(false);
@@ -44,12 +45,16 @@ const load = async (): Promise<void> => {
     isLoading.value = true;
     loadError.value = '';
     project.value = null;
+    flags.value = [];
 
     try {
         const loaded = await projectService.get(requestedId, loadController.signal);
+        const loadedFlags =
+            loaded.status === 'active' ? await featureFlagService.list(requestedId, loadController.signal) : [];
 
         if (Number(route.params.projectId) === requestedId) {
             project.value = loaded;
+            flags.value = loadedFlags;
         }
     } catch (error: unknown) {
         if (!axios.isCancel(error)) {
@@ -202,6 +207,88 @@ onBeforeUnmount(() => loadController?.abort());
                         <p class="mt-1 font-mono text-sm text-slate-500">{{ environment.key }}</p>
                     </li>
                 </ul>
+            </section>
+
+            <section v-if="project.status === 'active'" class="mt-8" aria-labelledby="release-state-heading">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <h2 id="release-state-heading" class="text-xl font-semibold">Release state</h2>
+                        <p class="mt-1 text-sm text-slate-600">
+                            Compare each active flag across Development, Staging, and Production.
+                        </p>
+                    </div>
+                    <RouterLink
+                        class="text-sm font-semibold text-brand hover:underline"
+                        :to="`/projects/${project.id}/flags`"
+                    >
+                        Manage flags
+                    </RouterLink>
+                </div>
+                <div v-if="flags.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-white p-6">
+                    <h3 class="font-semibold">No feature flags yet</h3>
+                    <p class="mt-2 text-sm text-slate-600">Create a flag to begin comparing environment state.</p>
+                </div>
+                <div v-else class="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                    <table class="min-w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold" scope="col">Flag</th>
+                                <th
+                                    v-for="environment in project.environments"
+                                    :key="environment.id"
+                                    class="px-4 py-3 font-semibold"
+                                    scope="col"
+                                >
+                                    {{ environment.name }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr v-for="flag in flags" :key="flag.id">
+                                <th class="px-4 py-4 font-medium" scope="row">
+                                    <RouterLink
+                                        class="text-brand hover:underline"
+                                        :to="`/projects/${project.id}/flags/${flag.id}`"
+                                    >
+                                        {{ flag.name }}
+                                    </RouterLink>
+                                    <span class="mt-1 block font-mono text-xs font-normal text-slate-500">
+                                        {{ flag.key }}
+                                    </span>
+                                </th>
+                                <td v-for="environment in project.environments" :key="environment.id" class="px-4 py-4">
+                                    <span
+                                        class="inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold"
+                                        :class="
+                                            flag.environment_states.find(
+                                                (state) => state.environment.id === environment.id,
+                                            )?.enabled
+                                                ? 'bg-emerald-50 text-enabled'
+                                                : 'bg-slate-100 text-disabled'
+                                        "
+                                    >
+                                        <span aria-hidden="true">
+                                            {{
+                                                flag.environment_states.find(
+                                                    (state) => state.environment.id === environment.id,
+                                                )?.enabled
+                                                    ? '●'
+                                                    : '○'
+                                            }}
+                                        </span>
+                                        {{
+                                            flag.environment_states.find(
+                                                (state) => state.environment.id === environment.id,
+                                            )?.enabled
+                                                ? 'Enabled'
+                                                : 'Disabled'
+                                        }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <section

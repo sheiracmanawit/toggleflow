@@ -26,8 +26,8 @@ const translateError = (error: unknown): never => {
 };
 
 export const projectService = {
-    async list(): Promise<ProjectSummary[]> {
-        const response = await dashboardHttp.get<DataResponse<ProjectSummary[]>>('/dashboard/projects');
+    async list(signal?: AbortSignal): Promise<ProjectSummary[]> {
+        const response = await dashboardHttp.get<DataResponse<ProjectSummary[]>>('/dashboard/projects', { signal });
         return response.data.data;
     },
 

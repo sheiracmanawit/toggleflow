@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Dashboard\ApiKeyController;
 use App\Http\Controllers\Dashboard\Auth\SessionController;
+use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\FeatureFlagController;
 use App\Http\Controllers\Dashboard\ProjectController;
 use App\Http\RateLimiting\LoginRateLimit;
@@ -22,6 +23,8 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
 });
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('/summary', [DashboardController::class, 'show'])->name('summary');
+
     Route::prefix('projects')->name('projects.')->group(function (): void {
         Route::get('/', [ProjectController::class, 'index'])->name('index');
         Route::post('/', [ProjectController::class, 'store'])->name('store');

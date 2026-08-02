@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AuditEventAction;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AuditEvent extends Model
@@ -26,6 +28,40 @@ class AuditEvent extends Model
     public function subject(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /** @return BelongsTo<Project, $this> */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_id');
+    }
+
+    public function actionValue(): AuditEventAction
+    {
+        $action = $this->getAttribute('action');
+
+        return $action instanceof AuditEventAction ? $action : AuditEventAction::from($action);
+    }
+
+    /** @return array<string, mixed> */
+    public function metadataValue(): array
+    {
+        $metadata = $this->getAttribute('metadata');
+
+        return is_array($metadata) ? $metadata : [];
+    }
+
+    /** @param Builder<AuditEvent> $query */
+    public function scopeForOwner(Builder $query, User $owner): void
+    {
+        $query->whereHas('project', fn (Builder $project) => $project
+            ->where('owner_id', $owner->id));
     }
 
     protected function casts(): array

@@ -45,4 +45,36 @@ describe('project management', () => {
     it('creates, reviews, renames, and archives a project on a desktop-sized screen', () => {
         exerciseProjectLifecycle(1280, 900, 'Desktop');
     });
+
+    it('shows release state and keyboard-accessible project navigation on mobile', () => {
+        cy.viewport(390, 844);
+        signIn();
+
+        cy.contains('dt', 'Active projects').should('be.visible');
+        cy.contains('dt', 'Active flags').should('be.visible');
+        cy.contains('h2', 'Recent activity').should('be.visible');
+        cy.contains('a', 'Projects').click();
+        cy.contains('button', 'Create project').first().click();
+        cy.get('#project-name').type('Release State Mobile');
+        cy.get('form').contains('button', 'Create project').click();
+        cy.contains('a', 'Manage feature flags').click();
+        cy.contains('button', 'Create flag').first().click();
+        cy.get('#flag-name').type('Mobile comparison');
+        cy.get('form').contains('button', 'Create flag').click();
+
+        cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
+        cy.get('aside[aria-label="Mobile application navigation"]')
+            .should('be.focused')
+            .contains('a', 'Project overview')
+            .click();
+        cy.contains('h2', 'Release state').should('be.visible');
+        cy.contains('th', 'Development').should('exist');
+        cy.contains('th', 'Staging').should('exist');
+        cy.contains('th', 'Production').should('exist');
+        cy.contains('Mobile comparison').should('be.visible');
+
+        cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
+        cy.get('aside[aria-label="Mobile application navigation"]').should('be.focused').type('{esc}');
+        cy.get('button[aria-label="Open navigation"]').should('be.focused');
+    });
 });

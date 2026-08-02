@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Contracts\Auditable;
+use App\Enums\FeatureFlagStatus;
 use App\Enums\ProjectStatus;
 use App\Models\Concerns\HasAuditEvents;
 use Database\Factories\ProjectFactory;
@@ -44,6 +45,24 @@ class Project extends Model implements Auditable
         return $this->hasMany(FeatureFlag::class);
     }
 
+    /** @return HasMany<FeatureFlag, $this> */
+    public function activeFeatureFlags(): HasMany
+    {
+        return $this->hasMany(FeatureFlag::class)
+            ->where('status', FeatureFlagStatus::Active);
+    }
+
+    /** @return HasMany<FeatureFlag, $this> */
+    public function productionEnabledFeatureFlags(): HasMany
+    {
+        return $this->hasMany(FeatureFlag::class)
+            ->where('status', FeatureFlagStatus::Active)
+            ->whereHas('environmentStates', fn (Builder $state) => $state
+                ->where('enabled', true)
+                ->whereHas('environment', fn (Builder $environment) => $environment
+                    ->where('key', 'production')));
+    }
+
     public function auditProjectId(): int
     {
         return $this->auditSubjectId();
@@ -53,6 +72,12 @@ class Project extends Model implements Auditable
     public function scopeActive(Builder $query): void
     {
         $query->where('status', ProjectStatus::Active);
+    }
+
+    /** @param Builder<Project> $query */
+    public function scopeOwnedBy(Builder $query, User $owner): void
+    {
+        $query->where('owner_id', $owner->id);
     }
 
     public function statusValue(): ProjectStatus

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\FeatureFlagStatus;
+use App\Enums\ProjectStatus;
 use Database\Factories\EnvironmentFlagFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +30,23 @@ class EnvironmentFlag extends Model
     public function featureFlag(): BelongsTo
     {
         return $this->belongsTo(FeatureFlag::class);
+    }
+
+    /** @param Builder<EnvironmentFlag> $query */
+    public function scopeProductionEnabledForActiveProjectsOwnedBy(Builder $query, User $owner): void
+    {
+        $query
+            ->where('enabled', true)
+            ->whereHas('environment', fn (Builder $environment) => $environment
+                ->where('key', 'production')
+                ->whereHas('project', fn (Builder $project) => $project
+                    ->where('owner_id', $owner->id)
+                    ->where('status', ProjectStatus::Active)))
+            ->whereHas('featureFlag', fn (Builder $featureFlag) => $featureFlag
+                ->where('status', FeatureFlagStatus::Active)
+                ->whereHas('project', fn (Builder $project) => $project
+                    ->where('owner_id', $owner->id)
+                    ->where('status', ProjectStatus::Active)));
     }
 
     protected function casts(): array

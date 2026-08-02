@@ -198,6 +198,37 @@ composition is clearer than duplication.
 
 ## 5. Laravel Standards
 
+### Default backend request flow
+
+Use this flow by default for Laravel application behavior:
+
+```text
+Request -> Controller -> Action -> Eloquent models and query scopes -> Database
+                              -> typed result -> API Resource
+```
+
+- Controllers own HTTP concerns: validated input, authenticated context,
+  authorization coordination, action invocation, and the response.
+- Actions own one application use case and coordinate the models, transactions,
+  audit recording, and other collaborators required by that use case.
+- Eloquent models own persistence mapping, relationships, casts, local predicates,
+  query scopes, and small invariants.
+- Services are optional reusable business capabilities used by multiple actions;
+  they are not a mandatory pass-through layer between an action and a model.
+- Typed data objects or read models carry structured results between the application
+  and HTTP layers. API Resources own the external JSON representation.
+
+Do not add repositories as a standard layer over Eloquent. A class that only renames
+`Model::query()`, `find()`, `save()`, or relationship operations adds indirection
+without creating a useful boundary. Introduce a repository only when an approved
+design requires a genuine persistence boundary, such as interchangeable storage
+implementations or data composed from multiple persistence systems.
+
+For complex reads, keep cross-model orchestration in a focused action. Put reusable,
+model-local filters in named Eloquent scopes. Extract a narrowly named query object
+only when one projection remains difficult to understand or is reused; do not call
+that object a repository or hide Eloquent merely for layering symmetry.
+
 ### Controllers and requests
 
 - Keep controllers thin: receive the request, coordinate authorization, invoke one

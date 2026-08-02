@@ -1,9 +1,9 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ProjectValidationError, projectService } from '../services';
-import type { Project } from '../types';
+import { featureFlagService, ProjectValidationError, projectService } from '../services';
+import type { FeatureFlag, Project } from '../types';
 import ProjectOverviewPage from './ProjectOverviewPage.vue';
 
 const project: Project = {
@@ -39,6 +39,10 @@ const mountPage = async () => {
 };
 
 describe('ProjectOverviewPage', () => {
+    beforeEach(() => {
+        vi.spyOn(featureFlagService, 'list').mockResolvedValue([]);
+    });
+
     afterEach(() => {
         document.body.innerHTML = '';
         vi.restoreAllMocks();
@@ -65,6 +69,34 @@ describe('ProjectOverviewPage', () => {
             description: 'Checkout release controls',
         });
         expect(wrapper.get('h1').text()).toBe('Checkout API');
+    });
+
+    it('compares each flag across all three environments with text labels', async () => {
+        const flag: FeatureFlag = {
+            id: 4,
+            project_id: 1,
+            name: 'New checkout',
+            key: 'new-checkout',
+            description: null,
+            status: 'active',
+            updated_at: '2026-07-23T00:00:00.000Z',
+            environment_states: project.environments.map((environment) => ({
+                environment,
+                enabled: environment.key !== 'production',
+                updated_at: '2026-07-23T00:00:00.000Z',
+            })),
+        };
+        vi.mocked(featureFlagService.list).mockResolvedValue([flag]);
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        const { wrapper } = await mountPage();
+
+        const table = wrapper.get('table');
+        expect(table.text()).toContain('Development');
+        expect(table.text()).toContain('Staging');
+        expect(table.text()).toContain('Production');
+        expect(table.text()).toContain('Enabled');
+        expect(table.text()).toContain('Disabled');
+        expect(table.text()).toContain('new-checkout');
     });
 
     it('identifies an archived project and removes active-only mutation controls', async () => {
