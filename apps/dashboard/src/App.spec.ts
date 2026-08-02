@@ -4,12 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App.vue';
 import { projectService } from './services';
-import { pinia, useAuthStore } from './stores';
+import { pinia, useAuthStore, useProjectContextStore } from './stores';
 
 describe('App', () => {
     const authStore = useAuthStore(pinia);
+    const projectContextStore = useProjectContextStore(pinia);
 
     beforeEach(() => {
+        projectContextStore.resetForTests();
         vi.spyOn(projectService, 'list').mockResolvedValue([]);
     });
 
@@ -17,6 +19,7 @@ describe('App', () => {
         document.body.innerHTML = '';
         vi.restoreAllMocks();
         authStore.resetForTests();
+        projectContextStore.resetForTests();
     });
 
     it('renders only implemented application and project navigation', async () => {
@@ -75,6 +78,7 @@ describe('App', () => {
             history: createMemoryHistory(),
             routes: [
                 { path: '/projects/:projectId', component: { template: '<h1>Project</h1>' } },
+                { path: '/projects/:projectId/flags', component: { template: '<h1>Flags</h1>' } },
                 { path: '/sign-in', component: { template: '<h1>Sign in</h1>' } },
             ],
         });
@@ -88,9 +92,18 @@ describe('App', () => {
         await flushPromises();
         expect(router.currentRoute.value.path).toBe('/projects/2');
         expect(wrapper.get('nav[aria-label="Application"]').text()).toContain('Project overview');
+
+        projectContextStore.updateProject({
+            ...projectContextStore.projects[0],
+            name: 'Payments API',
+        });
+        await router.push('/projects/2/flags');
+        await flushPromises();
+        expect(wrapper.get('nav[aria-label="Application"]').text()).toContain('Payments API');
+        expect(wrapper.get('#project-switcher').text()).toContain('Payments API');
     });
 
-    it('moves focus into the mobile drawer and returns it after Escape', async () => {
+    it('contains focus in the mobile drawer and returns it after Escape', async () => {
         authStore.status = 'authenticated';
         authStore.owner = { id: 1, name: 'Demo Owner', email: 'owner@example.test' };
         const router = createRouter({
@@ -104,9 +117,18 @@ describe('App', () => {
         const openButton = wrapper.get('button[aria-label="Open navigation"]');
         await openButton.trigger('click');
         await flushPromises();
-        expect(document.activeElement?.getAttribute('aria-label')).toBe('Mobile application navigation');
+        const drawer = wrapper.get('aside[aria-label="Mobile application navigation"]');
+        const closeButton = drawer.findAll('button').find((button) => button.text() === 'Close');
+        const signOutButton = drawer.findAll('button').find((button) => button.text() === 'Sign out');
+        expect(document.activeElement).toBe(closeButton?.element);
+        expect(wrapper.get('header').attributes()).toHaveProperty('inert');
 
-        await wrapper.get('aside[aria-label="Mobile application navigation"]').trigger('keydown', { key: 'Escape' });
+        await closeButton?.trigger('keydown', { key: 'Tab', shiftKey: true });
+        expect(document.activeElement).toBe(signOutButton?.element);
+        await signOutButton?.trigger('keydown', { key: 'Tab' });
+        expect(document.activeElement).toBe(closeButton?.element);
+
+        await drawer.trigger('keydown', { key: 'Escape' });
         await flushPromises();
         expect(document.activeElement).toBe(openButton.element);
     });

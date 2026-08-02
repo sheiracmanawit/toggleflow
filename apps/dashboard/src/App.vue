@@ -1,24 +1,21 @@
 <script setup lang="ts">
-import axios from 'axios';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 
-import { projectService } from './services';
-import { useAuthStore } from './stores';
-import type { ProjectSummary } from './types';
+import { useAuthStore, useProjectContextStore } from './stores';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const projectContextStore = useProjectContextStore();
+const { projects, isLoading: projectsLoading, error: projectsError } = storeToRefs(projectContextStore);
 const drawerOpen = ref(false);
 const drawer = ref<HTMLElement | null>(null);
 const drawerButton = ref<HTMLElement | null>(null);
+const drawerCloseButton = ref<HTMLElement | null>(null);
 const isSigningOut = ref(false);
 const signOutError = ref('');
-const projects = ref<ProjectSummary[]>([]);
-const projectsLoading = ref(false);
-const projectsError = ref('');
-let projectsController: AbortController | null = null;
 
 const projectId = computed(() => {
     const value = route.params.projectId;
@@ -26,36 +23,6 @@ const projectId = computed(() => {
 });
 
 const currentProject = computed(() => projects.value.find((project) => String(project.id) === projectId.value) ?? null);
-
-const loadProjects = async (): Promise<void> => {
-    projectsController?.abort();
-    projects.value = [];
-    projectsError.value = '';
-
-    if (!authStore.isAuthenticated) {
-        projectsLoading.value = false;
-        return;
-    }
-
-    const requestController = new AbortController();
-    projectsController = requestController;
-    projectsLoading.value = true;
-
-    try {
-        const loadedProjects = await projectService.list(requestController.signal);
-        if (projectsController === requestController) {
-            projects.value = loadedProjects;
-        }
-    } catch (error: unknown) {
-        if (projectsController === requestController && !axios.isCancel(error)) {
-            projectsError.value = 'Project navigation is unavailable.';
-        }
-    } finally {
-        if (projectsController === requestController) {
-            projectsLoading.value = false;
-        }
-    }
-};
 
 const switchProject = async (event: globalThis.Event): Promise<void> => {
     const selectedProjectId = (event.target as globalThis.HTMLSelectElement).value;
@@ -67,7 +34,7 @@ const switchProject = async (event: globalThis.Event): Promise<void> => {
 const openDrawer = async (): Promise<void> => {
     drawerOpen.value = true;
     await nextTick();
-    drawer.value?.focus();
+    drawerCloseButton.value?.focus();
 };
 
 const closeDrawer = async (): Promise<void> => {
@@ -84,7 +51,9 @@ const handleDrawerKeydown = (event: KeyboardEvent): void => {
     if (event.key !== 'Tab' || !drawer.value) return;
 
     const focusable = Array.from(
-        drawer.value.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+        drawer.value.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
     );
     if (focusable.length === 0) return;
 
@@ -116,19 +85,21 @@ const signOut = async (): Promise<void> => {
     }
 };
 
-watch([() => authStore.isAuthenticated, projectId], loadProjects, { immediate: true });
-onBeforeUnmount(() => projectsController?.abort());
+watch([() => authStore.isAuthenticated, projectId], () => projectContextStore.load(authStore.isAuthenticated), {
+    immediate: true,
+});
+onBeforeUnmount(projectContextStore.cancel);
 </script>
 
 <template>
     <div class="min-h-screen">
-        <header class="border-b border-slate-200 bg-white">
+        <header class="border-b border-slate-200 bg-white" :inert="drawerOpen">
             <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6" aria-label="Primary">
                 <div class="flex items-center gap-3">
                     <button
                         v-if="authStore.isAuthenticated"
                         ref="drawerButton"
-                        class="rounded-lg border border-slate-300 p-2 lg:hidden"
+                        class="rounded-lg border border-slate-300 p-2 md:hidden"
                         type="button"
                         aria-label="Open navigation"
                         :aria-expanded="drawerOpen"
@@ -138,7 +109,7 @@ onBeforeUnmount(() => projectsController?.abort());
                     </button>
                     <RouterLink class="font-semibold text-brand" to="/"> ToggleFlow </RouterLink>
                 </div>
-                <div v-if="authStore.isAuthenticated" class="flex items-center gap-3">
+                <div v-if="authStore.isAuthenticated" class="hidden items-center gap-3 md:flex">
                     <RouterLink class="rounded px-2 py-2 text-sm font-medium hover:bg-slate-100" to="/app">
                         Dashboard
                     </RouterLink>
@@ -174,8 +145,8 @@ onBeforeUnmount(() => projectsController?.abort());
             </p>
         </header>
 
-        <div v-if="authStore.isAuthenticated" class="mx-auto flex max-w-7xl">
-            <aside class="hidden w-64 shrink-0 border-r border-slate-200 bg-white px-4 py-6 lg:block">
+        <div v-if="authStore.isAuthenticated" class="mx-auto flex max-w-7xl" :inert="drawerOpen">
+            <aside class="hidden w-64 shrink-0 border-r border-slate-200 bg-white px-4 py-6 md:block">
                 <nav aria-label="Application">
                     <RouterLink class="block rounded-lg px-3 py-2 font-medium hover:bg-slate-100" to="/app">
                         Overview
@@ -244,7 +215,7 @@ onBeforeUnmount(() => projectsController?.abort());
             <RouterView />
         </main>
 
-        <div v-if="drawerOpen && authStore.isAuthenticated" class="fixed inset-0 z-50 lg:hidden">
+        <div v-if="drawerOpen && authStore.isAuthenticated" class="fixed inset-0 z-50 md:hidden">
             <button
                 class="absolute inset-0 bg-slate-950/40"
                 type="button"
@@ -254,13 +225,17 @@ onBeforeUnmount(() => projectsController?.abort());
             <aside
                 ref="drawer"
                 class="relative h-full w-80 max-w-[85vw] bg-white p-5 shadow-xl"
-                tabindex="-1"
                 aria-label="Mobile application navigation"
                 @keydown="handleDrawerKeydown"
             >
                 <div class="flex items-center justify-between">
                     <span class="font-semibold text-brand">ToggleFlow</span>
-                    <button class="rounded-lg border border-slate-300 px-3 py-2" type="button" @click="closeDrawer">
+                    <button
+                        ref="drawerCloseButton"
+                        class="rounded-lg border border-slate-300 px-3 py-2"
+                        type="button"
+                        @click="closeDrawer"
+                    >
                         Close
                     </button>
                 </div>
@@ -325,6 +300,19 @@ onBeforeUnmount(() => projectsController?.abort());
                         </RouterLink>
                     </template>
                 </nav>
+                <div class="mt-8 border-t border-slate-200 px-3 pt-5">
+                    <p class="text-sm font-semibold">{{ authStore.owner?.name }}</p>
+                    <p class="mt-1 break-all text-xs text-slate-500">{{ authStore.owner?.email }}</p>
+                    <button
+                        class="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-60"
+                        type="button"
+                        :disabled="isSigningOut"
+                        @click="signOut"
+                    >
+                        {{ isSigningOut ? 'Signing out…' : 'Sign out' }}
+                    </button>
+                    <p v-if="signOutError" class="mt-3 text-sm text-danger" role="alert">{{ signOutError }}</p>
+                </div>
             </aside>
         </div>
     </div>
