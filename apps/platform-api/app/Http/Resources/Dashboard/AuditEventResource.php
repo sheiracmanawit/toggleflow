@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Dashboard;
 
 use App\Models\AuditEvent;
+use App\Models\Environment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -76,7 +77,16 @@ class AuditEventResource extends JsonResource
     {
         $environment = $metadata['environment'] ?? null;
         if (! is_array($environment) && isset($metadata['environment_id'])) {
-            $environment = ['id' => $metadata['environment_id']];
+            $displayEnvironment = $this->relationLoaded('displayEnvironment')
+                ? $this->getRelation('displayEnvironment')
+                : null;
+            $environment = $displayEnvironment instanceof Environment
+                ? [
+                    'id' => $displayEnvironment->id,
+                    'key' => $displayEnvironment->key,
+                    'name' => $displayEnvironment->name,
+                ]
+                : ['id' => $metadata['environment_id']];
         }
         if (! is_array($environment)) {
             return null;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\AuditEventAction;
 use App\Models\ApiKey;
 use App\Models\AuditEvent;
+use App\Models\Environment;
 use App\Models\FeatureFlag;
 use App\Models\Project;
 use App\Models\User;
@@ -96,6 +97,10 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
     $owner = User::factory()->create(['name' => 'Current owner']);
     $project = Project::factory()->for($owner, 'owner')->create(['name' => 'Current project name']);
     $flag = FeatureFlag::factory()->for($project)->create(['name' => 'Current flag name']);
+    $production = Environment::factory()->for($project)->create([
+        'name' => 'Production',
+        'key' => 'production',
+    ]);
 
     AuditEvent::query()->create([
         'project_id' => $project->id,
@@ -127,7 +132,7 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
         'metadata' => [
             'name' => 'Legacy production key',
             'prefix' => 'tf_live_legacy',
-            'environment_id' => 123,
+            'environment_id' => $production->id,
         ],
         'created_at' => now(),
     ]);
@@ -136,6 +141,9 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
         ->getJson("/dashboard/projects/{$project->id}/audit-events")
         ->assertOk()
         ->assertJsonPath('data.0.subject.name', 'Legacy production key')
+        ->assertJsonPath('data.0.environment.id', $production->id)
+        ->assertJsonPath('data.0.environment.key', 'production')
+        ->assertJsonPath('data.0.environment.name', 'Production')
         ->assertJsonPath('data.1.subject.name', 'Current flag name')
         ->assertJsonPath('data.2.subject.name', 'Original project name')
         ->assertJsonPath('data.2.project.name', 'Current project name');
