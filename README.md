@@ -107,12 +107,16 @@ The SPA is available at `http://localhost:5173` and proxies `/dashboard`, `/api`
 to Laravel at `http://127.0.0.1:8000`. Laravel Sanctum's
 `/sanctum/csrf-cookie` endpoint initializes CSRF protection before sign-in.
 
-The default local configuration enables a deterministic demo owner after `php artisan
-db:seed`:
+The default local configuration enables a deterministic release fixture after `php
+artisan db:seed`. The command is idempotent and may be run again without duplicating
+the fixture:
 
 ```text
 Email: owner@toggleflow.test
 Password: toggleflow-demo
+Project: Checkout Service
+Environments: Development, Staging, Production
+Feature flag: new-checkout (disabled in every environment)
 ```
 
 Demo seeding and credential display are restricted to local or explicit demo
@@ -148,6 +152,28 @@ reason. Client applications must still use a local fallback for network failures
 server errors, and timeouts. Use a different environment key for each deployment,
 never ship server-side keys in public browser bundles, and redact bearer values from
 logs and error reports.
+
+## Demo the MVP release workflow
+
+The seeded fixture supports the complete release demonstration without database
+edits or a pre-generated credential:
+
+1. Sign in with the documented demo account and open **Checkout Service**.
+2. Open **API keys**, issue a key for Production, copy its one-time value into the
+   local `TOGGLEFLOW_API_KEY` shell variable, and acknowledge the disclosure.
+3. Run the cURL evaluation above and observe `false` for `new-checkout`.
+4. Open **Feature flags** and enable Development. Evaluate with the Production key
+   again and confirm Production remains `false`.
+5. Enable Production after reviewing its impact confirmation. The next evaluation
+   returns `true` without an application deployment.
+6. Disable Production to demonstrate rollback. The next evaluation returns `false`.
+7. Open **Audit history** and verify both Production changes include the demo owner
+   and timestamps.
+8. Revoke the Production key, then repeat the evaluation and verify the stable
+   `401 INVALID_API_KEY` response.
+
+Create the key through the dashboard for each demonstration. ToggleFlow never seeds,
+stores, or documents a reusable plaintext environment credential.
 
 ## Quality Checks
 

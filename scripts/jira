@@ -19,7 +19,8 @@ Usage:
   scripts/jira search 'JQL'
   scripts/jira comments ISSUE-KEY
   scripts/jira comment ISSUE-KEY 'Markdown comment'
-  scripts/jira append-description ISSUE-KEY 'Text to append'
+  scripts/jira append-description ISSUE-KEY 'Markdown to append'
+  scripts/jira render-adf 'Markdown to render'
   scripts/jira request METHOD /rest/api/3/PATH ['JSON body']
 
 Credentials are stored in the Git-ignored .env.jira file with user-only
@@ -162,6 +163,53 @@ jira_request() {
     fi
 }
 
+markdown_to_adf() {
+    jq -Rn --arg markdown "$1" '
+        def paragraph($text):
+            {type: "paragraph", content: [{type: "text", text: $text}]};
+        def list_item($text):
+            {type: "listItem", content: [paragraph($text)]};
+        def parsed_line:
+            if test("^#{1,6} ") then
+                (capture("^(?<marks>#{1,6}) (?<text>.*)$")
+                    | {kind: "block", node: {
+                        type: "heading",
+                        attrs: {level: (.marks | length)},
+                        content: [{type: "text", text: .text}]
+                    }})
+            elif test("^[*-] ") then
+                {kind: "bullet", item: list_item(sub("^[*-] "; ""))}
+            elif test("^[0-9]+[.] ") then
+                {kind: "ordered", item: list_item(sub("^[0-9]+[.] "; ""))}
+            elif length == 0 then
+                {kind: "blank"}
+            else
+                {kind: "block", node: paragraph(.)}
+            end;
+        def append_node($item):
+            if $item.kind == "blank" then
+                .last_kind = null
+            elif $item.kind == "block" then
+                .content += [$item.node] | .last_kind = null
+            elif .last_kind == $item.kind then
+                .content[-1].content += [$item.item]
+            else
+                .content += [{
+                    type: (if $item.kind == "bullet" then "bulletList" else "orderedList" end),
+                    content: [$item.item]
+                }]
+                | .last_kind = $item.kind
+            end;
+
+        $markdown
+        | gsub("\\r\\n?"; "\n")
+        | split("\n")
+        | map(parsed_line)
+        | reduce .[] as $item ({content: [], last_kind: null}; append_node($item))
+        | {type: "doc", version: 1, content: .content}
+    '
+}
+
 require_command curl
 require_command git
 require_command jq
@@ -197,37 +245,31 @@ case "$command" in
         ;;
     comment)
         [[ $# -eq 2 ]] || { usage >&2; exit 1; }
+        rendered="$(markdown_to_adf "$2")"
         jira_request POST "/rest/api/3/issue/$1/comment" \
-            "$(jq -n --arg text "$2" '{
-                body: {
-                    type: "doc",
-                    version: 1,
-                    content: [{
-                        type: "paragraph",
-                        content: [{type: "text", text: $text}]
-                    }]
-                }
-            }')" | jq
+            "$(jq -n --argjson rendered "$rendered" '{body: $rendered}')" | jq
         ;;
     append-description)
         [[ $# -eq 2 ]] || { usage >&2; exit 1; }
         issue="$(jira_request GET "/rest/api/3/issue/$1?fields=description")"
+        rendered="$(markdown_to_adf "$2")"
         payload="$(jq -n \
             --argjson description "$(jq '.fields.description' <<<"$issue")" \
-            --arg text "$2" \
+            --argjson rendered "$rendered" \
             '{
                 fields: {
                     description: (
-                        $description
-                        | .content += [{
-                            type: "paragraph",
-                            content: [{type: "text", text: $text}]
-                        }]
+                        ($description // {type: "doc", version: 1, content: []})
+                        | .content += $rendered.content
                     )
                 }
             }')"
         jira_request PUT "/rest/api/3/issue/$1" "$payload" >/dev/null
         echo "Appended description text to $1."
+        ;;
+    render-adf)
+        [[ $# -eq 1 ]] || { usage >&2; exit 1; }
+        markdown_to_adf "$1"
         ;;
     request)
         [[ $# -ge 2 && $# -le 3 ]] || { usage >&2; exit 1; }
