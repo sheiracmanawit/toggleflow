@@ -50,6 +50,11 @@ final class IssueEnvironmentKey
                 'name' => $apiKey->name,
                 'prefix' => $apiKey->prefix,
                 'environment_id' => $lockedEnvironment->id,
+                'environment' => [
+                    'id' => $lockedEnvironment->id,
+                    'key' => $lockedEnvironment->key,
+                    'name' => $lockedEnvironment->name,
+                ],
             ]);
 
             return new IssuedEnvironmentKey($apiKey->load('environment'), $credential);

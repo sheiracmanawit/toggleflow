@@ -45,11 +45,14 @@ it('returns owner scoped release counts, project summaries, and safe recent acti
 
     AuditEvent::query()->create([
         'project_id' => $project->id,
-        'actor_id' => $owner->id,
+        'actor_id' => null,
         'action' => AuditEventAction::FeatureFlagEnabled,
         'subject_type' => $activeFlag->getMorphClass(),
         'subject_id' => $activeFlag->id,
         'metadata' => [
+            'project' => ['name' => 'Historical checkout'],
+            'subject' => ['name' => 'Historical new checkout'],
+            'actor' => ['name' => 'Former release owner'],
             'environment' => ['id' => $production->id, 'key' => 'production', 'name' => 'Production'],
             'secret' => 'must-not-be-serialized',
         ],
@@ -74,9 +77,9 @@ it('returns owner scoped release counts, project summaries, and safe recent acti
         ->assertJsonPath('data.projects.0.active_flag_count', 1)
         ->assertJsonCount(1, 'data.recent_activity')
         ->assertJsonPath('data.recent_activity.0.action', 'feature_flag.enabled')
-        ->assertJsonPath('data.recent_activity.0.project.name', 'Checkout')
-        ->assertJsonPath('data.recent_activity.0.subject.name', 'New checkout')
-        ->assertJsonPath('data.recent_activity.0.actor.name', 'Release Owner')
+        ->assertJsonPath('data.recent_activity.0.project.name', 'Historical checkout')
+        ->assertJsonPath('data.recent_activity.0.subject.name', 'Historical new checkout')
+        ->assertJsonPath('data.recent_activity.0.actor.name', 'Former release owner')
         ->assertJsonPath('data.recent_activity.0.environment.name', 'Production')
         ->assertJsonMissingPath('data.recent_activity.0.metadata')
         ->assertJsonMissing(['secret' => 'must-not-be-serialized'])

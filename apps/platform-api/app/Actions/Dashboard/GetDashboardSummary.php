@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
+use App\Actions\Audit\HydrateAuditEventDisplayContext;
 use App\Data\DashboardSummary;
+use App\Http\Resources\Dashboard\AuditEventResource;
 use App\Models\AuditEvent;
 use App\Models\EnvironmentFlag;
 use App\Models\FeatureFlag;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 
 final class GetDashboardSummary
 {
     private const PROJECT_LIMIT = 6;
 
     private const ACTIVITY_LIMIT = 8;
+
+    public function __construct(private readonly HydrateAuditEventDisplayContext $hydrateDisplayContext) {}
 
     public function execute(User $owner): DashboardSummary
     {
@@ -98,6 +101,8 @@ final class GetDashboardSummary
             ->limit(self::ACTIVITY_LIMIT)
             ->get();
 
+        $this->hydrateDisplayContext->execute($events);
+
         return $this->activityItems($events);
     }
 
@@ -108,48 +113,8 @@ final class GetDashboardSummary
     private function activityItems(Collection $events): array
     {
         return $events
-            ->map(fn (AuditEvent $event): array => [
-                'id' => $event->id,
-                'action' => $event->actionValue()->value,
-                'project' => [
-                    'id' => $event->project_id,
-                    'name' => $event->project->name,
-                ],
-                'subject' => [
-                    'type' => class_basename($event->subject_type),
-                    'id' => $event->subject_id,
-                    'name' => $this->subjectName($event),
-                ],
-                'actor' => $event->actor === null ? null : [
-                    'id' => $event->actor->id,
-                    'name' => $event->actor->name,
-                ],
-                'environment' => $this->environment($event),
-                'created_at' => $event->created_at->toISOString(),
-            ])
+            ->map(fn (AuditEvent $event): array => AuditEventResource::make($event)->resolve())
             ->values()
             ->all();
-    }
-
-    private function subjectName(AuditEvent $event): string
-    {
-        return $event->subject instanceof Model
-            ? (string) ($event->subject->getAttribute('name') ?? 'Archived resource')
-            : 'Archived resource';
-    }
-
-    /** @return array{key: string|null, name: string|null}|null */
-    private function environment(AuditEvent $event): ?array
-    {
-        $environment = $event->metadataValue()['environment'] ?? null;
-
-        if (! is_array($environment)) {
-            return null;
-        }
-
-        return [
-            'key' => isset($environment['key']) ? (string) $environment['key'] : null,
-            'name' => isset($environment['name']) ? (string) $environment['name'] : null,
-        ];
     }
 }

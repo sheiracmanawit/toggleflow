@@ -27,7 +27,8 @@ const summary: DashboardSummary = {
             project: { id: 1, name: 'Checkout' },
             subject: { type: 'FeatureFlag', id: 5, name: 'New checkout' },
             actor: { id: 1, name: 'Demo Owner' },
-            environment: { key: 'production', name: 'Production' },
+            environment: { id: 3, key: 'production', name: 'Production' },
+            changes: { before: { enabled: false }, after: { enabled: true } },
             created_at: '2026-07-31T00:00:00.000Z',
         },
     ],
@@ -71,7 +72,9 @@ describe('DashboardPage', () => {
         expect(wrapper.text()).toContain('Active flags');
         expect(wrapper.text()).toContain('Enabled in Production');
         expect(wrapper.text()).toContain('Checkout');
-        expect(wrapper.text()).toContain('Demo Owner enabled New checkout in Production');
+        expect(wrapper.text()).toContain(
+            'Demo Owner enabled feature flag New checkout for Production in project Checkout',
+        );
     });
 
     it('shows a next action for a genuinely empty account', async () => {

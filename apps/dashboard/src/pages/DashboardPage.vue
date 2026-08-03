@@ -5,30 +5,14 @@ import { RouterLink } from 'vue-router';
 
 import { dashboardService } from '../services';
 import type { DashboardSummary, RecentActivity } from '../types';
+import { auditEventDescription } from '../utils/auditEvents';
 
 const summary = ref<DashboardSummary | null>(null);
 const isLoading = ref(true);
 const loadError = ref('');
 let controller: AbortController | null = null;
 
-const actionLabels: Record<string, string> = {
-    'project.created': 'created',
-    'project.archived': 'archived',
-    'feature_flag.created': 'created',
-    'feature_flag.updated': 'updated',
-    'feature_flag.archived': 'archived',
-    'feature_flag.enabled': 'enabled',
-    'feature_flag.disabled': 'disabled',
-    'api_key.created': 'created',
-    'api_key.revoked': 'revoked',
-};
-
-const activityDescription = (activity: RecentActivity): string => {
-    const actor = activity.actor?.name ?? 'System';
-    const action = actionLabels[activity.action] ?? activity.action;
-    const environment = activity.environment?.name ? ` in ${activity.environment.name}` : '';
-    return `${actor} ${action} ${activity.subject.name}${environment}`;
-};
+const activityDescription = (activity: RecentActivity): string => auditEventDescription(activity);
 
 const formatTime = (value: string): string =>
     new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Dashboard\ApiKeyController;
+use App\Http\Controllers\Dashboard\AuditEventController;
 use App\Http\Controllers\Dashboard\Auth\SessionController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\FeatureFlagController;
@@ -37,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/{project}/archive', [ProjectController::class, 'archive'])
             ->whereNumber('project')
             ->name('archive');
+
+        Route::get('/{project}/audit-events', [AuditEventController::class, 'index'])
+            ->whereNumber('project')
+            ->name('audit-events.index');
 
         Route::get('/{project}/flags', [FeatureFlagController::class, 'index'])
             ->whereNumber('project')

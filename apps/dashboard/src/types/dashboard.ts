@@ -7,15 +7,7 @@ export interface DashboardProjectSummary {
     updated_at: string;
 }
 
-export interface RecentActivity {
-    id: number;
-    action: string;
-    project: { id: number; name: string };
-    subject: { type: string; id: number; name: string };
-    actor: { id: number; name: string } | null;
-    environment: { key: string | null; name: string | null } | null;
-    created_at: string;
-}
+export type RecentActivity = AuditEvent;
 
 export interface DashboardSummary {
     project_count: number;
@@ -24,3 +16,4 @@ export interface DashboardSummary {
     projects: DashboardProjectSummary[];
     recent_activity: RecentActivity[];
 }
+import type { AuditEvent } from './auditEvents';

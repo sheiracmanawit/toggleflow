@@ -50,6 +50,11 @@ final class RevokeEnvironmentKey
                 'name' => $lockedKey->name,
                 'prefix' => $lockedKey->prefix,
                 'environment_id' => $lockedKey->environment_id,
+                'environment' => [
+                    'id' => $lockedKey->environment->id,
+                    'key' => $lockedKey->environment->key,
+                    'name' => $lockedKey->environment->name,
+                ],
             ]);
 
             return $lockedKey;
