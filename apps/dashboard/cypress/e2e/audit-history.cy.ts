@@ -21,10 +21,8 @@ describe('audit history', () => {
         cy.location('pathname').should('match', /^\/projects\/\d+\/audit-log$/);
         cy.contains('h1', 'Audit history').should('be.visible');
         cy.get('ol').within(() => {
-            cy.contains('Updated the project').should('be.visible');
-            cy.contains('Created the project').should('be.visible');
-            cy.contains('Demo Owner').should('be.visible');
-            cy.contains('Renamed Checkout').should('be.visible');
+            cy.contains('Demo Owner updated project Renamed Checkout').should('be.visible');
+            cy.contains('Demo Owner created project Audited Checkout').should('be.visible');
         });
         cy.get('time').first().should('have.attr', 'datetime');
     });
@@ -39,7 +37,7 @@ describe('audit history', () => {
         cy.get('form').contains('button', 'Create project').click();
         cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').contains('a', 'Audit history').click();
-        cy.contains('Created the project').should('be.visible');
+        cy.contains('Demo Owner created project Mobile Audit').should('be.visible');
         cy.document().then((document) => {
             expect(document.documentElement.scrollWidth).to.be.at.most(document.documentElement.clientWidth);
         });
