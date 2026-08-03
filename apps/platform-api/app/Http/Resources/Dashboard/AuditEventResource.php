@@ -23,8 +23,7 @@ class AuditEventResource extends JsonResource
             'project' => [
                 'id' => $this->project_id,
                 'name' => $this->nestedString($metadata, 'project', 'name')
-                    ?? $this->project?->name
-                    ?? 'Archived project',
+                    ?? $this->project->name,
             ],
             'subject' => [
                 'type' => class_basename($this->subject_type),
