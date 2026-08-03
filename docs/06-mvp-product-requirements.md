@@ -108,7 +108,7 @@ required in MVP 0.1.
 
 ### 5.7 Audit Log
 
-- ToggleFlow records project creation and archival.
+- ToggleFlow records project creation, rename, and archival.
 - ToggleFlow records flag creation, editing, archival, enabling, and disabling.
 - ToggleFlow records API-key creation and revocation without recording secrets.
 - An event contains the actor, action, subject, project, timestamp, and safe before/

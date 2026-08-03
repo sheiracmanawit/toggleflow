@@ -213,6 +213,12 @@ onBeforeUnmount(() => {
                         >
                             API keys
                         </RouterLink>
+                        <RouterLink
+                            class="mt-1 block rounded-lg px-3 py-2 text-sm font-medium hover:bg-slate-100"
+                            :to="`/projects/${projectId}/audit-log`"
+                        >
+                            Audit history
+                        </RouterLink>
                     </template>
                 </nav>
             </aside>
@@ -307,6 +313,13 @@ onBeforeUnmount(() => {
                             @click="closeDrawer"
                         >
                             API keys
+                        </RouterLink>
+                        <RouterLink
+                            class="mt-1 block rounded-lg px-3 py-2"
+                            :to="`/projects/${projectId}/audit-log`"
+                            @click="closeDrawer"
+                        >
+                            Audit history
                         </RouterLink>
                     </template>
                 </nav>

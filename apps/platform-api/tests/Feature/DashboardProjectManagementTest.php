@@ -206,6 +206,38 @@ it('shows fixed environments in their stable order and updates only mutable meta
         ->assertJsonPath('data.name', 'Renamed Project')
         ->assertJsonPath('data.slug', 'stable-slug')
         ->assertJsonPath('data.status', 'active');
+
+    expect(AuditEvent::query()->where('action', AuditEventAction::ProjectUpdated)->count())->toBe(1);
+});
+
+it('does not audit a project no-op and rolls back an update when audit storage fails', function (): void {
+    $owner = User::factory()->create();
+    $project = Project::factory()->for($owner, 'owner')->create([
+        'name' => 'Checkout',
+        'description' => 'Original description',
+    ]);
+
+    $this->actingAs($owner)->patchJson("/dashboard/projects/{$project->id}", [
+        'name' => 'Checkout',
+        'description' => 'Original description',
+    ])->assertOk();
+    expect(AuditEvent::query()->count())->toBe(0);
+
+    $eventName = 'eloquent.creating: '.AuditEvent::class;
+    $dispatcher = AuditEvent::getEventDispatcher();
+    $dispatcher?->listen($eventName, fn (): never => throw new AuditStorageFailure('audit unavailable'));
+
+    try {
+        $this->actingAs($owner)->patchJson("/dashboard/projects/{$project->id}", [
+            'name' => 'Uncommitted rename',
+            'description' => 'Original description',
+        ])->assertServerError();
+    } finally {
+        $dispatcher?->forget($eventName);
+    }
+
+    expect($project->refresh()->name)->toBe('Checkout')
+        ->and(AuditEvent::query()->count())->toBe(0);
 });
 
 it('archives idempotently, retains children, and records one transactional audit event', function (): void {

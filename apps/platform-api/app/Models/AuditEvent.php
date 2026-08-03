@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AuditEventAction;
+use Database\Factories\AuditEventFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AuditEvent extends Model
 {
+    /** @use HasFactory<AuditEventFactory> */
+    use HasFactory;
+
     public const UPDATED_AT = null;
 
     /** @var list<string> */

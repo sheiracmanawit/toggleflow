@@ -8,6 +8,7 @@ import {
 
 import { pinia, useAuthStore } from '../stores';
 import DashboardPage from '../pages/DashboardPage.vue';
+import AuditLogPage from '../pages/AuditLogPage.vue';
 import ApiKeysPage from '../pages/ApiKeysPage.vue';
 import FeatureFlagDetailsPage from '../pages/FeatureFlagDetailsPage.vue';
 import FeatureFlagsPage from '../pages/FeatureFlagsPage.vue';
@@ -39,6 +40,11 @@ export const routes: RouteRecordRaw[] = [
     {
         path: '/projects/:projectId(\\d+)/api-keys',
         component: ApiKeysPage,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/projects/:projectId(\\d+)/audit-log',
+        component: AuditLogPage,
         meta: { requiresAuth: true },
     },
 ];

@@ -59,7 +59,7 @@ class ProjectController extends Controller
         $ownedProject = $this->ownedProject($project);
         $this->authorizeProject('update', $ownedProject);
 
-        return new ProjectResource($updateProject->execute($ownedProject, $request->validated()));
+        return new ProjectResource($updateProject->execute($ownedProject, $this->owner(), $request->validated()));
     }
 
     /**
