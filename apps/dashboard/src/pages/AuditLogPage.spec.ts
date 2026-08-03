@@ -46,10 +46,9 @@ describe('AuditLogPage', () => {
         });
         const wrapper = await mountPage();
 
-        expect(wrapper.text()).toContain('Enabled the feature flag');
-        expect(wrapper.text()).toContain('Release Owner');
-        expect(wrapper.text()).toContain('New checkout');
-        expect(wrapper.text()).toContain('Production');
+        expect(wrapper.text()).toContain(
+            'Release Owner enabled feature flag New checkout for Production in project Checkout',
+        );
         expect(wrapper.get('time').attributes('datetime')).toBe(event.created_at);
         expect(wrapper.get('nav[aria-label="Audit history pages"]').text()).toContain('Page 1 of 2');
     });
@@ -85,7 +84,9 @@ describe('AuditLogPage', () => {
         await flushPromises();
 
         expect(wrapper.text()).toContain('Audit history could not be refreshed');
-        expect(wrapper.text()).toContain('Enabled the feature flag');
+        expect(wrapper.text()).toContain(
+            'Release Owner enabled feature flag New checkout for Production in project Checkout',
+        );
         expect(wrapper.text()).toContain('Page 1 of 2');
         expect(wrapper.get('button').text()).toBe('Try again');
     });

@@ -5,6 +5,7 @@ import { RouterLink, useRoute } from 'vue-router';
 
 import { auditEventService, projectService } from '../services';
 import type { AuditEvent, Project } from '../types';
+import { auditEventDescription } from '../utils/auditEvents';
 
 const route = useRoute();
 const project = ref<Project | null>(null);
@@ -18,20 +19,6 @@ let controller: AbortController | null = null;
 let activeRequest = 0;
 let loadedProjectId: number | null = null;
 
-const actionLabels: Record<string, string> = {
-    'project.created': 'Created the project',
-    'project.updated': 'Updated the project',
-    'project.archived': 'Archived the project',
-    'feature_flag.created': 'Created the feature flag',
-    'feature_flag.updated': 'Updated the feature flag',
-    'feature_flag.archived': 'Archived the feature flag',
-    'feature_flag.enabled': 'Enabled the feature flag',
-    'feature_flag.disabled': 'Disabled the feature flag',
-    'api_key.created': 'Issued the API key',
-    'api_key.revoked': 'Revoked the API key',
-};
-
-const actionLabel = (action: string): string => actionLabels[action] ?? 'Changed release configuration';
 const timestamp = (value: string): string =>
     new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(value));
 
@@ -136,17 +123,7 @@ onBeforeUnmount(() => {
                 <li v-for="event in events" :key="event.id" class="rounded-xl border border-slate-200 bg-white p-5">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div class="min-w-0">
-                            <p class="font-semibold">{{ actionLabel(event.action) }}</p>
-                            <p class="mt-1 break-words text-slate-700">
-                                <span class="font-medium">{{ event.actor.name }}</span>
-                                changed <span class="font-medium">{{ event.subject.name }}</span>
-                                <template v-if="event.environment">
-                                    in
-                                    {{
-                                        event.environment.name ?? event.environment.key ?? 'an unavailable environment'
-                                    }}</template
-                                >.
-                            </p>
+                            <p class="break-words font-semibold">{{ auditEventDescription(event) }}</p>
                             <p class="mt-1 text-sm text-slate-500">Project: {{ event.project.name }}</p>
                         </div>
                         <time class="shrink-0 text-sm text-slate-600" :datetime="event.created_at">{{

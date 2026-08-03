@@ -71,7 +71,9 @@ describe('DashboardPage', () => {
         expect(wrapper.text()).toContain('Active flags');
         expect(wrapper.text()).toContain('Enabled in Production');
         expect(wrapper.text()).toContain('Checkout');
-        expect(wrapper.text()).toContain('Demo Owner enabled New checkout in Production');
+        expect(wrapper.text()).toContain(
+            'Demo Owner enabled feature flag New checkout for Production in project Checkout',
+        );
     });
 
     it('shows a next action for a genuinely empty account', async () => {
