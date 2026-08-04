@@ -2,7 +2,10 @@
 
 ## 1. Status
 
-Accepted for MVP 0.1.
+The current Vue/Vite SPA and its safety rules are accepted and implemented. TF-24 and
+TF-26 define the Committed architecture and design-system migration. This
+document must be updated with their implementation so current and target structure do
+not diverge.
 
 ## 2. Product Experience
 
@@ -16,7 +19,7 @@ and change Development, Staging, and Production state without ambiguity.
 ## 3. Rendering Architecture Decision
 
 The authenticated management interface is a Vue 3 single-page application. It is not
-server-side rendered for MVP 0.1.
+server-side rendered.
 
 ```text
 Browser
@@ -41,7 +44,7 @@ Browser
 SSR would add server rendering, hydration, and deployment complexity without improving
 the private dashboard's discoverability or core workflow. It may be useful later for
 a separate public marketing or documentation site, but that site is not part of the
-MVP management application.
+authenticated management application.
 
 ### Future public surfaces
 
@@ -61,7 +64,7 @@ Evaluation API             → versioned Laravel JSON API
 | UI framework | Vue 3 Composition API |
 | Language | TypeScript |
 | Build tooling | Vite |
-| Styling | Tailwind CSS |
+| Styling | Tailwind CSS 4 and approved Nuxt UI foundation after TF-26 |
 | Navigation | Vue Router |
 | Shared client state | Pinia only where state genuinely spans routes |
 | Server communication | A small typed HTTP client |
@@ -69,9 +72,11 @@ Evaluation API             → versioned Laravel JSON API
 | Authentication | Sanctum SPA session |
 | Testing | Vitest component tests and focused Cypress end-to-end tests for critical flows |
 
-Avoid a large component framework in MVP 0.1. Small reusable ToggleFlow components
-provide consistency while keeping HTML semantics, Tailwind behavior, and accessibility
-under project control.
+The original application used small ToggleFlow-owned primitives. TF-26 deliberately
+supersedes the earlier restriction on a comprehensive component library by adopting
+Nuxt UI in the existing Vue/Vite application. ToggleFlow retains ownership of
+product-specific components, semantic tokens, accessibility, and workflow behavior;
+Nuxt, SSR, and Nuxt Content are not introduced.
 
 ## 5. Information Architecture
 
@@ -94,7 +99,7 @@ ToggleFlow
     └── Sign out
 ```
 
-MVP routes should use stable identifiers and preserve project context:
+Routes use stable identifiers and preserve project context:
 
 ```text
 /login
@@ -155,15 +160,15 @@ Use semantic design tokens rather than raw color names inside page components.
 
 | Role | Direction | Usage |
 | --- | --- | --- |
-| Brand | Indigo or violet | Primary actions, active navigation, focus accents |
+| Brand | Indigo | Primary actions, active navigation, and focus accents |
 | Enabled | Emerald | Enabled flag state and healthy confirmation |
-| Disabled | Neutral slate | Normal disabled state |
+| Disabled | Zinc | Normal disabled state |
 | Warning | Amber | Caution and Staging context |
-| Danger | Rose or red | Errors, revocation, archival, and destructive confirmation |
+| Danger | Red | Errors, revocation, archival, and destructive confirmation |
 | Development | Sky | Development environment identity |
 | Staging | Amber | Staging environment identity |
 | Production | Violet | Production environment identity and emphasis |
-| Surface | White and slate | Cards, tables, navigation, and page backgrounds |
+| Surface | White and zinc | Cards, tables, navigation, and page backgrounds |
 
 Disabled flags are normal configuration and must not be styled as failures. Reserve
 danger colors for errors and destructive actions.
@@ -171,10 +176,36 @@ danger colors for errors and destructive actions.
 Never communicate meaning with color alone. Pair state colors with text, icons, or
 patterns.
 
+### Accepted light-theme anchors
+
+TF-26 owns the centralized Nuxt UI and Tailwind configuration. The Nuxt UI Landing
+template is a visual-character reference, but its lime palette and lime glow are not
+part of ToggleFlow.
+
+| Token | Value |
+| --- | --- |
+| Primary soft | Indigo 50 `#EEF2FF` |
+| Primary border | Indigo 200 `#C7D2FE` |
+| Primary focus | Indigo 500 `#6366F1` |
+| Primary action | Indigo 600 `#4F46E5` |
+| Primary hover | Indigo 700 `#4338CA` |
+| Primary pressed | Indigo 800 `#3730A3` |
+| Page background | Zinc 50 `#FAFAFA` |
+| Muted surface | Zinc 100 `#F4F4F5` |
+| Standard border | Zinc 200 `#E4E4E7` |
+| Secondary text | Zinc 600 `#52525B` |
+| Primary text | Zinc 900 `#18181B` |
+
+Emerald remains Enabled/success, sky remains information/Development, amber remains
+warning/Staging, violet remains Production, and red remains failure/destructive. The
+exact shade used by each component may be adjusted during contrast verification, but
+the semantic ownership must not be redefined per page.
+
 ### Typography
 
-- Use a modern system-oriented sans-serif font stack.
-- Use a monospace stack for flag keys, API-key prefixes, code, and request examples.
+- Use Instrument Sans with system sans-serif fallbacks for application text.
+- Use IBM Plex Mono with system monospace fallbacks for flag keys, API-key prefixes,
+  code, and request examples.
 - Prefer a restrained type scale with strong hierarchy rather than oversized headings.
 - Use tabular numbers where rapidly changing counts or timestamps benefit from stable
   alignment.
@@ -196,17 +227,17 @@ Use CSS custom properties or an equivalent token layer for semantic values:
 
 ```css
 :root {
-  --color-brand: /* selected indigo or violet value */;
-  --color-enabled: /* selected emerald value */;
-  --color-warning: /* selected amber value */;
-  --color-danger: /* selected rose value */;
-  --color-surface: /* selected neutral surface */;
+  --color-brand: #4f46e5;
+  --color-enabled: /* semantic emerald token */;
+  --color-warning: /* semantic amber token */;
+  --color-danger: /* semantic red token */;
+  --color-surface: /* semantic zinc/white token */;
 }
 ```
 
-Select exact palette values during implementation and test them for accessible
-contrast in both light and dark themes. Avoid scattering arbitrary values across Vue
-templates.
+Configure complete shade scales and derived Nuxt UI semantic tokens during TF-26 and
+test the supported light theme for accessible contrast. Avoid scattering arbitrary
+values across Vue templates. Dark-mode delivery remains separate.
 
 ### Component variants
 
@@ -226,60 +257,34 @@ introduce a styling abstraction before repeated patterns exist.
 ### Dark mode
 
 Design tokens must permit a class-controlled dark theme. Dark mode is desirable but
-is below critical workflow completion in the MVP priority order. Light mode must be
+is below critical workflow completion in the current priority order. Light mode must be
 complete and accessible first.
 
-## 9. Component Architecture
+## 9. Feature-oriented frontend architecture
 
-Separate general UI primitives from domain components:
+TF-24 replaces the current layer-first source organization with three top-level
+ownership areas. The migration must complete before TF-26 and TF-27 implementation:
 
 ```text
 apps/dashboard/src/
-├── app.ts
-├── router/
-├── layouts/
-│   ├── AuthLayout.vue
-│   └── AppLayout.vue
-├── pages/
-│   ├── auth/
-│   ├── dashboard/
-│   ├── projects/
-│   ├── flags/
-│   ├── api-keys/
-│   └── audit/
-├── components/
-│   ├── ui/
-│   │   ├── AppBadge.vue
-│   │   ├── AppButton.vue
-│   │   ├── AppCard.vue
-│   │   ├── AppDialog.vue
-│   │   ├── AppEmptyState.vue
-│   │   ├── AppInput.vue
-│   │   ├── AppTable.vue
-│   │   ├── AppToast.vue
-│   │   └── AppToggle.vue
-│   ├── flags/
-│   │   ├── EnvironmentState.vue
-│   │   ├── FeatureFlagRow.vue
-│   │   ├── FlagStateToggle.vue
-│   │   └── ProductionChangeDialog.vue
-│   └── audit/
-├── composables/
-├── services/
-├── stores/
-├── types/
-└── styles/
+├── app/       # bootstrap, router, providers, layouts, global styles, composition
+├── features/  # authentication, projects, flags, credentials, audit, dashboard
+└── shared/    # product-agnostic API, UI, composables, types, and utilities
 ```
 
 ### Responsibilities
 
-- Pages load route-level data and compose workflows.
-- UI primitives implement reusable interaction and visual behavior.
-- Domain components understand flags, environments, credentials, or audit events.
-- Composables contain reusable reactive behavior.
-- Services contain typed HTTP operations and response normalization.
-- Pinia stores hold state that must survive or coordinate across routes, not ordinary
-  page-local form state.
+- Code used by one component stays with that component.
+- Code reused within one workflow stays in its owning feature.
+- Cross-feature consumption uses an intentional public feature entry point.
+- Shared contains only domain-neutral capabilities and never depends on a feature.
+- App composes features and shared foundations.
+- Feature dependencies remain acyclic.
+- Pinia holds only state that genuinely spans routes or distant workflows.
+
+Use Nuxt UI primitives directly when their semantics fit. Create a ToggleFlow
+component only when it adds stable product meaning, behavior, safety, or composition.
+Do not wrap every Nuxt UI primitive or depend on undocumented library internals.
 
 Avoid a single global store containing all projects, flags, loading states, and form
 errors.
@@ -305,7 +310,8 @@ Prioritize actionable status over decorative charts:
 - Recent management activity
 - Project summaries
 
-Do not show evaluation analytics or invented health data in MVP 0.1.
+Do not show evaluation analytics or invented health data before supporting product
+behavior and data exist.
 
 ### Project list and creation
 
@@ -453,9 +459,9 @@ idle → loading → success
 - Explain empty states and offer one clear next action.
 - Do not fabricate metrics that the backend does not calculate reliably.
 
-## 15. MVP Design Boundary
+## 15. Available Experience and Committed Redesign Boundary
 
-### Must be polished
+### Available workflows that must remain complete
 
 1. Sign in
 2. Dashboard
@@ -466,14 +472,20 @@ idle → loading → success
 7. Audit history
 8. Loading, empty, validation, success, and failure states for the primary flow
 
-### Deferred
+### Committed
+
+- TF-24 feature-oriented architecture
+- TF-26 Nuxt UI and centralized indigo-and-zinc ToggleFlow theme
+- TF-27 workflow-based dashboard redesign and cross-application verification
+
+### Outside the committed redesign
 
 - Advanced analytics and charts
 - Command palette
 - Visual rollout-rule builder
 - Drag-and-drop prioritization
 - Organization and membership screens
-- Custom themes
+- User-selectable or tenant-specific custom themes
 - Elaborate animation
 - Dedicated SSR marketing site
 
@@ -497,7 +509,7 @@ A frontend story is complete when:
 
 ## 17. Related Documentation
 
-- [MVP Product Requirements](06-mvp-product-requirements.md)
-- [Domain and Architecture](07-domain-and-architecture.md)
-- [Architecture and Flow Diagrams](10-architecture-and-flow-diagrams.md)
-- [Authentication and API Key Decision](11-authentication-and-api-key-decision.md)
+- [Product Requirements](../05-product-requirements.md)
+- [Domain and Architecture](overview.md)
+- [Architecture and Flow Diagrams](system-diagrams.md)
+- [Authentication and API Key Decision](authentication-and-api-keys.md)

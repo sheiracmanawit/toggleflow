@@ -1,56 +1,68 @@
-# ToggleFlow Overview
+# ToggleFlow Documentation Overview
 
-## What is ToggleFlow?
+ToggleFlow is an open-source, self-hosted feature release platform. It separates
+deployment from release through understandable controls, predictable evaluation,
+secure environment isolation, and an auditable history of management changes.
 
-ToggleFlow is an open-source feature management platform that enables software teams to safely release software by separating deployment from feature release.
+## Documentation model
 
-Instead of using environment variables or maintaining long-lived feature branches, teams can control feature availability through a centralized dashboard and REST API.
+The documentation describes the complete product vision without presenting every
+capability as already delivered. Each capability uses one status:
 
-## Product Goals
+- **Available:** implemented and usable now.
+- **Committed:** approved direction with accepted or prepared delivery work.
+- **Planned:** accepted product scope that requires delivery-ready stories and
+  technical review.
+- **Exploring:** a hypothesis requiring validation before it becomes product scope.
 
-- Release software safely
-- Reduce deployment risk
-- Support gradual rollouts
-- Instantly disable problematic features
-- Improve collaboration between Engineering, QA, and Product
+Capability status is not implementation authorization. Only an approved,
+delivery-ready Jira ticket authorizes a product change.
 
-## Core Capabilities
+## Product documentation
 
-- Projects
-- Environments
-- Feature Flags
-- Percentage Rollouts
-- User Targeting
-- Audit Logs
-- REST API
+- [Product Vision](01-product-vision.md)
+- [Problem](02-problem.md)
+- [Target Users](03-target-users.md)
+- [Product Capabilities](04-product-capabilities.md)
+- [Product Requirements](05-product-requirements.md)
+- [Quality Requirements](06-quality-requirements.md)
+- [Product Strategy](07-product-strategy.md)
+- [Product Roadmap](08-roadmap.md)
 
-## MVP 0.1 Scope
+Percentage Rollouts, User Targeting, Targeting Rules, Segments, SDKs, team
+governance, production operations, and release intelligence are visible product
+capabilities with honest delivery status—not a separate future product.
 
-Included:
-- Authentication
-- Projects
-- Environments
-- Boolean Feature Flags
-- Audit Logs
-- API Keys
-- Dashboard
-- Evaluation API
+## Architecture documentation
 
-Excluded:
-- Organizations
-- Percentage Rollouts
-- User Targeting
-- A/B Testing
-- Analytics
-- Enterprise SSO
-- Notifications
+- [Architecture Overview](architecture/overview.md)
+- [Domain Model](architecture/domain-model.md)
+- [Authentication and API Keys](architecture/authentication-and-api-keys.md)
+- [Evaluation Engine](architecture/evaluation-engine.md)
+- [API Contract](architecture/api-contract.md)
+- [Frontend Architecture](architecture/frontend-architecture.md)
+- [System Diagrams](architecture/system-diagrams.md)
 
-Excluded items are deferred, not abandoned. The MVP establishes the core domain and
-evaluation boundary that later releases will extend.
+Architecture documents distinguish target design from available implementation and
+identify the ticket responsible for an incomplete migration.
 
-## Success Criteria
+## Engineering documentation
 
-A user should be able to create a project, configure a boolean flag independently in
-each environment, evaluate it through an authenticated API, and disable it instantly
-without redeploying. Gradual release becomes a success criterion when rollout rules
-ship after the MVP.
+- [Coding Standards](engineering/coding-standards.md)
+- [Repository Structure](engineering/repository-structure.md)
+- [Delivery Workflow](engineering/delivery-workflow.md)
+- [Testing Strategy](engineering/testing-strategy.md)
+- [Git and CI](engineering/git-and-ci.md)
+
+## Architecture decisions
+
+Accepted, durable decisions live in [decisions](decisions/). ADRs explain why a
+direction was chosen; architecture documents explain how the system is intended to
+work.
+
+## Source-of-truth rule
+
+Product documents own intent and capability status. Architecture documents own
+technical boundaries. Jira owns delivery-ready scope and acceptance criteria. When
+these sources conflict, route product intent to the Product Owner and technical
+direction to the System Architect rather than choosing silently.

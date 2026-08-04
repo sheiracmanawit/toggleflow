@@ -75,18 +75,20 @@ shape is:
 
 ```text
 apps/
-├── platform-api/    # Laravel management and MVP evaluation backend
+├── platform-api/    # Laravel management and versioned evaluation backend
 └── dashboard/       # Vue 3 TypeScript SPA
 packages/            # Added only for real shared contracts or published SDKs
 docs/
 ```
 
 Do not create an empty package or a third service merely to reserve a future name.
-Follow [Monorepo Application Structure](15-monorepo-application-structure.md) and do
+Follow [Monorepo Application Structure](repository-structure.md) and do
 not place application-owned source or dependency manifests at the repository root.
 
 Within `apps/platform-api`, follow Laravel conventions while making application
-actions and public boundaries easy to find.
+actions and public boundaries easy to find. TF-22 establishes bounded modules as the
+approved target; until that migration is implemented, the current layout remains the
+source of executable behavior.
 
 Suggested backend organization:
 
@@ -111,11 +113,14 @@ apps/platform-api/app/
 └── Providers/
 ```
 
-This is a starting convention, not a requirement to create empty directories or
-speculative layers. Follow existing Laravel structure when it remains clear.
+This layer-first tree describes the current implementation before TF-22. The accepted
+target organizes project-owned backend code into Core, Identity, ReleaseManagement,
+and Evaluation modules while preserving Laravel framework conventions and public
+behavior. Do not create empty directories or speculative layers, and do not mix the
+old and target ownership models as a permanent state.
 
-The frontend organization is defined in
-[Frontend Architecture and Design System](12-frontend-architecture-and-design-system.md).
+The approved feature-oriented frontend organization is defined in
+[Frontend Architecture and Design System](../architecture/frontend-architecture.md).
 
 ## 4. PHP Standards
 
@@ -381,7 +386,7 @@ action open the transaction and call the model method.
 ### Public evaluation API
 
 - Keep public evaluation endpoints under `/api/v1`.
-- Follow [API Contract](08-api-contract.md).
+- Follow [API Contract](../architecture/api-contract.md).
 - Use stable machine-readable reason and error codes.
 - Preserve existing fields within a published API version.
 - Add optional fields compatibly; do not silently rename or remove fields.
@@ -486,7 +491,7 @@ action open the transaction and call the model method.
 - Preserve visible focus styles.
 - Never use color as the only indication of state.
 - Respect reduced-motion preferences.
-- Complete and verify the light theme before spending MVP time on dark mode.
+- Complete and verify the approved light theme before prioritizing dark mode.
 - Avoid `!important` except for a documented integration constraint.
 
 ## 11. Accessibility Standards
@@ -611,7 +616,7 @@ and confirming the required checks pass again after every substantive review fix
 
 ## 15. Git and Change Standards
 
-Follow [Git Branch, Pull Request, and CI Workflow](16-git-branch-pr-ci-workflow.md) as
+Follow [Git Branch, Pull Request, and CI Workflow](git-and-ci.md) as
 the single source of truth for branch names, commit messages, staging, pushing, pull
 requests, CI, review, merging, and branch cleanup.
 
@@ -628,7 +633,7 @@ required by that workflow.
 - Keep Jira technical reviews aligned with permanent repository documentation.
 - Use Mermaid diagrams when relationships or sequences are materially clearer than
   prose.
-- Mark future components explicitly so diagrams do not misrepresent MVP scope.
+- Mark planned components explicitly so diagrams do not misrepresent current scope.
 - Use relative links between repository documents and verify them after changes.
 - Do not copy large sections of source documentation into code comments.
 
@@ -694,9 +699,9 @@ configuration together when the team adopts a new standard.
 
 ## 19. Related Documentation
 
-- [Domain and Architecture](07-domain-and-architecture.md)
-- [API Contract](08-api-contract.md)
-- [Authentication and API Key Decision](11-authentication-and-api-key-decision.md)
-- [Frontend Architecture and Design System](12-frontend-architecture-and-design-system.md)
-- [Product-to-Delivery Workflow](13-product-to-delivery-workflow.md)
-- [Git Branch, Pull Request, and CI Workflow](16-git-branch-pr-ci-workflow.md)
+- [Domain and Architecture](../architecture/overview.md)
+- [API Contract](../architecture/api-contract.md)
+- [Authentication and API Key Decision](../architecture/authentication-and-api-keys.md)
+- [Frontend Architecture and Design System](../architecture/frontend-architecture.md)
+- [Product-to-Delivery Workflow](delivery-workflow.md)
+- [Git Branch, Pull Request, and CI Workflow](git-and-ci.md)

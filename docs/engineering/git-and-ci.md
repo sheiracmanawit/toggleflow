@@ -374,8 +374,8 @@ git diff main...HEAD         # Show the complete branch diff
 
 ## 13. Related Documentation
 
-- [Product-to-Delivery Workflow](13-product-to-delivery-workflow.md)
-- [Engineering and Coding Standards](14-engineering-and-coding-standards.md)
-- [Monorepo Application Structure](15-monorepo-application-structure.md)
-- [Developer Role](../.agents/developer.md)
-- [Code Reviewer Role](../.agents/code-reviewer.md)
+- [Product-to-Delivery Workflow](delivery-workflow.md)
+- [Engineering and Coding Standards](coding-standards.md)
+- [Monorepo Application Structure](repository-structure.md)
+- [Developer Role](../../.agents/developer.md)
+- [Code Reviewer Role](../../.agents/code-reviewer.md)

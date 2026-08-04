@@ -12,7 +12,7 @@ applications:
 ```text
 toggleflow/
 ├── apps/
-│   ├── platform-api/       # Laravel control plane and MVP evaluation API
+│   ├── platform-api/       # Laravel control plane and versioned evaluation API
 │   └── dashboard/          # Vue 3, TypeScript, Vite, and Tailwind SPA
 ├── packages/               # Future shared contracts and SDK packages when needed
 ├── docs/
@@ -35,7 +35,7 @@ The Laravel application owns:
 - Dashboard session authentication through Sanctum
 - Management APIs and authorization policies
 - Projects, environments, flags, environment state, credentials, and audit history
-- The versioned `/api/v1` evaluation API for MVP 0.1
+- The versioned `/api/v1` evaluation API
 - MySQL persistence, transactions, validation, rate limiting, and secret handling
 
 It remains a modular monolith. Management and evaluation have separate controllers,
@@ -57,7 +57,7 @@ It contains no authoritative authorization or feature-evaluation rules.
 
 - Product, API, UI, tests, documentation, and SDK evolution remain versioned together.
 - A vertical feature can update its Laravel endpoint and Vue workflow in one change.
-- Shared CI and repository standards reduce coordination cost during the MVP.
+- Shared CI and repository standards reduce coordination cost as the product evolves.
 - The applications keep distinct dependency manifests and build processes without the
   operational overhead of multiple repositories.
 
@@ -78,9 +78,9 @@ The dashboard and API may use different local origins. The Laravel configuration
 must explicitly include the dashboard host and port in Sanctum's stateful domains and
 credentialed CORS allowlist. The Vue HTTP client must send cookies and CSRF headers.
 
-Redis is not required for local or MVP correctness. Docker Compose may be added after
-the critical product loop is complete; it must not become the only supported local
-workflow without an approved documentation change.
+Redis is not required for local or evaluation correctness. Docker Compose may be
+added through the production-operations roadmap; it must not become the only
+supported local workflow without an approved documentation change.
 
 ## 6. Production Topology
 
@@ -110,7 +110,7 @@ protected landing page so same-origin proxy routing remains unambiguous.
 The evaluation path is security- and performance-sensitive, but a directory boundary
 does not create scalability. Extracting it now would add service authentication,
 network failure modes, duplicated deployment configuration, data ownership questions,
-and distributed observability before the MVP has measured traffic.
+and distributed observability without measured traffic or availability evidence.
 
 Consider extraction only when evidence shows one or more of these needs:
 
@@ -160,8 +160,8 @@ rule-engine work, or Docker packaging.
 
 ## 10. Related Documentation
 
-- [Domain and Architecture](07-domain-and-architecture.md)
-- [Architecture and Flow Diagrams](10-architecture-and-flow-diagrams.md)
-- [Authentication and API Key Decision](11-authentication-and-api-key-decision.md)
-- [Frontend Architecture and Design System](12-frontend-architecture-and-design-system.md)
-- [Engineering and Coding Standards](14-engineering-and-coding-standards.md)
+- [Domain and Architecture](../architecture/overview.md)
+- [Architecture and Flow Diagrams](../architecture/system-diagrams.md)
+- [Authentication and API Key Decision](../architecture/authentication-and-api-keys.md)
+- [Frontend Architecture and Design System](../architecture/frontend-architecture.md)
+- [Engineering and Coding Standards](coding-standards.md)

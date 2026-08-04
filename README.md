@@ -8,19 +8,22 @@ ToggleFlow helps software teams separate **deployment** from **release** by prov
 
 Modern teams deploy frequently, but not every feature is ready to be released immediately. ToggleFlow allows developers to ship code safely while giving product and QA teams control over when features become available.
 
-## Product Direction
+## Product
 
-- 🚩 Feature Flag Management
-- 🌍 Environment-specific configuration
-- 🔑 API key authentication
-- 📜 Audit logs
-- ⚡ REST API
-- 🖥️ Modern Vue dashboard
+- 🚩 Boolean feature flags with environment-specific release state
+- 🌍 Isolated Development, Staging, and Production environments
+- 🔑 Opaque, environment-scoped evaluation credentials
+- 📜 Transactionally consistent management audit history
+- ⚡ Versioned evaluation REST API with safe fallbacks
+- 🖥️ Responsive Vue management dashboard
 
-Percentage rollouts, user targeting, SDKs, and team permissions are planned after the
-boolean-flag MVP.
+The active product program strengthens backend and frontend ownership, establishes a
+Nuxt UI design foundation, and redesigns the current management workflows before
+progressive delivery expands evaluation behavior. Percentage rollouts, targeting,
+OpenFeature and SDK integrations, team governance, and production operations follow
+through the maintained roadmap.
 
-## MVP 0.1 Scope
+## Available Capabilities
 
 - Authentication
 - Projects
@@ -30,32 +33,19 @@ boolean-flag MVP.
 - API Keys
 - Evaluation REST API
 
-The MVP is the first production-quality milestone, not the final product. Percentage
-rollouts, targeting, SDKs, organizations, and permissions remain part of the planned
-evolution of ToggleFlow.
+See [Product Requirements](docs/05-product-requirements.md),
+[Product Strategy](docs/07-product-strategy.md), and the
+[Product Roadmap](docs/08-roadmap.md) for product scope and delivery direction.
 
 ## Documentation
 
-See the `docs/` directory for the product documentation.
+Start with the [Documentation Overview](docs/00-overview.md). The documentation is
+organized into:
 
-- 00-overview.md
-- 01-product-vision.md
-- 02-problem.md
-- 03-target-users.md
-- 04-features.md
-- 05-non-functional-requirements.md
-- 06-mvp-product-requirements.md
-- 07-domain-and-architecture.md
-- 08-api-contract.md
-- 09-delivery-plan.md
-- 10-architecture-and-flow-diagrams.md
-- 11-authentication-and-api-key-decision.md
-- 12-frontend-architecture-and-design-system.md
-- 13-product-to-delivery-workflow.md
-- 14-engineering-and-coding-standards.md
-- 15-monorepo-application-structure.md
-- 16-git-branch-pr-ci-workflow.md
-- roadmap.md
+- product definition and direction in `docs/00` through `docs/08`;
+- system design and contracts in `docs/architecture/`;
+- contributor and delivery guidance in `docs/engineering/`; and
+- accepted architecture decisions in `docs/decisions/`.
 
 ## Tech Stack
 
@@ -66,7 +56,9 @@ See the `docs/` directory for the product documentation.
 - Laravel Sanctum for first-party SPA cookie authentication
 - Pest 3, Laravel Pint, Larastan/PHPStan, ESLint, Prettier, Vitest, and Cypress
 
-Redis is intentionally not required for MVP correctness.
+Redis is intentionally not required for evaluation correctness. MySQL remains the
+authoritative configuration store until an approved, evidence-based architecture
+decision changes that responsibility.
 
 ## Prerequisites
 
@@ -153,7 +145,7 @@ server errors, and timeouts. Use a different environment key for each deployment
 never ship server-side keys in public browser bundles, and redact bearer values from
 logs and error reports.
 
-## Demo the MVP release workflow
+## Demo the release-control workflow
 
 The seeded fixture supports the complete release demonstration without database
 edits or a pre-generated credential:
@@ -208,7 +200,7 @@ runs type checking, linting, formatting, Vitest, the production build, and Cypre
 - The Vue SPA owns dashboard navigation and consumes Laravel's JSON APIs. In
   production, a reverse proxy should preferably expose the dashboard and API through
   one HTTPS origin even though they are independently built applications.
-- The evaluation API remains a module of `apps/platform-api` for the MVP. It should
+- The evaluation API remains a module of `apps/platform-api`. It should
   become a separate deployable service only after measured scaling or reliability
   needs justify that operational boundary.
 

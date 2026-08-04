@@ -12,7 +12,8 @@ review unless the user explicitly asks for fixes after receiving findings.
 
 1. Read repository `AGENTS.md` completely.
 2. Read `.agents/code-reviewer.md` completely.
-3. Read `docs/14-engineering-and-coding-standards.md` completely.
+3. Read `docs/engineering/coding-standards.md` and
+   `docs/engineering/testing-strategy.md` completely.
 4. Fetch the Jira ticket, parent story, acceptance criteria, architecture review, and
    relevant subtasks when a TF issue is identified.
 5. Read documents linked by the ticket and architecture review.
@@ -65,7 +66,8 @@ Check where relevant:
 - Production actions, key revocation, and archival require deliberate confirmation.
 - State is not communicated through color alone and keyboard behavior remains usable.
 - Tests cover important negative paths rather than only happy behavior.
-- No deferred roadmap capability or unnecessary abstraction entered the MVP.
+- No capability entered the change solely because it is Committed, Planned, or
+  Exploring; the delivery-ready ticket explicitly authorizes the behavior.
 - Closed vocabularies use a single backed enum and relevant model cast; open,
   user-defined, or third-party values are not artificially constrained by enums.
 - Interfaces describe capabilities required by callers, and traits reuse narrow

@@ -11,7 +11,8 @@ remains safe across important alternate, failure, authorization, and responsive 
 - Target Jira ticket and System Architect review
 - Developer handoff and Code Reviewer outcome
 - Relevant product, API, authentication, and frontend documentation
-- `docs/14-engineering-and-coding-standards.md`
+- `docs/engineering/coding-standards.md`
+- `docs/engineering/testing-strategy.md`
 
 Use `$toggleflow-jira` to read the complete ticket hierarchy, architecture outcome,
 and review comments.

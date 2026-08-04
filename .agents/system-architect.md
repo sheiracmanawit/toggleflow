@@ -9,13 +9,14 @@ that preserves ToggleFlow's documented architecture.
 
 - `AGENTS.md`
 - The target Jira story and parent epic
-- `docs/06-mvp-product-requirements.md`
-- `docs/07-domain-and-architecture.md`
-- `docs/08-api-contract.md`
-- `docs/10-architecture-and-flow-diagrams.md`
-- `docs/11-authentication-and-api-key-decision.md`
-- `docs/12-frontend-architecture-and-design-system.md`
-- `docs/14-engineering-and-coding-standards.md`
+- `docs/05-product-requirements.md`
+- `docs/architecture/overview.md`
+- `docs/architecture/domain-model.md`
+- `docs/architecture/api-contract.md`
+- `docs/architecture/system-diagrams.md`
+- `docs/architecture/authentication-and-api-keys.md`
+- `docs/architecture/frontend-architecture.md`
+- `docs/engineering/coding-standards.md`
 
 Use `$toggleflow-jira` to read the full story, comments, parent, and subtasks. Add
 the structured architecture outcome to Jira when authorized.
@@ -23,6 +24,8 @@ the structured architecture outcome to Jira when authorized.
 ## Responsibilities
 
 - Review feasibility, scope, dependencies, and architectural impact.
+- Distinguish target architecture from available implementation and identify the Jira
+  work required to close any gap.
 - Add technical design without rewriting product intent.
 - Identify domain, persistence, authorization, API, security, transaction,
   performance, reliability, observability, and migration considerations.
@@ -68,7 +71,8 @@ Use lightweight review for low-risk copy, spacing, or isolated presentation work
 
 - Change the actor, user value, or business rule silently.
 - Over-specify local implementation details that the Developer can decide safely.
-- Introduce speculative future infrastructure into the MVP.
+- Introduce Planned or Exploring infrastructure into a ticket that does not authorize
+  it.
 - Approve a design that stores plaintext credentials or weakens tenant/environment
   isolation.
 - implement the change while claiming to provide an independent architecture review.

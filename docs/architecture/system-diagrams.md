@@ -2,10 +2,10 @@
 
 ## 1. Purpose and Scope
 
-These diagrams visualize the MVP 0.1 architecture and primary workflows defined in
-the product requirements, domain architecture, and API contract. Solid components are
-part of the MVP. Dashed or explicitly labeled future components show intended
-extension points and are not implementation commitments for MVP 0.1.
+These diagrams visualize the current ToggleFlow architecture and primary workflows
+defined in the product requirements, domain architecture, and API contract. Solid
+components represent current behavior. Dashed or explicitly labeled planned
+components show approved extension direction, not implemented behavior.
 
 ## 2. Diagram Index
 
@@ -18,7 +18,7 @@ extension points and are not implementation commitments for MVP 0.1.
 | Evaluation Sequence | How does a client application obtain a safe boolean value? |
 | Flag State Change Sequence | How are state and audit history kept consistent? |
 | API Key Lifecycle | How does an environment credential move from creation to revocation? |
-| Evolution View | Where do post-MVP capabilities extend the system? |
+| Evolution View | Where do planned capabilities extend the system? |
 
 ## 3. C4 Level 1 — System Context
 
@@ -44,11 +44,11 @@ flowchart LR
   environment.
 - ToggleFlow does not execute the consuming application's feature. It returns the
   decision the application uses.
-- Third-party identity, notifications, analytics, and billing are outside MVP 0.1.
+- Third-party identity, notifications, analytics, and billing are not current product behavior.
 
 ## 4. C4 Level 2 — Container View
 
-The MVP is one monorepo with an independently built Vue dashboard and a modular
+ToggleFlow is one monorepo with an independently built Vue dashboard and a modular
 Laravel backend connected to one authoritative database. Management and evaluation
 use different entry paths even though both backend paths share domain services and
 persistence. The diagram shows runtime containers, not separate repositories.
@@ -77,7 +77,7 @@ flowchart TB
     management --> domain
     evaluation --> domain
     domain -->|"Transactions and queries"| mysql
-    evaluation -.->|"Post-MVP cached reads"| redis
+    evaluation -.->|"Optional cached reads"| redis
     management -.->|"Post-commit invalidation"| redis
 
     classDef future stroke-dasharray: 6 4,color:#666;
@@ -93,7 +93,7 @@ flowchart TB
 | Evaluation API | Authenticate environment keys and return stable evaluation responses. |
 | Domain services | Enforce invariants and coordinate state changes with audit events. |
 | MySQL | Store authoritative configuration, credential hashes, and audit history. |
-| Redis | Optional post-MVP acceleration; never the sole source of configuration. |
+| Redis | Optional future acceleration; never the sole source of configuration. |
 
 For self-hosting, a reverse proxy should normally expose the dashboard and Laravel
 routes through one HTTPS origin. Local development may use separate Vite and Artisan
@@ -178,7 +178,7 @@ erDiagram
 
 ### Important constraints
 
-- A project slug is unique for its owner in MVP 0.1.
+- A project slug is unique for its current owner.
 - An environment key and feature-flag key are unique within their project.
 - The pair of environment and feature flag is unique in `ENVIRONMENT_FLAG`.
 - An API key stores a lookup prefix and secure secret hash, never the recoverable
@@ -265,8 +265,8 @@ sequenceDiagram
 
 - Authentication failures use `401` and do not reveal whether the requested flag
   exists.
-- Missing or unavailable flags return the safe boolean `false` and a reason in MVP
-  0.1.
+- Missing or unavailable flags return the safe boolean `false` and a reason in the
+  current `/api/v1` contract.
 - The consuming application must retain a local fallback for network and server
   failures.
 
@@ -348,9 +348,9 @@ stateDiagram-v2
 Key rotation uses two credentials temporarily: issue a replacement, deploy it to the
 client application, verify successful evaluation, and then revoke the old key.
 
-## 10. Post-MVP Evolution View
+## 10. Product Evolution View
 
-The MVP evaluator remains the entry point as capabilities grow. Future components
+The versioned evaluator remains the entry point as capabilities grow. Planned components
 extend the decision process or ownership model without changing the meaning of a
 project, environment, or flag key.
 
@@ -360,19 +360,19 @@ flowchart LR
     sdk["Future SDK<br/>Fallbacks and local cache"]
     api["Versioned Evaluation API"]
     evaluator["Evaluation Service"]
-    static["MVP Static Boolean Strategy"]
+    static["Current Static Boolean Strategy"]
     rules["Future Rule Engine<br/>Priorities and defaults"]
     segments["Future Segments<br/>Reusable audiences"]
     rollout["Future Percentage Allocation<br/>Deterministic bucketing"]
     store[("Configuration Store")]
 
-    owner["MVP Project Owner"]
+    owner["Current Project Owner"]
     org["Future Organization"]
     membership["Future Membership and Roles"]
     project["Project"]
 
-    client -->|"MVP direct HTTP"| api
-    client -.->|"Post-MVP"| sdk
+    client -->|"Current direct HTTP"| api
+    client -.->|"Planned integration"| sdk
     sdk -.-> api
     api --> evaluator
     evaluator --> static
@@ -402,10 +402,10 @@ flowchart LR
 
 ## 11. Related Documentation
 
-- [MVP Product Requirements](06-mvp-product-requirements.md)
-- [Domain and Architecture](07-domain-and-architecture.md)
-- [API Contract](08-api-contract.md)
-- [One-week Delivery Plan](09-delivery-plan.md)
-- [Authentication and API Key Decision](11-authentication-and-api-key-decision.md)
-- [Frontend Architecture and Design System](12-frontend-architecture-and-design-system.md)
-- [Roadmap](roadmap.md)
+- [Product Requirements](../05-product-requirements.md)
+- [Domain and Architecture](overview.md)
+- [API Contract](api-contract.md)
+- [Delivery Strategy](../engineering/delivery-workflow.md)
+- [Authentication and API Key Decision](authentication-and-api-keys.md)
+- [Frontend Architecture and Design System](frontend-architecture.md)
+- [Roadmap](../08-roadmap.md)

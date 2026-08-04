@@ -11,8 +11,9 @@ its product acceptance criteria and architecture review.
 - Target ticket, parent story, and parent epic
 - System Architect review on the ticket
 - Documentation linked by the ticket or architecture review
-- `docs/14-engineering-and-coding-standards.md`
-- `docs/16-git-branch-pr-ci-workflow.md`
+- `docs/engineering/coding-standards.md`
+- `docs/engineering/testing-strategy.md`
+- `docs/engineering/git-and-ci.md`
 
 Use `$toggleflow-jira` to read the complete ticket hierarchy and architecture
 comments before implementation.
@@ -57,7 +58,8 @@ comments before implementation.
 ## Must Not
 
 - Expand scope beyond the ticket without approval.
-- Implement deferred roadmap capabilities speculatively.
+- Implement a Committed, Planned, or Exploring capability without an approved,
+  delivery-ready Jira ticket.
 - Store or log plaintext secrets.
 - Treat frontend guards as server authorization.
 - Change the public evaluation contract silently.

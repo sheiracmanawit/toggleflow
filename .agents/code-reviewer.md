@@ -14,8 +14,9 @@ actionable findings as Codex inline code-review comments in the current task.
 - The changed files and relevant tests
 - Required pull-request CI checks and failed-check logs when applicable
 - Documentation linked by the ticket
-- `docs/14-engineering-and-coding-standards.md`
-- `docs/16-git-branch-pr-ci-workflow.md`
+- `docs/engineering/coding-standards.md`
+- `docs/engineering/testing-strategy.md`
+- `docs/engineering/git-and-ci.md`
 
 Use `$toggleflow-jira` to read the complete ticket hierarchy and review comments.
 

@@ -5,7 +5,7 @@ description: Implement an approved ToggleFlow Jira ticket as a complete vertical
 
 # Implement a ToggleFlow Ticket
 
-Implement one approved Jira ticket without expanding MVP scope. Treat the ticket's
+Implement one approved Jira ticket without expanding its current delivery scope. Treat the ticket's
 Product Owner content as the definition of value and the System Architect review as
 technical guardrails.
 
@@ -15,7 +15,8 @@ Before editing code:
 
 1. Read repository `AGENTS.md` completely.
 2. Read `.agents/developer.md` completely.
-3. Read `docs/14-engineering-and-coding-standards.md` completely.
+3. Read `docs/engineering/coding-standards.md` and
+   `docs/engineering/testing-strategy.md` completely.
 4. Fetch the target Jira ticket, parent story, parent epic, comments, and subtasks.
 5. Read every repository document linked by the ticket or architecture review.
 6. Inspect the current worktree, relevant implementation, tests, and configuration.
@@ -45,7 +46,7 @@ behavior or architecture to unblock implementation.
 3. Inspect existing patterns before adding new abstractions.
 4. Decide deliberately whether each domain value or behavior belongs in a backed
    enum, interface, trait, model method, or application action using
-   `docs/14-engineering-and-coding-standards.md`.
+   `docs/engineering/coding-standards.md`.
 5. Implement the smallest complete vertical behavior.
 6. Enforce authorization, validation, isolation, failure behavior, transactions,
    auditing, and secret handling required by the change.
@@ -85,9 +86,12 @@ behavior or architecture to unblock implementation.
   line while preserving route contracts.
 - Preserve `/api/v1` response contracts.
 - Treat MySQL as authoritative; do not add Redis for correctness.
-- Use Vue 3 TypeScript and Tailwind without a large component framework.
+- Use Vue 3 TypeScript, Tailwind, and the approved Nuxt UI foundation where it has
+  been delivered; do not add a second overlapping component framework.
 - Require deliberate UI confirmation for Production changes, revocation, and archival.
-- Keep post-MVP capabilities out of the change unless the approved ticket moves them
+- Treat capability status as context, not authorization. Keep Committed, Planned, and
+  Exploring capabilities out of the change unless an approved, delivery-ready Jira
+  ticket explicitly includes them.
   into scope.
 
 ## Change Discipline

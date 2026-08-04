@@ -8,6 +8,11 @@ description: Read, search, comment on, and update ToggleFlow Jira issues through
 Use the repository-local `scripts/jira` helper from the repository root. Treat Jira
 as the source of ticket state and `AGENTS.md` as the source of project workflow rules.
 
+When a ticket changes product behavior, compare it with
+`docs/04-product-capabilities.md`. Available, Committed, Planned, and Exploring
+describe product maturity; none of those statuses substitutes for an approved,
+delivery-ready Jira ticket.
+
 ## Protect credentials
 
 1. Confirm `scripts/jira` exists and is executable.

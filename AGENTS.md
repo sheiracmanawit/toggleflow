@@ -2,48 +2,62 @@
 
 ## Mission
 
-Deliver ToggleFlow MVP 0.1 as a polished, secure, self-hosted feature-flag platform
-without compromising the documented path to later releases.
+Deliver ToggleFlow as a polished, secure, understandable, self-hosted feature-release
+platform while preserving current contracts and the documented path to later
+capabilities.
 
 ## Required Context
 
 Before changing product behavior, read the relevant Jira ticket and the documents it
 references. Use these documents as the default source of truth:
 
-- `docs/06-mvp-product-requirements.md`
-- `docs/07-domain-and-architecture.md`
-- `docs/08-api-contract.md`
-- `docs/09-delivery-plan.md`
-- `docs/10-architecture-and-flow-diagrams.md`
-- `docs/11-authentication-and-api-key-decision.md`
-- `docs/12-frontend-architecture-and-design-system.md`
-- `docs/14-engineering-and-coding-standards.md`
-- `docs/16-git-branch-pr-ci-workflow.md`
+- `docs/04-product-capabilities.md`
+- `docs/05-product-requirements.md`
+- `docs/07-product-strategy.md`
+- `docs/08-roadmap.md`
+- `docs/architecture/overview.md`
+- `docs/architecture/domain-model.md`
+- `docs/architecture/authentication-and-api-keys.md`
+- `docs/architecture/evaluation-engine.md`
+- `docs/architecture/api-contract.md`
+- `docs/architecture/frontend-architecture.md`
+- `docs/architecture/system-diagrams.md`
+- `docs/engineering/coding-standards.md`
+- `docs/engineering/testing-strategy.md`
+- `docs/engineering/git-and-ci.md`
 
 When documents conflict, do not silently choose one. Identify the conflict and route
 the decision to the Product Owner for product intent or the System Architect for
 technical direction.
 
-## MVP Boundaries
+## Product Scope and Status
 
-MVP 0.1 includes authentication, directly owned projects, default environments,
-boolean feature flags, environment-specific state, opaque environment API keys, a
-versioned evaluation API, audit history, and a focused Vue dashboard.
+Product capabilities use four statuses:
 
-Do not implement percentage rollouts, targeting, organizations, team RBAC, published
-SDKs, scheduling, notifications, experiments, analytics, or SSR unless the approved
-ticket and documentation explicitly move that capability into scope.
+- **Available:** implemented behavior whose compatibility must be preserved.
+- **Committed:** approved direction with accepted or prepared delivery work.
+- **Planned:** accepted product scope that is not delivery-ready by status alone.
+- **Exploring:** a hypothesis that is not yet accepted product scope.
+
+The capability catalog defines product scope; Jira defines authorized delivery.
+Neither Committed nor Planned status authorizes implementation without an approved,
+delivery-ready ticket. Do not implement Exploring work until the Product Owner first
+promotes it through an explicit product decision and the normal delivery workflow.
+
+Percentage Rollouts and User Targeting are Planned first-class product capabilities.
+Their presence in the vision must be preserved, but their behavior must not be
+invented before the applicable stories and architecture are ready.
 
 ## Architecture Invariants
 
 - Use one monorepo with the Laravel modular monolith in `apps/platform-api` and the
   Vue 3 TypeScript SPA in `apps/dashboard`. Do not add application code at the
   repository root.
-- Keep the MVP evaluation API inside `apps/platform-api`; do not create a separate
+- Keep the evaluation API inside `apps/platform-api`; do not create a separate
   runtime service without an approved architecture decision based on measured need.
 - Use Sanctum cookie-based authentication for the first-party dashboard.
 - Use opaque, hashed API keys scoped to one environment for evaluation.
-- Do not use Passport, JWTs, or Sanctum personal tokens for MVP evaluation.
+- Do not use Passport, JWTs, or Sanctum personal tokens for evaluation.
 - Resolve project and environment from the evaluation credential; request data cannot
   override either value.
 - Keep management and evaluation controllers, authentication, and response contracts
@@ -61,12 +75,12 @@ ticket and documentation explicitly move that capability into scope.
 - Centralize authorization in Laravel policies. Client-side guards are not an
   authorization boundary.
 - Archive lifecycle resources instead of permanently deleting them through ordinary
-  MVP behavior.
+  product behavior.
 
 ## API Invariants
 
 - Keep public evaluation endpoints under `/api/v1`.
-- Preserve the response and error envelopes in `docs/08-api-contract.md`.
+- Preserve the response and error envelopes in `docs/architecture/api-contract.md`.
 - Return safe boolean fallbacks and documented reasons for missing, archived, or
   unconfigured flags.
 - Authentication errors must not reveal whether a key prefix, project, environment,
@@ -81,8 +95,9 @@ ticket and documentation explicitly move that capability into scope.
 
 - Use Vue 3 Composition API, TypeScript, Vite, Vue Router, and Tailwind CSS.
 - Use Pinia only for state that genuinely spans routes.
-- Build reusable UI primitives and domain components without introducing a large
-  component framework.
+- Use the approved Nuxt UI foundation after TF-26 while retaining ToggleFlow ownership
+  of semantic tokens, product components, accessibility, and workflow behavior. Do
+  not introduce a second overlapping component framework.
 - Treat Disabled as a normal state; reserve danger styling for failures and
   destructive actions.
 - Require explicit confirmation for Production state changes, key revocation, and
@@ -192,7 +207,7 @@ not run and what remains unverified.
 
 ## Coding Standards
 
-Follow `docs/14-engineering-and-coding-standards.md` for PHP, Laravel, Vue,
+Follow `docs/engineering/coding-standards.md` for PHP, Laravel, Vue,
 TypeScript, Tailwind, API, database, testing, security, Git, and documentation
 conventions. When the implementation introduces formatter, linter, type-checker, or
 static-analysis configuration, treat the checked-in configuration as executable

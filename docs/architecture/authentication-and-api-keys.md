@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for MVP 0.1.
+Accepted and current.
 
 ## Decision
 
@@ -13,7 +13,7 @@ ToggleFlow uses two authentication mechanisms for two different actors:
 | Human using the Vue dashboard | Laravel Sanctum session authentication | Projects owned by the authenticated user |
 | Client application evaluating flags | Opaque environment API key | Read-only evaluation for exactly one environment |
 
-Laravel Passport, OAuth 2.0 client credentials, and JWTs are not used for MVP flag
+Laravel Passport, OAuth 2.0 client credentials, and JWTs are not used for flag
 evaluation.
 
 ## Context
@@ -216,12 +216,12 @@ Client ID and client secret
       → evaluate a flag
 ```
 
-This was not selected for MVP evaluation because it introduces OAuth clients, grant
+This was not selected for evaluation because it introduces OAuth clients, grant
 handling, access-token issuance, expiry and renewal, Passport keys, scopes, and
 additional persistence. Applications would need to obtain and cache access tokens
 before evaluating flags.
 
-Those capabilities do not improve the MVP's single authorization rule: read evaluated
+Those capabilities do not improve the current authorization rule: read evaluated
 flags from one environment. The opaque environment key represents that boundary
 directly and requires no preliminary token exchange.
 
@@ -256,7 +256,7 @@ authorization semantics explicit.
 - Full secrets are not recoverable from the database.
 - Multiple keys support safe rotation.
 - Dashboard and evaluation security boundaries remain separate.
-- The MVP avoids unnecessary OAuth and JWT infrastructure.
+- The product avoids unnecessary OAuth and JWT infrastructure.
 
 ### Costs
 
@@ -297,7 +297,7 @@ Passport. The two credential types serve different actors and security boundarie
 
 ## Related Documentation
 
-- [MVP Product Requirements](06-mvp-product-requirements.md)
-- [Domain and Architecture](07-domain-and-architecture.md)
-- [API Contract](08-api-contract.md)
-- [Architecture and Flow Diagrams](10-architecture-and-flow-diagrams.md)
+- [Product Requirements](../05-product-requirements.md)
+- [Domain and Architecture](overview.md)
+- [API Contract](api-contract.md)
+- [Architecture and Flow Diagrams](system-diagrams.md)

@@ -47,7 +47,9 @@ flowchart LR
 
 - The actor, outcome, and value are explicit.
 - Acceptance criteria are observable and limited to one outcome.
-- MVP scope and exclusions are clear.
+- Available, Committed, Planned, and Exploring boundaries are clear.
+- The story is authorized by its Jira scope; capability status alone is not treated
+  as permission to implement it.
 - Product questions that block behavior are resolved.
 - The story passes INVEST or declares a true dependency.
 
@@ -106,14 +108,14 @@ status transitions.
 
 ## 7. Related Instructions
 
-- [Repository Agent Instructions](../AGENTS.md)
-- [Product Owner](../.agents/product-owner.md)
-- [System Architect](../.agents/system-architect.md)
-- [Developer](../.agents/developer.md)
-- [Code Reviewer](../.agents/code-reviewer.md)
-- [QA Tester](../.agents/qa-tester.md)
-- [Engineering and Coding Standards](14-engineering-and-coding-standards.md)
-- [Git Branch, Pull Request, and CI Workflow](16-git-branch-pr-ci-workflow.md)
+- [Repository Agent Instructions](../../AGENTS.md)
+- [Product Owner](../../.agents/product-owner.md)
+- [System Architect](../../.agents/system-architect.md)
+- [Developer](../../.agents/developer.md)
+- [Code Reviewer](../../.agents/code-reviewer.md)
+- [QA Tester](../../.agents/qa-tester.md)
+- [Engineering and Coding Standards](coding-standards.md)
+- [Git Branch, Pull Request, and CI Workflow](git-and-ci.md)
 
 ## 8. Project Skills
 

@@ -2,8 +2,8 @@
 
 ## Objective
 
-Maintain a valuable, coherent, and achievable ToggleFlow backlog while protecting the
-one-week MVP boundary.
+Maintain a valuable, coherent, and achievable ToggleFlow backlog while protecting
+current contracts and the sequencing boundaries in the product strategy and roadmap.
 
 ## Required Reading
 
@@ -12,9 +12,10 @@ one-week MVP boundary.
 - `docs/01-product-vision.md`
 - `docs/02-problem.md`
 - `docs/03-target-users.md`
-- `docs/06-mvp-product-requirements.md`
-- `docs/09-delivery-plan.md`
-- `docs/roadmap.md`
+- `docs/04-product-capabilities.md`
+- `docs/05-product-requirements.md`
+- `docs/07-product-strategy.md`
+- `docs/08-roadmap.md`
 
 Use `$write-and-split-user-stories` for story creation and backlog refinement.
 Use `$toggleflow-jira` to read the target, parent, comments, and subtasks before
@@ -28,7 +29,8 @@ declaring Product Ready.
 - Apply INVEST and split oversized work vertically with SPIDR.
 - Keep technical layers as tasks or subtasks, not stories.
 - Resolve questions about desired user behavior and business rules.
-- Protect MVP scope and sequence work by product value and dependency.
+- Assign **Available**, **Committed**, **Planned**, or **Exploring** status consistently
+  and sequence work by product value and dependency.
 - Request architecture review after a story is Product Ready.
 
 ## Must Not
@@ -37,7 +39,10 @@ declaring Product Ready.
   user-story sentence.
 - Change an accepted architecture decision without System Architect review.
 - Mark work Ready for Development while product questions block a testable outcome.
-- Add future roadmap capabilities to an MVP story without an explicit scope decision.
+- Treat Committed status as implementation authorization. Only an approved,
+  delivery-ready Jira ticket authorizes implementation.
+- Move a Planned or Exploring capability into delivery without an explicit Product
+  Owner decision and the required architecture review.
 
 ## Output
 

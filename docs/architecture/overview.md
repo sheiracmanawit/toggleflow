@@ -2,7 +2,7 @@
 
 ## 1. Architectural Goals
 
-ToggleFlow should be simple to operate in the MVP and straightforward to extend. The
+ToggleFlow should be simple to operate and straightforward to extend. The
 architecture prioritizes clear domain boundaries, secure evaluation, auditability,
 and a stable public API over premature distribution or microservices.
 
@@ -13,18 +13,18 @@ product. The separation keeps frontend tooling and deployment concerns explicit
 without prematurely splitting the Laravel domain into microservices.
 
 The accepted repository and runtime boundaries are recorded in
-[Monorepo Application Structure](15-monorepo-application-structure.md).
+[Monorepo Application Structure](../engineering/repository-structure.md).
 
-See [Architecture and Flow Diagrams](10-architecture-and-flow-diagrams.md) for the
+See [Architecture and Flow Diagrams](system-diagrams.md) for the
 system context, container view, domain relationships, user flow, and evaluation
 sequence described in this document.
 
-Authentication choices and the decision not to use Passport for MVP evaluation are
-recorded in [Authentication and API Key Decision](11-authentication-and-api-key-decision.md).
+Authentication choices and the decision not to use Passport for evaluation are
+recorded in [Authentication and API Key Decision](authentication-and-api-keys.md).
 
 The Vue SPA structure, Tailwind design system, page composition, responsive behavior,
 and accessibility rules are defined in
-[Frontend Architecture and Design System](12-frontend-architecture-and-design-system.md).
+[Frontend Architecture and Design System](frontend-architecture.md).
 
 ## 2. System Context
 
@@ -42,7 +42,7 @@ separate makes later caching and SDK development safer.
 
 ### User
 
-Represents the authenticated owner in MVP 0.1. A user owns many projects. A future
+Represents the current authenticated release owner. A user owns many projects. A planned
 organization membership layer can replace direct ownership without changing the
 project-to-environment or flag-to-state relationships.
 
@@ -65,7 +65,7 @@ enabled value belongs to each environment-specific state.
 ### EnvironmentFlag
 
 Joins an environment and feature flag and stores the current boolean value. This
-separation is the most important extensibility decision in the MVP. Later releases
+separation is a foundational extensibility decision. Later releases
 can associate ordered rules, variations, prerequisites, and version metadata with
 this environment-specific configuration.
 
@@ -104,7 +104,7 @@ User 0..1 ── * AuditEvent
 
 ## 5. Suggested Persistence Constraints
 
-- `projects.slug` is unique per owner for the MVP.
+- `projects.slug` is unique per current owner.
 - `environments.key` is unique per project.
 - `feature_flags.key` is unique per project.
 - `environment_flags` is unique on `(environment_id, feature_flag_id)`.
@@ -117,6 +117,23 @@ Database constraints supplement application validation; they are not optional.
 
 ## 6. Application Layers
 
+### Committed bounded-module evolution
+
+TF-22 moves the existing Laravel source into four bounded modules before planned
+backend product capabilities are implemented:
+
+- **Core:** narrow cross-module contracts and truly shared mechanics
+- **Identity:** dashboard authentication and current/future actor identity
+- **ReleaseManagement:** projects, environments, flags, credentials, and audit-aware
+  management workflows
+- **Evaluation:** environment-key authentication and versioned flag decisions
+
+This is a complete internal ownership migration, not a change to current routes,
+responses, authorization, persistence, evaluation, or audit behavior. Management and
+evaluation keep separate HTTP and authentication boundaries. Cross-module
+dependencies must be explicit and acyclic; the old layer-first application
+directories are removed when the migration completes.
+
 ### HTTP and UI Layer
 
 Controllers parse requests, invoke application actions, and return resources. They
@@ -128,7 +145,7 @@ The authenticated management interface is an independently built Vue 3 single-pa
 application. Vue Router owns dashboard navigation, and the SPA communicates with the
 Laravel application through JSON management endpoints authenticated by Sanctum. In
 production, a reverse proxy should preferably expose both applications through one
-HTTPS origin. Server-side rendering is not required for MVP 0.1 because the
+HTTPS origin. Server-side rendering is not required for the authenticated dashboard because the
 management interface is private, interactive, and has no search-indexing requirement.
 
 First-party dashboard JSON endpoints use the `/dashboard` namespace and are registered
@@ -136,7 +153,7 @@ from `routes/dashboard.php`. The public, versioned evaluation contract alone use
 `/api/v1` and is registered from `routes/api.php`. The route files preserve distinct
 authentication, controller, response, and rate-limiting boundaries inside Laravel.
 
-For the MVP project lifecycle, the dashboard management boundary provides
+For the current project lifecycle, the dashboard management boundary provides
 owner-scoped operations to list active projects, create a project, read project
 details, update mutable metadata, and archive a project through a deliberate command.
 Project resources expose intentional fields rather than raw Eloquent models. Project
@@ -196,13 +213,13 @@ Redis caching belong here. Redis should be introduced only after correctness exi
 the evaluator interface should make that addition transparent to callers.
 
 The public evaluation endpoints remain a dedicated module and HTTP boundary within
-the Laravel application for MVP 0.1. A future `apps/evaluation-api` is an extraction
-option, not a planned MVP workspace. Extraction requires measured independent
+the Laravel application. A future `apps/evaluation-api` is an extraction option,
+not an assumed roadmap workspace. Extraction requires measured independent
 scaling, availability, or deployment needs and a documented data-ownership decision.
 
 ## 7. Evaluation Design
 
-The MVP evaluator performs these steps:
+The current evaluator performs these steps:
 
 1. Authenticate and resolve the environment from the API key.
 2. Find an active flag by project and key.
@@ -218,7 +235,8 @@ evaluate(environment, flagKey, context, defaultValue) -> EvaluationResult
 ```
 
 It can then evaluate prerequisites, ordered targeting rules, percentage allocation,
-and a final default rule. No speculative rule tables are needed for MVP 0.1.
+and a final default rule. Rule persistence is introduced only with an approved
+progressive-delivery story and migration design.
 
 ## 8. Percentage Rollout Extension
 
@@ -233,7 +251,7 @@ The future request context may contain:
 - Optional email
 - Custom string, number, or boolean attributes
 
-The MVP API may accept no context, but its evaluation service should be callable with
+The current API accepts no context, but its evaluation service should remain able to evolve toward
 an empty context object so adding context does not require redesigning management
 models.
 
@@ -251,19 +269,19 @@ models.
 - CORS is configured deliberately for browser consumers; it is not globally open by
   accident.
 
-MVP authentication is intentionally split by actor:
+Authentication is intentionally split by actor:
 
 - Human dashboard users authenticate with Laravel Sanctum using the first-party SPA
   session flow.
 - Client applications authenticate evaluation requests with opaque, hashed API keys
   scoped to one environment.
-- Laravel Passport and OAuth 2.0 client credentials are not used for MVP evaluation.
+- Laravel Passport and OAuth 2.0 client credentials are not used for evaluation.
   Passport may be reconsidered for a future public management API requiring standard
   OAuth clients, short-lived tokens, delegated access, or granular scopes.
 
 ## 10. Performance and Reliability
 
-The database-backed evaluator is acceptable for MVP 0.1 if it meets the documented
+The database-backed evaluator remains authoritative while it meets the documented
 latency target under a representative local test. Later optimization should use:
 
 - Compound indexes for flag lookup and environment state
@@ -306,14 +324,14 @@ telemetry is a separate future concern with different retention requirements.
 
 ## 12. Evolution to Organizations
 
-Direct project ownership keeps the MVP small. When teams are introduced:
+Direct project ownership is the current tenancy model. When teams are introduced:
 
 1. Add organizations and organization memberships.
 2. Associate projects with organizations.
 3. Migrate each existing user into a personal organization.
 4. Replace owner checks with membership permissions.
 
-This migration should be planned before v1.0. The MVP should centralize authorization
+This migration must be planned before team collaboration is implemented. The current product centralizes authorization
 in policies so the migration does not require rewriting every controller.
 
 ## 13. Testing Strategy

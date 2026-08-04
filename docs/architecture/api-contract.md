@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-This document defines the public evaluation API required by MVP 0.1. Administrative
+This document defines the current public evaluation API contract. Administrative
 endpoints are internal dashboard endpoints and may evolve more quickly. The public API
 is versioned because SDKs and client applications will depend on it.
 
@@ -32,8 +32,8 @@ The bearer value is an opaque API key, not a JWT or OAuth access token. The `Bea
 scheme describes how the credential is transported in HTTP and does not imply a token
 format. ToggleFlow stores only a lookup prefix and secure hash of the secret.
 
-Laravel Passport is not part of the MVP evaluation path. See
-[Authentication and API Key Decision](11-authentication-and-api-key-decision.md) for
+Laravel Passport is not part of the evaluation path. See
+[Authentication and API Key Decision](authentication-and-api-keys.md) for
 the alternatives and rationale.
 
 ## 3. Evaluate One Flag
@@ -57,7 +57,8 @@ Successful response:
 ```
 
 The `value` field is intentionally named generically so the API can support string or
-numeric variations in a future version. MVP 0.1 returns only booleans.
+numeric variations in a future version. The current `/api/v1` endpoint returns only
+booleans.
 
 ### Result Reasons
 
@@ -68,7 +69,7 @@ numeric variations in a future version. MVP 0.1 returns only booleans.
 | `FLAG_ARCHIVED` | The flag is archived and not eligible for evaluation. |
 | `CONFIGURATION_MISSING` | The flag has no valid state for the environment. |
 
-For MVP 0.1, missing or unavailable flags return `false` with HTTP 200 so client code
+In the current `/api/v1` contract, missing or unavailable flags return `false` with HTTP 200 so client code
 can fail safely and still inspect the reason:
 
 ```json
@@ -142,7 +143,7 @@ Content-Type: application/json
 }
 ```
 
-This endpoint is documented as a direction, not an MVP requirement. It should not be
+This endpoint is documented as planned direction, not current behavior. It must not be
 implemented until targeting or caller-defined defaults are scheduled.
 
 ## 6. API Stability Rules

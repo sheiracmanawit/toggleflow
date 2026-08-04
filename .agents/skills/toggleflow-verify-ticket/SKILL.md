@@ -12,7 +12,8 @@ match the implementation and do not silently fix defects during verification.
 
 1. Read repository `AGENTS.md` completely.
 2. Read `.agents/qa-tester.md` completely.
-3. Read `docs/14-engineering-and-coding-standards.md` completely.
+3. Read `docs/engineering/coding-standards.md` and
+   `docs/engineering/testing-strategy.md` completely.
 4. Fetch the Jira ticket, parent story, acceptance criteria, architecture review,
    subtasks, and relevant review comments.
 5. Read linked product, API, authentication, architecture, and frontend documents.
@@ -52,7 +53,8 @@ Create one row for every acceptance criterion. Add focused cases for relevant:
 - Loading, empty, success, and failed mutation behavior
 - Keyboard access, focus, non-color state indicators, and responsive layouts
 
-Do not expand QA into deferred product features.
+Do not expand QA into capabilities outside the approved ticket, regardless of their
+catalog status.
 
 ## Execute Verification
 
