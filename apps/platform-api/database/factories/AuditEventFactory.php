@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\AuditEventAction;
-use App\Models\AuditEvent;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Enums\AuditEventAction;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<AuditEvent> */

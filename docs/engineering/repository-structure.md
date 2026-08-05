@@ -100,8 +100,8 @@ One origin simplifies secure cookies, CSRF protection, CORS, and installation. T
 dashboard can be served by the reverse proxy as static assets; Laravel does not need
 to own the SPA source or Vite build.
 
-Laravel registers first-party owner operations from `routes/dashboard.php` beneath
-`/dashboard/*`. It registers the public feature-flag contract from `routes/api.php`
+The Identity and ReleaseManagement module providers register their module-owned route
+files beneath `/dashboard/*`. The Evaluation module provider registers its route file
 beneath `/api/v1/*`. The Vue application uses `/app` rather than `/dashboard` for its
 protected landing page so same-origin proxy routing remains unambiguous.
 

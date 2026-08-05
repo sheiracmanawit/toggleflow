@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Actions\Projects\CreateProject;
-use App\Enums\AuditEventAction;
-use App\Enums\ProjectStatus;
-use App\Models\AuditEvent;
-use App\Models\Environment;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Actions\Projects\CreateProject;
+use App\Modules\ReleaseManagement\Enums\AuditEventAction;
+use App\Modules\ReleaseManagement\Enums\ProjectStatus;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;

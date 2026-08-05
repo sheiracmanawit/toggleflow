@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Http\RateLimiting\LoginRateLimit;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\Identity\RateLimiting\LoginRateLimit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 

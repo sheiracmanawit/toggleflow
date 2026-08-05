@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Actions\FeatureFlags\ArchiveFeatureFlag;
-use App\Actions\FeatureFlags\SetEnvironmentFlagState;
-use App\Enums\AuditEventAction;
-use App\Enums\FeatureFlagStatus;
-use App\Models\AuditEvent;
-use App\Models\Environment;
-use App\Models\EnvironmentFlag;
-use App\Models\FeatureFlag;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Actions\FeatureFlags\ArchiveFeatureFlag;
+use App\Modules\ReleaseManagement\Actions\FeatureFlags\SetEnvironmentFlagState;
+use App\Modules\ReleaseManagement\Enums\AuditEventAction;
+use App\Modules\ReleaseManagement\Enums\FeatureFlagStatus;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\EnvironmentFlag;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;

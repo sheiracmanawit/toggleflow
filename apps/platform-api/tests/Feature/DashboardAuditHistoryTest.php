@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Enums\AuditEventAction;
-use App\Models\ApiKey;
-use App\Models\AuditEvent;
-use App\Models\Environment;
-use App\Models\FeatureFlag;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Enums\AuditEventAction;
+use App\Modules\ReleaseManagement\Models\ApiKey;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

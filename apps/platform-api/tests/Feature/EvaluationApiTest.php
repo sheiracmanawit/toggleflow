@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use App\Contracts\AuthenticatesEnvironmentKeys;
-use App\Enums\FeatureFlagStatus;
-use App\Enums\ProjectStatus;
-use App\Http\RateLimiting\EvaluationRateLimit;
-use App\Models\ApiKey;
-use App\Models\AuditEvent;
-use App\Models\Environment;
-use App\Models\EnvironmentFlag;
-use App\Models\FeatureFlag;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Evaluation\RateLimiting\EvaluationRateLimit;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Credentials\Contracts\AuthenticatesEnvironmentKeys;
+use App\Modules\ReleaseManagement\Enums\FeatureFlagStatus;
+use App\Modules\ReleaseManagement\Enums\ProjectStatus;
+use App\Modules\ReleaseManagement\Models\ApiKey;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\EnvironmentFlag;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Project;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;

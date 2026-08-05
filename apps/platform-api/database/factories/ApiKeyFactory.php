@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Models\ApiKey;
-use App\Models\Environment;
+use App\Modules\ReleaseManagement\Models\ApiKey;
+use App\Modules\ReleaseManagement\Models\Environment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 

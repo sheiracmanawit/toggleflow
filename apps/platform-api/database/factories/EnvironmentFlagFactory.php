@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Models\Environment;
-use App\Models\EnvironmentFlag;
-use App\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\EnvironmentFlag;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<EnvironmentFlag> */
