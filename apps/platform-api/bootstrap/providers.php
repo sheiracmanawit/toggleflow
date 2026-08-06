@@ -1,7 +1,13 @@
 <?php
 
-use App\Providers\AppServiceProvider;
+use App\Core\Providers\CoreServiceProvider;
+use App\Modules\Evaluation\EvaluationServiceProvider;
+use App\Modules\Identity\IdentityServiceProvider;
+use App\Modules\ReleaseManagement\ReleaseManagementServiceProvider;
 
 return [
-    AppServiceProvider::class,
+    CoreServiceProvider::class,
+    IdentityServiceProvider::class,
+    ReleaseManagementServiceProvider::class,
+    EvaluationServiceProvider::class,
 ];

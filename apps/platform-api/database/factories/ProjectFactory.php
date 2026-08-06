@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\ProjectStatus;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Enums\ProjectStatus;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

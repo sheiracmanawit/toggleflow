@@ -1,10 +1,10 @@
 <?php
 
-use App\Enums\EvaluationErrorCode;
-use App\Http\Middleware\AuthenticateEnvironmentApiKey;
-use App\Http\Middleware\RejectEnvironmentApiKeyFromDashboard;
-use App\Http\Middleware\ThrottleAuthenticatedEvaluationRequests;
-use App\Http\Responses\EvaluationErrorResponse;
+use App\Modules\Evaluation\Enums\EvaluationErrorCode;
+use App\Modules\Evaluation\Http\Middleware\AuthenticateEnvironmentApiKey;
+use App\Modules\Evaluation\Http\Middleware\ThrottleAuthenticatedEvaluationRequests;
+use App\Modules\Evaluation\Http\Responses\EvaluationErrorResponse;
+use App\Modules\Identity\Http\Middleware\RejectEnvironmentApiKeyFromDashboard;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -13,7 +13,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\ThrottleRequests;
-use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -21,17 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-        then: function (): void {
-            Route::middleware(['web', RejectEnvironmentApiKeyFromDashboard::class])
-                ->prefix('dashboard')
-                ->name('dashboard.')
-                ->group(base_path('routes/dashboard.php'));
-
-            Route::middleware('api')
-                ->prefix('api/v1')
-                ->name('api.v1.')
-                ->group(base_path('routes/api.php'));
-        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();

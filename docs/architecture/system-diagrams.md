@@ -13,6 +13,7 @@ components show approved extension direction, not implemented behavior.
 | --- | --- |
 | System Context | Who uses ToggleFlow, and why? |
 | Container View | Which runtime components own management and evaluation behavior? |
+| Backend Module View | How do the backend modules depend on one another? |
 | Domain Model | How are users, projects, environments, flags, keys, and audit events related? |
 | Primary Management Flow | How does an owner configure and release a feature? |
 | Evaluation Sequence | How does a client application obtain a safe boolean value? |
@@ -98,6 +99,32 @@ flowchart TB
 For self-hosting, a reverse proxy should normally expose the dashboard and Laravel
 routes through one HTTPS origin. Local development may use separate Vite and Artisan
 origins with credentialed CORS and Sanctum stateful-domain configuration.
+
+### Backend module boundaries
+
+The Laravel container is a modular monolith with four bounded modules. Dependencies
+flow inward toward Core and never form cycles. Evaluation may consume Release
+Management's public credential contracts and immutable authenticated-key data, plus
+the domain state needed to evaluate a flag; it must not reach into credential models,
+authentication implementations, or application actions.
+
+```mermaid
+flowchart LR
+    identity["Identity<br/>Sessions and users"]
+    release["Release Management<br/>Projects, flags, environments,<br/>credentials, and audit history"]
+    evaluation["Evaluation<br/>Public evaluation API,<br/>rate limits, and responses"]
+    core["Core<br/>Product-agnostic shared primitives"]
+
+    identity --> core
+    release --> identity
+    release --> core
+    evaluation --> core
+    evaluation -->|"Public credential contracts,<br/>authenticated-key data,<br/>and evaluation domain state"| release
+```
+
+Each module owns its routes and service provider. Cross-module workflows depend on
+small contracts registered by the owning module; no module imports another module's
+controllers, private actions, or credential persistence model.
 
 ## 5. Core Domain Model
 

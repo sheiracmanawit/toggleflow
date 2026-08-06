@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
-use App\Actions\FeatureFlags\CreateFeatureFlag;
-use App\Actions\Projects\CreateProject;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Actions\FeatureFlags\CreateFeatureFlag;
+use App\Modules\ReleaseManagement\Actions\Projects\CreateProject;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -28,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'password' => config('toggleflow.demo.password'),
         ]);
 
-        $project = $owner->projects()->where('slug', 'checkout-service')->first();
+        $project = Project::query()->ownedBy($owner)->where('slug', 'checkout-service')->first();
 
         if ($project === null) {
             $project = $createProject->execute($owner, [

@@ -15,6 +15,9 @@ compatibility, accessibility, and recoverability as capabilities evolve.
   recovery, accessible names, and reusable product components.
 - **End-to-end tests** cover critical browser and cross-application release flows.
 - **Compatibility tests** protect public evaluation responses and supported SDKs.
+- **Architecture tests** in `apps/platform-api/tests/Architecture` enforce backend
+  module dependency direction, Core purity, service-provider and route ownership,
+  and removal of legacy layer-first application directories.
 - **Operational exercises** validate clean installation, upgrade, backup, restore,
   and recovery before corresponding product claims are made.
 
@@ -34,6 +37,12 @@ Run the checks relevant to the change: Pest, Laravel Pint, PHPStan, frontend typ
 checking, linting, formatting, unit or component tests, and Cypress for critical
 flows. Required pull-request checks must pass for the current head commit before QA
 handoff.
+
+Backend architecture rules run with Pest as part of the normal backend suite. New
+cross-module dependencies must be represented by a narrow public contract or domain
+type and reflected in the architecture tests. Feature and unit tests still prove
+runtime behavior; architecture tests prevent prohibited dependency direction and
+implementation coupling before those violations become runtime regressions.
 
 ## Acceptance evidence
 

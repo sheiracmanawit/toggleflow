@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Models\Environment;
-use App\Models\Project;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Environment> */

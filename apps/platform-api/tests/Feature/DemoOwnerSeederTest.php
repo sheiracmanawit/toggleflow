@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Enums\AuditEventAction;
-use App\Enums\FeatureFlagStatus;
-use App\Enums\ProjectStatus;
-use App\Models\AuditEvent;
-use App\Models\EnvironmentFlag;
-use App\Models\FeatureFlag;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Enums\AuditEventAction;
+use App\Modules\ReleaseManagement\Enums\FeatureFlagStatus;
+use App\Modules\ReleaseManagement\Enums\ProjectStatus;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\EnvironmentFlag;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Project;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;

@@ -86,38 +86,24 @@ Follow [Monorepo Application Structure](repository-structure.md) and do
 not place application-owned source or dependency manifests at the repository root.
 
 Within `apps/platform-api`, follow Laravel conventions while making application
-actions and public boundaries easy to find. TF-22 establishes bounded modules as the
-approved target; until that migration is implemented, the current layout remains the
-source of executable behavior.
+actions and public boundaries easy to find. The backend uses the bounded modules
+established by TF-22.
 
-Suggested backend organization:
+Backend organization:
 
 ```text
 apps/platform-api/app/
-├── Actions/
-│   ├── Projects/
-│   ├── FeatureFlags/
-│   ├── ApiKeys/
-│   └── Audit/
-├── Domain/
-│   └── Evaluation/
-├── Http/
-│   ├── Controllers/
-│   │   ├── Management/
-│   │   └── Api/V1/
-│   ├── Middleware/
-│   ├── Requests/
-│   └── Resources/
-├── Models/
-├── Policies/
-└── Providers/
+├── Core/
+└── Modules/
+    ├── Identity/
+    ├── ReleaseManagement/
+    └── Evaluation/
 ```
 
-This layer-first tree describes the current implementation before TF-22. The accepted
-target organizes project-owned backend code into Core, Identity, ReleaseManagement,
-and Evaluation modules while preserving Laravel framework conventions and public
-behavior. Do not create empty directories or speculative layers, and do not mix the
-old and target ownership models as a permanent state.
+Each product module owns one service provider and route file. Core remains
+product-agnostic. Follow [ADR 001](../decisions/001-modular-monolith.md) for the module
+responsibilities and dependency matrix. Do not create empty directories or
+speculative layers, and do not reintroduce layer-first application directories.
 
 The approved feature-oriented frontend organization is defined in
 [Frontend Architecture and Design System](../architecture/frontend-architecture.md).

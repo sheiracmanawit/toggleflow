@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\FeatureFlagStatus;
-use App\Models\FeatureFlag;
-use App\Models\Project;
+use App\Modules\ReleaseManagement\Enums\FeatureFlagStatus;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<FeatureFlag> */

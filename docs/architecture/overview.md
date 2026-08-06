@@ -117,10 +117,10 @@ Database constraints supplement application validation; they are not optional.
 
 ## 6. Application Layers
 
-### Committed bounded-module evolution
+### Available bounded modules
 
-TF-22 moves the existing Laravel source into four bounded modules before planned
-backend product capabilities are implemented:
+TF-22 established four bounded modules before planned backend product capabilities
+are implemented:
 
 - **Core:** narrow cross-module contracts and truly shared mechanics
 - **Identity:** dashboard authentication and current/future actor identity
@@ -128,11 +128,10 @@ backend product capabilities are implemented:
   management workflows
 - **Evaluation:** environment-key authentication and versioned flag decisions
 
-This is a complete internal ownership migration, not a change to current routes,
-responses, authorization, persistence, evaluation, or audit behavior. Management and
-evaluation keep separate HTTP and authentication boundaries. Cross-module
-dependencies must be explicit and acyclic; the old layer-first application
-directories are removed when the migration completes.
+The migration did not change routes, responses, authorization, persistence,
+evaluation, or audit behavior. Management and evaluation keep separate HTTP and
+authentication boundaries. Cross-module dependencies are explicit and acyclic; see
+[ADR 001](../decisions/001-modular-monolith.md).
 
 ### HTTP and UI Layer
 
@@ -149,9 +148,10 @@ HTTPS origin. Server-side rendering is not required for the authenticated dashbo
 management interface is private, interactive, and has no search-indexing requirement.
 
 First-party dashboard JSON endpoints use the `/dashboard` namespace and are registered
-from `routes/dashboard.php`. The public, versioned evaluation contract alone uses
-`/api/v1` and is registered from `routes/api.php`. The route files preserve distinct
-authentication, controller, response, and rate-limiting boundaries inside Laravel.
+by the Identity and ReleaseManagement module providers. The public, versioned
+evaluation contract alone uses `/api/v1` and is registered by the Evaluation module
+provider. Module-owned route files preserve distinct authentication, controller,
+response, and rate-limiting boundaries inside Laravel.
 
 For the current project lifecycle, the dashboard management boundary provides
 owner-scoped operations to list active projects, create a project, read project

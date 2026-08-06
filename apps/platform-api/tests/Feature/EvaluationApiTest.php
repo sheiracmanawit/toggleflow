@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-use App\Contracts\AuthenticatesEnvironmentKeys;
-use App\Enums\FeatureFlagStatus;
-use App\Enums\ProjectStatus;
-use App\Http\RateLimiting\EvaluationRateLimit;
-use App\Models\ApiKey;
-use App\Models\AuditEvent;
-use App\Models\Environment;
-use App\Models\EnvironmentFlag;
-use App\Models\FeatureFlag;
-use App\Models\Project;
-use App\Models\User;
+use App\Modules\Evaluation\RateLimiting\EvaluationRateLimit;
+use App\Modules\Identity\Models\User;
+use App\Modules\ReleaseManagement\Credentials\Contracts\AuthenticatesEnvironmentKeys;
+use App\Modules\ReleaseManagement\Credentials\Data\AuthenticatedEnvironmentKey;
+use App\Modules\ReleaseManagement\Enums\FeatureFlagStatus;
+use App\Modules\ReleaseManagement\Enums\ProjectStatus;
+use App\Modules\ReleaseManagement\Models\ApiKey;
+use App\Modules\ReleaseManagement\Models\AuditEvent;
+use App\Modules\ReleaseManagement\Models\Environment;
+use App\Modules\ReleaseManagement\Models\EnvironmentFlag;
+use App\Modules\ReleaseManagement\Models\FeatureFlag;
+use App\Modules\ReleaseManagement\Models\Project;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -130,7 +131,7 @@ it('returns the configured boolean and reflects the next persisted state without
         ]);
 
     expect(AuditEvent::query()->count())->toBe(0);
-    EvaluationRateLimit::clearForApiKey($apiKey);
+    EvaluationRateLimit::clearForCredentialId((int) $apiKey->getKey());
 });
 
 it('derives project and environment only from the credential', function (): void {
@@ -158,7 +159,7 @@ it('derives project and environment only from the credential', function (): void
         ->assertJsonPath('data.value', false)
         ->assertJsonPath('data.reason', 'STATIC');
 
-    EvaluationRateLimit::clearForApiKey($apiKey);
+    EvaluationRateLimit::clearForCredentialId((int) $apiKey->getKey());
 });
 
 it('returns safe false results that distinguish missing archived and unconfigured flags', function (): void {
@@ -190,7 +191,7 @@ it('returns safe false results that distinguish missing archived and unconfigure
         ->assertJsonPath('data.reason', 'CONFIGURATION_MISSING');
 
     expect(AuditEvent::query()->count())->toBe(0);
-    EvaluationRateLimit::clearForApiKey($apiKey);
+    EvaluationRateLimit::clearForCredentialId((int) $apiKey->getKey());
 });
 
 it('distinguishes a missing bearer token without exposing internal state', function (): void {
@@ -250,7 +251,7 @@ it('updates last used after valid authentication without moving it backwards', f
     $this->withHeaders($headers)->getJson('/api/v1/flags/missing')->assertOk();
     expect($apiKey->refresh()->last_used_at?->equalTo($latestUse))->toBeTrue();
 
-    EvaluationRateLimit::clearForApiKey($apiKey);
+    EvaluationRateLimit::clearForCredentialId((int) $apiKey->getKey());
 });
 
 it('does not grant dashboard management access to an evaluation credential', function (): void {
@@ -266,17 +267,17 @@ it('rate limits successful evaluations by key id with the documented response an
     ['development' => $environment] = evaluationProject();
     ['apiKey' => $apiKey, 'credential' => $credential] = evaluationCredential($environment);
     ['apiKey' => $secondApiKey, 'credential' => $secondCredential] = evaluationCredential($environment);
-    EvaluationRateLimit::clearForApiKey($apiKey);
-    EvaluationRateLimit::clearForApiKey($secondApiKey);
+    EvaluationRateLimit::clearForCredentialId((int) $apiKey->getKey());
+    EvaluationRateLimit::clearForCredentialId((int) $secondApiKey->getKey());
 
     foreach (range(1, EvaluationRateLimit::MAX_ATTEMPTS - 1) as $attempt) {
-        RateLimiter::hit(EvaluationRateLimit::storageKeyForApiKey($apiKey), 60);
+        RateLimiter::hit(EvaluationRateLimit::storageKeyForCredentialId((int) $apiKey->getKey()), 60);
     }
 
     $this->withHeaders(evaluationHeaders($credential))
         ->getJson('/api/v1/flags/missing')
         ->assertOk();
-    expect(EvaluationRateLimit::attemptsForApiKey($apiKey))
+    expect(EvaluationRateLimit::attemptsForCredentialId((int) $apiKey->getKey()))
         ->toBe(EvaluationRateLimit::MAX_ATTEMPTS)
         ->and(EvaluationRateLimit::attemptsForInvalidIp('127.0.0.1'))
         ->toBe(0);
@@ -297,10 +298,10 @@ it('rate limits successful evaluations by key id with the documented response an
     $this->withHeaders(evaluationHeaders($secondCredential))
         ->getJson('/api/v1/flags/missing')
         ->assertOk();
-    expect(EvaluationRateLimit::attemptsForApiKey($secondApiKey))->toBe(1);
+    expect(EvaluationRateLimit::attemptsForCredentialId((int) $secondApiKey->getKey()))->toBe(1);
 
-    EvaluationRateLimit::clearForApiKey($apiKey);
-    EvaluationRateLimit::clearForApiKey($secondApiKey);
+    EvaluationRateLimit::clearForCredentialId((int) $apiKey->getKey());
+    EvaluationRateLimit::clearForCredentialId((int) $secondApiKey->getKey());
 });
 
 it('rate limits invalid evaluations by normalized ip so fake prefixes cannot bypass it', function (): void {
@@ -364,7 +365,7 @@ it('rejects a limited invalid ip before credential hash verification', function 
     {
         public int $attempts = 0;
 
-        public function authenticate(string $credential): ?ApiKey
+        public function authenticate(string $credential): ?AuthenticatedEnvironmentKey
         {
             $this->attempts++;
 
