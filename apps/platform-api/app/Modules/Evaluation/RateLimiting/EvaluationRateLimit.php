@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Evaluation\RateLimiting;
 
 use App\Modules\Evaluation\Http\Middleware\AuthenticateEnvironmentApiKey;
-use App\Modules\ReleaseManagement\Models\ApiKey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -20,10 +19,10 @@ final class EvaluationRateLimit
 
     public static function authenticatedKey(Request $request): ?string
     {
-        $apiKey = AuthenticateEnvironmentApiKey::apiKey($request);
+        $credential = AuthenticateEnvironmentApiKey::credential($request);
 
-        return $apiKey instanceof ApiKey
-            ? self::keyForApiKey($apiKey)
+        return $credential !== null
+            ? self::keyForCredentialId($credential->credentialId)
             : null;
     }
 
@@ -32,9 +31,9 @@ final class EvaluationRateLimit
         return self::keyForInvalidIp((string) $request->ip());
     }
 
-    public static function clearForApiKey(ApiKey $apiKey): void
+    public static function clearForCredentialId(int $credentialId): void
     {
-        RateLimiter::clear(self::storageKey(self::NAME, self::keyForApiKey($apiKey)));
+        RateLimiter::clear(self::storageKey(self::NAME, self::keyForCredentialId($credentialId)));
     }
 
     public static function clearForInvalidIp(string $ip): void
@@ -42,9 +41,9 @@ final class EvaluationRateLimit
         RateLimiter::clear(self::storageKey(self::INVALID_NAME, self::keyForInvalidIp($ip)));
     }
 
-    public static function attemptsForApiKey(ApiKey $apiKey): int
+    public static function attemptsForCredentialId(int $credentialId): int
     {
-        return RateLimiter::attempts(self::storageKey(self::NAME, self::keyForApiKey($apiKey)));
+        return RateLimiter::attempts(self::storageKey(self::NAME, self::keyForCredentialId($credentialId)));
     }
 
     public static function attemptsForInvalidIp(string $ip): int
@@ -52,9 +51,9 @@ final class EvaluationRateLimit
         return RateLimiter::attempts(self::storageKey(self::INVALID_NAME, self::keyForInvalidIp($ip)));
     }
 
-    public static function storageKeyForApiKey(ApiKey $apiKey): string
+    public static function storageKeyForCredentialId(int $credentialId): string
     {
-        return self::storageKey(self::NAME, self::keyForApiKey($apiKey));
+        return self::storageKey(self::NAME, self::keyForCredentialId($credentialId));
     }
 
     public static function storageKeyForInvalidIp(string $ip): string
@@ -62,9 +61,9 @@ final class EvaluationRateLimit
         return self::storageKey(self::INVALID_NAME, self::keyForInvalidIp($ip));
     }
 
-    private static function keyForApiKey(ApiKey $apiKey): string
+    private static function keyForCredentialId(int $credentialId): string
     {
-        return 'api-key:'.$apiKey->getKey();
+        return 'api-key:'.$credentialId;
     }
 
     private static function keyForInvalidIp(string $ip): string

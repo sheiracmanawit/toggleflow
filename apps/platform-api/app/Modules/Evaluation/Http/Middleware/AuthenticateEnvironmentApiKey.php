@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Evaluation\Http\Middleware;
 
 use App\Modules\Evaluation\Enums\EvaluationErrorCode;
-use App\Modules\ReleaseManagement\Actions\Credentials\RecordEnvironmentKeyUsage;
 use App\Modules\ReleaseManagement\Credentials\Contracts\AuthenticatesEnvironmentKeys;
-use App\Modules\ReleaseManagement\Models\ApiKey;
+use App\Modules\ReleaseManagement\Credentials\Contracts\RecordsEnvironmentKeyUsage;
+use App\Modules\ReleaseManagement\Credentials\Data\AuthenticatedEnvironmentKey;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Request;
@@ -15,13 +15,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class AuthenticateEnvironmentApiKey
 {
-    private const API_KEY_ATTRIBUTE = 'toggleflow.evaluation.api_key';
+    private const CREDENTIAL_ATTRIBUTE = 'toggleflow.evaluation.credential';
 
     private const ERROR_ATTRIBUTE = 'toggleflow.evaluation.authentication_error';
 
     public function __construct(
         private readonly AuthenticatesEnvironmentKeys $authenticator,
-        private readonly RecordEnvironmentKeyUsage $recordUsage,
+        private readonly RecordsEnvironmentKeyUsage $recordUsage,
     ) {}
 
     /**
@@ -48,24 +48,24 @@ final class AuthenticateEnvironmentApiKey
             return $next($request);
         }
 
-        $apiKey = $this->authenticator->authenticate($credential);
-        if (! $apiKey instanceof ApiKey) {
+        $authenticated = $this->authenticator->authenticate($credential);
+        if (! $authenticated instanceof AuthenticatedEnvironmentKey) {
             $request->attributes->set(self::ERROR_ATTRIBUTE, EvaluationErrorCode::InvalidApiKey);
 
             return $next($request);
         }
 
-        $this->recordUsage->execute($apiKey, CarbonImmutable::now());
-        $request->attributes->set(self::API_KEY_ATTRIBUTE, $apiKey);
+        $this->recordUsage->record($authenticated->credentialId, CarbonImmutable::now());
+        $request->attributes->set(self::CREDENTIAL_ATTRIBUTE, $authenticated);
 
         return $next($request);
     }
 
-    public static function apiKey(Request $request): ?ApiKey
+    public static function credential(Request $request): ?AuthenticatedEnvironmentKey
     {
-        $apiKey = $request->attributes->get(self::API_KEY_ATTRIBUTE);
+        $credential = $request->attributes->get(self::CREDENTIAL_ATTRIBUTE);
 
-        return $apiKey instanceof ApiKey ? $apiKey : null;
+        return $credential instanceof AuthenticatedEnvironmentKey ? $credential : null;
     }
 
     public static function error(Request $request): ?EvaluationErrorCode

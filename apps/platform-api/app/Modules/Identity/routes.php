@@ -12,8 +12,10 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
         ->middleware(ThrottleRequests::using(LoginRateLimit::NAME))
         ->name('session.store');
 
-    Route::middleware('auth:sanctum')->group(function (): void {
-        Route::get('/session', [SessionController::class, 'show'])->name('session.show');
-        Route::delete('/session', [SessionController::class, 'destroy'])->name('session.destroy');
-    });
+    Route::get('/session', [SessionController::class, 'show'])
+        ->middleware('auth:sanctum')
+        ->name('session.show');
+    Route::delete('/session', [SessionController::class, 'destroy'])
+        ->middleware('auth:sanctum')
+        ->name('session.destroy');
 });

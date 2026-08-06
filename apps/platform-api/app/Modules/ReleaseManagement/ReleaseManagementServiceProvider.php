@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\ReleaseManagement;
 
 use App\Modules\Identity\Http\Middleware\RejectEnvironmentApiKeyFromDashboard;
+use App\Modules\ReleaseManagement\Actions\Credentials\RecordEnvironmentKeyUsage;
 use App\Modules\ReleaseManagement\Credentials\Authentication\EnvironmentKeyAuthenticator;
 use App\Modules\ReleaseManagement\Credentials\Contracts\AuthenticatesEnvironmentKeys;
+use App\Modules\ReleaseManagement\Credentials\Contracts\RecordsEnvironmentKeyUsage;
 use App\Modules\ReleaseManagement\Models\ApiKey;
 use App\Modules\ReleaseManagement\Models\FeatureFlag;
 use App\Modules\ReleaseManagement\Models\Project;
@@ -22,6 +24,7 @@ final class ReleaseManagementServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AuthenticatesEnvironmentKeys::class, EnvironmentKeyAuthenticator::class);
+        $this->app->bind(RecordsEnvironmentKeyUsage::class, RecordEnvironmentKeyUsage::class);
     }
 
     public function boot(): void

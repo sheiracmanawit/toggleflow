@@ -7,16 +7,15 @@ namespace App\Modules\Evaluation\Actions;
 use App\Modules\Evaluation\Data\EvaluationResult;
 use App\Modules\Evaluation\Enums\EvaluationReason;
 use App\Modules\ReleaseManagement\Enums\FeatureFlagStatus;
-use App\Modules\ReleaseManagement\Models\Environment;
 use App\Modules\ReleaseManagement\Models\EnvironmentFlag;
 use App\Modules\ReleaseManagement\Models\FeatureFlag;
 
 final class EvaluateFeatureFlag
 {
-    public function evaluate(Environment $environment, string $flagKey): EvaluationResult
+    public function evaluate(int $environmentId, int $projectId, string $flagKey): EvaluationResult
     {
         $flag = FeatureFlag::query()
-            ->where('project_id', $environment->project_id)
+            ->where('project_id', $projectId)
             ->where('key', $flagKey)
             ->first();
 
@@ -29,7 +28,7 @@ final class EvaluateFeatureFlag
         }
 
         $state = EnvironmentFlag::query()
-            ->where('environment_id', $environment->getKey())
+            ->where('environment_id', $environmentId)
             ->where('feature_flag_id', $flag->getKey())
             ->first();
 

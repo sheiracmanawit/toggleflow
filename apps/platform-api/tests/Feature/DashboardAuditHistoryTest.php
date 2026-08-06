@@ -101,12 +101,13 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
         'name' => 'Production',
         'key' => 'production',
     ]);
+    $apiKey = ApiKey::factory()->for($production)->create(['name' => 'Current production key']);
 
     AuditEvent::query()->create([
         'project_id' => $project->id,
         'actor_id' => $owner->id,
         'action' => AuditEventAction::ProjectCreated,
-        'subject_type' => Project::class,
+        'subject_type' => 'App\\Models\\Project',
         'subject_id' => $project->id,
         'metadata' => ['after' => ['name' => 'Original project name']],
         'created_at' => now()->subSeconds(2),
@@ -115,7 +116,7 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
         'project_id' => $project->id,
         'actor_id' => $owner->id,
         'action' => AuditEventAction::FeatureFlagArchived,
-        'subject_type' => FeatureFlag::class,
+        'subject_type' => 'App\\Models\\FeatureFlag',
         'subject_id' => $flag->id,
         'metadata' => [
             'before' => ['status' => 'active'],
@@ -127,8 +128,8 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
         'project_id' => $project->id,
         'actor_id' => $owner->id,
         'action' => AuditEventAction::ApiKeyRevoked,
-        'subject_type' => ApiKey::class,
-        'subject_id' => 999999,
+        'subject_type' => 'App\\Models\\ApiKey',
+        'subject_id' => $apiKey->id,
         'metadata' => [
             'name' => 'Legacy production key',
             'prefix' => 'tf_live_legacy',
@@ -136,6 +137,12 @@ it('keeps audit rows written with legacy metadata readable', function (): void {
         ],
         'created_at' => now(),
     ]);
+
+    $legacyEvents = AuditEvent::query()->oldest('id')->get();
+
+    expect($legacyEvents[0]->subject)->toBeInstanceOf(Project::class)
+        ->and($legacyEvents[1]->subject)->toBeInstanceOf(FeatureFlag::class)
+        ->and($legacyEvents[2]->subject)->toBeInstanceOf(ApiKey::class);
 
     $this->actingAs($owner)
         ->getJson("/dashboard/projects/{$project->id}/audit-events")

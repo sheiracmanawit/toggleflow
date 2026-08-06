@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 use Illuminate\Support\ServiceProvider;
 
 arch('core remains product agnostic')
@@ -27,6 +28,14 @@ arch('evaluation does not depend on identity workflows')
     ->not->toUse([
         'App\Modules\Identity\Http',
         'App\Modules\Identity\RateLimiting',
+    ]);
+
+arch('evaluation consumes only release management public boundaries and domain state')
+    ->expect('App\Modules\Evaluation')
+    ->not->toUse([
+        'App\Modules\ReleaseManagement\Actions',
+        'App\Modules\ReleaseManagement\Credentials\Authentication',
+        'App\Modules\ReleaseManagement\Models\ApiKey',
     ]);
 
 arch('each product module has one service provider')

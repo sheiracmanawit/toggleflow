@@ -25,13 +25,17 @@ final class EvaluationController extends Controller
             return EvaluationErrorResponse::make($error);
         }
 
-        $apiKey = AuthenticateEnvironmentApiKey::apiKey($request);
-        if ($apiKey === null) {
+        $credential = AuthenticateEnvironmentApiKey::credential($request);
+        if ($credential === null) {
             return EvaluationErrorResponse::make(EvaluationErrorCode::InvalidApiKey);
         }
 
         return new EvaluationResource(
-            $evaluateFeatureFlag->evaluate($apiKey->environment, $flagKey),
+            $evaluateFeatureFlag->evaluate(
+                $credential->environmentId,
+                $credential->projectId,
+                $flagKey,
+            ),
         );
     }
 }

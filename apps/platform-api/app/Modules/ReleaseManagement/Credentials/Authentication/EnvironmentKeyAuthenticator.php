@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\ReleaseManagement\Credentials\Authentication;
 
 use App\Modules\ReleaseManagement\Credentials\Contracts\AuthenticatesEnvironmentKeys;
+use App\Modules\ReleaseManagement\Credentials\Data\AuthenticatedEnvironmentKey;
 use App\Modules\ReleaseManagement\Enums\ProjectStatus;
 use App\Modules\ReleaseManagement\Models\ApiKey;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +16,7 @@ final class EnvironmentKeyAuthenticator implements AuthenticatesEnvironmentKeys
 
     private static ?string $dummyHash = null;
 
-    public function authenticate(string $credential): ?ApiKey
+    public function authenticate(string $credential): ?AuthenticatedEnvironmentKey
     {
         $prefix = null;
         $secret = self::DUMMY_SECRET;
@@ -44,7 +45,11 @@ final class EnvironmentKeyAuthenticator implements AuthenticatesEnvironmentKeys
             return null;
         }
 
-        return $apiKey;
+        return new AuthenticatedEnvironmentKey(
+            credentialId: (int) $apiKey->getKey(),
+            environmentId: (int) $apiKey->environment->getKey(),
+            projectId: (int) $apiKey->environment->project->getKey(),
+        );
     }
 
     private static function dummyHash(): string
