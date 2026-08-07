@@ -49,6 +49,14 @@ export const routes: RouteRecordRaw[] = [
     },
 ];
 
+if (import.meta.env.DEV) {
+    routes.push({
+        path: '/__ui-foundation',
+        name: 'ui-foundation',
+        component: () => import('../pages/UiFoundationPage.vue'),
+    });
+}
+
 export const authenticationGuard: NavigationGuard = async (to): Promise<RouteLocationRaw | undefined> => {
     const authStore = useAuthStore(pinia);
 

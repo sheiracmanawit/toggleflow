@@ -20,7 +20,7 @@ describe('audit history', () => {
         cy.get('nav[aria-label="Application"]').contains('a', 'Audit history').click();
         cy.location('pathname').should('match', /^\/projects\/\d+\/audit-log$/);
         cy.contains('h1', 'Audit history').should('be.visible');
-        cy.get('ol').within(() => {
+        cy.get('main ol').within(() => {
             cy.contains('Demo Owner updated project Renamed Checkout').should('be.visible');
             cy.contains('Demo Owner created project Audited Checkout').should('be.visible');
         });

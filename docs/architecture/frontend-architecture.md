@@ -58,18 +58,18 @@ Evaluation API             → versioned Laravel JSON API
 
 ## 4. Frontend Technology
 
-| Concern | Choice |
-| --- | --- |
-| UI framework | Vue 3 Composition API |
-| Language | TypeScript |
-| Build tooling | Vite |
-| Styling | Tailwind CSS 4 and approved Nuxt UI foundation after TF-26 |
-| Navigation | Vue Router |
-| Shared client state | Pinia only where state genuinely spans routes |
-| Server communication | A small typed HTTP client |
-| Icons | One consistent outline icon family |
-| Authentication | Sanctum SPA session |
-| Testing | Vitest component tests and focused Cypress end-to-end tests for critical flows |
+| Concern              | Choice                                                                         |
+| -------------------- | ------------------------------------------------------------------------------ |
+| UI framework         | Vue 3 Composition API                                                          |
+| Language             | TypeScript                                                                     |
+| Build tooling        | Vite                                                                           |
+| Styling              | Tailwind CSS 4 and approved Nuxt UI foundation after TF-26                     |
+| Navigation           | Vue Router                                                                     |
+| Shared client state  | Pinia only where state genuinely spans routes                                  |
+| Server communication | A small typed HTTP client                                                      |
+| Icons                | One consistent outline icon family                                             |
+| Authentication       | Sanctum SPA session                                                            |
+| Testing              | Vitest component tests and focused Cypress end-to-end tests for critical flows |
 
 The original application used small ToggleFlow-owned primitives. TF-26 deliberately
 supersedes the earlier restriction on a comprehensive component library by adopting
@@ -157,17 +157,17 @@ Desktop uses a compact sidebar and top bar:
 
 Use semantic design tokens rather than raw color names inside page components.
 
-| Role | Direction | Usage |
-| --- | --- | --- |
-| Brand | Indigo | Primary actions, active navigation, and focus accents |
-| Enabled | Emerald | Enabled flag state and healthy confirmation |
-| Disabled | Zinc | Normal disabled state |
-| Warning | Amber | Caution and Staging context |
-| Danger | Red | Errors, revocation, archival, and destructive confirmation |
-| Development | Sky | Development environment identity |
-| Staging | Amber | Staging environment identity |
-| Production | Violet | Production environment identity and emphasis |
-| Surface | White and zinc | Cards, tables, navigation, and page backgrounds |
+| Role        | Direction      | Usage                                                      |
+| ----------- | -------------- | ---------------------------------------------------------- |
+| Brand       | Teal and mint  | Primary actions, active navigation, and focus accents      |
+| Enabled     | Emerald        | Enabled flag state and healthy confirmation                |
+| Disabled    | Zinc           | Normal disabled state                                      |
+| Warning     | Amber          | Caution and Staging context                                |
+| Danger      | Red            | Errors, revocation, archival, and destructive confirmation |
+| Development | Sky            | Development environment identity                           |
+| Staging     | Amber          | Staging environment identity                               |
+| Production  | Violet         | Production environment identity and emphasis               |
+| Surface     | White and zinc | Cards, tables, navigation, and page backgrounds            |
 
 Disabled flags are normal configuration and must not be styled as failures. Reserve
 danger colors for errors and destructive actions.
@@ -179,21 +179,22 @@ patterns.
 
 TF-26 owns the centralized Nuxt UI and Tailwind configuration. The Nuxt UI Landing
 template is a visual-character reference, but its lime palette and lime glow are not
-part of ToggleFlow.
+part of ToggleFlow. Light and Dark use darker teal and brighter mint values from one
+recognizable brand family.
 
-| Token | Value |
-| --- | --- |
-| Primary soft | Indigo 50 `#EEF2FF` |
-| Primary border | Indigo 200 `#C7D2FE` |
-| Primary focus | Indigo 500 `#6366F1` |
-| Primary action | Indigo 600 `#4F46E5` |
-| Primary hover | Indigo 700 `#4338CA` |
-| Primary pressed | Indigo 800 `#3730A3` |
-| Page background | Zinc 50 `#FAFAFA` |
-| Muted surface | Zinc 100 `#F4F4F5` |
-| Standard border | Zinc 200 `#E4E4E7` |
-| Secondary text | Zinc 600 `#52525B` |
-| Primary text | Zinc 900 `#18181B` |
+| Token           | Value                  |
+| --------------- | ---------------------- |
+| Primary soft    | Teal 50 `#F0FDFA`      |
+| Primary border  | Teal 200 `#99F6E4`     |
+| Primary focus   | Dark teal `#0F766E`    |
+| Primary action  | Dark teal `#0F766E`    |
+| Primary hover   | Deeper teal `#0D655E`  |
+| Primary pressed | Deepest teal `#0B554F` |
+| Page background | Zinc 50 `#FAFAFA`      |
+| Muted surface   | Zinc 100 `#F4F4F5`     |
+| Standard border | Zinc 200 `#E4E4E7`     |
+| Secondary text  | Zinc 600 `#52525B`     |
+| Primary text    | Zinc 900 `#18181B`     |
 
 Emerald remains Enabled/success, sky remains information/Development, amber remains
 warning/Staging, violet remains Production, and red remains failure/destructive. The
@@ -226,17 +227,17 @@ Use CSS custom properties or an equivalent token layer for semantic values:
 
 ```css
 :root {
-  --color-brand: #4f46e5;
-  --color-enabled: /* semantic emerald token */;
-  --color-warning: /* semantic amber token */;
-  --color-danger: /* semantic red token */;
-  --color-surface: /* semantic zinc/white token */;
+    --color-brand: #4f46e5;
+    --color-enabled: /* semantic emerald token */;
+    --color-warning: /* semantic amber token */;
+    --color-danger: /* semantic red token */;
+    --color-surface: /* semantic zinc/white token */;
 }
 ```
 
 Configure complete shade scales and derived Nuxt UI semantic tokens during TF-26 and
-test the supported light theme for accessible contrast. Avoid scattering arbitrary
-values across Vue templates. Dark-mode delivery remains separate.
+test both supported presentations for accessible contrast. Avoid scattering
+arbitrary values across Vue templates.
 
 ### Component variants
 
@@ -253,11 +254,20 @@ Prefer explicit semantic variants:
 Use a class composition helper only if it materially improves variant safety. Do not
 introduce a styling abstraction before repeated patterns exist.
 
-### Dark mode
+### Theme preference
 
-Design tokens must permit a class-controlled dark theme. Dark mode is desirable but
-is below critical workflow completion in the current priority order. Light mode must be
-complete and accessible first.
+TF-26 supports Light, Dark, and System. The app-owned theme preference capability
+stores the closed preference string in browser-local storage under
+`toggleflow.theme-preference`; it never stores user, project, or server data. System
+is the default and responds to `prefers-color-scheme` changes. A minimal script in
+`index.html` applies the same validated preference and resolution rule before the
+application entry to prevent an opposite-theme first-paint flash.
+
+The resolved presentation is expressed by the root `dark` class and `color-scheme`.
+Semantic token names and product meaning remain stable. The dark presentation uses
+deep blue-gray structural surfaces derived from `#2E3047`, elevated slate surfaces,
+cool neutral text, and mint primary interaction derived from `#3BBA9C`. Success and
+Enabled remain a separate emerald semantic treatment.
 
 ## 9. Feature-oriented frontend architecture
 
@@ -294,6 +304,16 @@ configured in TypeScript, Vite, and Vitest.
 Use Nuxt UI primitives directly when their semantics fit. Create a ToggleFlow
 component only when it adds stable product meaning, behavior, safety, or composition.
 Do not wrap every Nuxt UI primitive or depend on undocumented library internals.
+
+TF-26 places Nuxt UI registration, `UApp`, AppConfig, router wiring, and global CSS
+in `app`. Domain-neutral presentation foundations may live in `shared/ui`; product
+compositions remain feature-owned. Light uses darker teal primary and Dark uses
+brighter mint primary from the same family. Both retain Production-only violet,
+success/Enabled emerald, information/Development sky, warning/Staging amber,
+destructive/failure red, and neutral/Disabled semantics. Labels and accessible names
+remain required because color is never the sole state signal. The development-only
+`/__ui-foundation` fixture includes the preference selector and is absent from
+production registration and navigation.
 
 Avoid a single global store containing all projects, flags, loading states, and form
 errors.
@@ -489,7 +509,7 @@ idle → loading → success
 ### Committed
 
 - TF-24 feature-oriented architecture
-- TF-26 Nuxt UI and centralized indigo-and-zinc ToggleFlow theme
+- TF-26 Nuxt UI and centralized teal/mint-and-zinc ToggleFlow themes
 - TF-27 workflow-based dashboard redesign and cross-application verification
 
 ### Outside the committed redesign
@@ -503,8 +523,8 @@ idle → loading → success
 - Elaborate animation
 - Dedicated SSR marketing site
 
-Dark mode is a desired enhancement but must not delay a complete accessible light
-theme and working portfolio flow.
+User-defined palettes, per-project themes, and account-synchronized preferences are
+outside the committed redesign.
 
 ## 16. Frontend Definition of Done
 

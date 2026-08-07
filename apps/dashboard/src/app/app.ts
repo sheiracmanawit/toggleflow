@@ -2,12 +2,16 @@ import './app.css';
 import './bootstrap';
 
 import { createApp } from 'vue';
+import ui from '@nuxt/ui/vue-plugin';
 
 import App from './App.vue';
 import { router } from './router';
 import { setSessionExpiredHandler } from '@shared/api/http';
 import { useAuthStore } from '@features/authentication';
 import { pinia } from './pinia';
+import { themePreferenceController } from './theme/themePreference';
+
+themePreferenceController.start();
 
 const authStore = useAuthStore(pinia);
 
@@ -21,4 +25,4 @@ setSessionExpiredHandler(() => {
     }
 });
 
-createApp(App).use(pinia).use(router).mount('#app');
+createApp(App).use(pinia).use(router).use(ui).mount('#app');

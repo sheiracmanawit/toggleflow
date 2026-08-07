@@ -24,7 +24,7 @@ conflict rather than silently following whichever is more convenient.
 
 ### KISS, DRY, and abstraction
 
-Apply **KISS** (*Keep It Simple, Stupid*) and **DRY** (*Don't Repeat Yourself*)
+Apply **KISS** (_Keep It Simple, Stupid_) and **DRY** (_Don't Repeat Yourself_)
 together:
 
 - Choose the simplest design that clearly satisfies the current ticket and protects
@@ -44,25 +44,37 @@ together:
 - Do not create a generic abstraction for speculative roadmap behavior or combine
   code that is only superficially similar and likely to evolve independently.
 
+For dashboard presentation, use documented Nuxt UI props, slots, variants, and
+extension points. Use a primitive directly when it expresses the required semantics.
+Add a ToggleFlow component only for stable product meaning, safety, or composition;
+one-for-one wrappers that merely rename props or events are prohibited. Extend the
+centralized AppConfig or semantic CSS tokens instead of introducing page-owned color
+values or a competing theme source.
+
+Use the semantic primary role for ToggleFlow's teal/mint brand family: darker teal in
+Light and brighter mint in Dark. Violet is reserved for Production identity, while
+emerald is reserved for success/Enabled. Do not use either as a general alternate
+brand or page-level accent.
+
 “Used more than once” triggers a design check, not an automatic class or component.
 The abstraction must have one clear responsibility, a meaningful name, and a natural
 owner.
 
 Choose the extraction that matches the responsibility:
 
-| Repeated responsibility | Preferred location |
-| --- | --- |
-| State-changing application workflow | Focused Laravel Action |
-| Reusable domain calculation or orchestration | Domain or application Service |
-| Authorization decision | Laravel Policy |
-| HTTP input validation | Form Request or shared validation rule |
-| Stable JSON representation | API Resource |
-| Repeated Vue markup and interaction | UI or domain Component |
-| Reusable reactive Vue behavior | Composable |
-| Repeated typed HTTP operation or normalization | Frontend service module |
-| Shared visual value or variant | Semantic design token or UI primitive |
-| Small, pure, domain-neutral transformation | Narrow helper or utility |
-| Repeated test construction | Factory state, dataset, or focused test helper |
+| Repeated responsibility                        | Preferred location                             |
+| ---------------------------------------------- | ---------------------------------------------- |
+| State-changing application workflow            | Focused Laravel Action                         |
+| Reusable domain calculation or orchestration   | Domain or application Service                  |
+| Authorization decision                         | Laravel Policy                                 |
+| HTTP input validation                          | Form Request or shared validation rule         |
+| Stable JSON representation                     | API Resource                                   |
+| Repeated Vue markup and interaction            | UI or domain Component                         |
+| Reusable reactive Vue behavior                 | Composable                                     |
+| Repeated typed HTTP operation or normalization | Frontend service module                        |
+| Shared visual value or variant                 | Semantic design token or UI primitive          |
+| Small, pure, domain-neutral transformation     | Narrow helper or utility                       |
+| Repeated test construction                     | Factory state, dataset, or focused test helper |
 
 Do not use a catch-all `Helper`, `Manager`, `Utils`, global store, or base class as a
 dumping ground. Prefer a little obvious duplication over the wrong abstraction, then
@@ -482,7 +494,9 @@ action open the transaction and call the model method.
 - Preserve visible focus styles.
 - Never use color as the only indication of state.
 - Respect reduced-motion preferences.
-- Complete and verify the approved light theme before prioritizing dark mode.
+- Keep Light, Dark, and System resolution app-owned. Theme-specific values change
+  through centralized semantic CSS variables and the root `dark` class; do not branch
+  product templates by theme or persist only the resolved System value.
 - Avoid `!important` except for a documented integration constraint.
 
 ## 11. Accessibility Standards

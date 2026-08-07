@@ -1,30 +1,177 @@
 @import 'tailwindcss';
+@import '@nuxt/ui';
+
+/* Stable semantic values; themes change resolution, never product meaning. */
+:root {
+    color-scheme: light;
+    --tf-brand: #0f766e;
+    --tf-brand-soft: #f0fdfa;
+    --tf-brand-border: #99f6e4;
+    --tf-brand-hover: #0d655e;
+    --tf-brand-pressed: #0b554f;
+    --tf-page: var(--color-zinc-50);
+    --tf-surface: #ffffff;
+    --tf-surface-muted: var(--color-zinc-100);
+    --tf-surface-elevated: #ffffff;
+    --tf-text: var(--color-zinc-900);
+    --tf-text-muted: var(--color-zinc-600);
+    --tf-border: var(--color-zinc-200);
+    --tf-focus: #0f766e;
+    --tf-enabled: #047857;
+    --tf-disabled: #71717a;
+    --tf-warning: #b45309;
+    --tf-danger: #b91c1c;
+    --tf-development: #0369a1;
+    --tf-staging: #b45309;
+    --tf-production: #6d28d9;
+    --ui-color-primary-50: #f0fdfa;
+    --ui-color-primary-100: #ccfbf1;
+    --ui-color-primary-200: #99f6e4;
+    --ui-color-primary-300: #5eead4;
+    --ui-color-primary-400: #2dd4bf;
+    --ui-color-primary-500: #0f766e;
+    --ui-color-primary-600: #0d655e;
+    --ui-color-primary-700: #0b554f;
+    --ui-color-primary-800: #09443f;
+    --ui-color-primary-900: #073a35;
+    --ui-color-primary-950: #042f2e;
+}
+
+:root.dark {
+    color-scheme: dark;
+    --tf-brand: #5ee1c1;
+    --tf-brand-soft: #253f43;
+    --tf-brand-border: #39766f;
+    --tf-brand-hover: #82ead1;
+    --tf-brand-pressed: #a5f3df;
+    --tf-page: #25263a;
+    --tf-surface: #2e3047;
+    --tf-surface-muted: #35384f;
+    --tf-surface-elevated: #3c3f58;
+    --tf-text: #f1f5f9;
+    --tf-text-muted: #cbd5e1;
+    --tf-border: #7f86a2;
+    --tf-focus: #5ee1c1;
+    --tf-enabled: #6ee7b7;
+    --tf-disabled: #a1a1aa;
+    --tf-warning: #fcd34d;
+    --tf-danger: #fca5a5;
+    --tf-development: #7dd3fc;
+    --tf-staging: #fcd34d;
+    --tf-production: #c4b5fd;
+    --ui-color-primary-50: #ecfdf8;
+    --ui-color-primary-100: #d1faee;
+    --ui-color-primary-200: #a5f3df;
+    --ui-color-primary-300: #82ead1;
+    --ui-color-primary-400: #5ee1c1;
+    --ui-color-primary-500: #3bba9c;
+    --ui-color-primary-600: #26957d;
+    --ui-color-primary-700: #207764;
+    --ui-color-primary-800: #205f52;
+    --ui-color-primary-900: #1e5045;
+    --ui-color-primary-950: #0d2e29;
+    --ui-bg: var(--tf-surface);
+    --ui-bg-muted: var(--tf-surface-muted);
+    --ui-bg-elevated: var(--tf-surface-elevated);
+    --ui-bg-accented: #43455c;
+    --ui-text: var(--tf-text-muted);
+    --ui-text-highlighted: var(--tf-text);
+    --ui-border: var(--tf-border);
+    --ui-border-muted: #43455c;
+    --ui-border-accented: #7f86a2;
+}
 
 @theme {
-    --color-brand: #0f766e;
-    --color-enabled: #047857;
-    --color-disabled: #64748b;
-    --color-warning: #b45309;
-    --color-danger: #b91c1c;
-    --color-environment-development: #2563eb;
-    --color-environment-staging: #7c3aed;
-    --color-environment-production: #be123c;
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --radius-control: 0.5rem;
+    --radius-surface: 0.75rem;
+    --shadow-elevated: 0 8px 24px rgb(24 24 27 / 0.08);
+    --control-height: 2.5rem;
+    --motion-fast: 150ms;
+    --motion-standard: 200ms;
+}
+
+@theme inline {
+    --color-brand: var(--tf-brand);
+    --color-brand-soft: var(--tf-brand-soft);
+    --color-brand-border: var(--tf-brand-border);
+    --color-brand-hover: var(--tf-brand-hover);
+    --color-brand-pressed: var(--tf-brand-pressed);
+    --color-page: var(--tf-page);
+    --color-surface: var(--tf-surface);
+    --color-surface-muted: var(--tf-surface-muted);
+    --color-surface-elevated: var(--tf-surface-elevated);
+    --color-text: var(--tf-text);
+    --color-text-muted: var(--tf-text-muted);
+    --color-border: var(--tf-border);
+    --color-focus: var(--tf-focus);
+    --color-enabled: var(--tf-enabled);
+    --color-disabled: var(--tf-disabled);
+    --color-warning: var(--tf-warning);
+    --color-danger: var(--tf-danger);
+    --color-environment-development: var(--tf-development);
+    --color-environment-staging: var(--tf-staging);
+    --color-environment-production: var(--tf-production);
 }
 
 @layer base {
     body {
-        @apply min-h-screen bg-slate-50 text-slate-950 antialiased;
+        @apply min-h-screen bg-page font-sans text-text antialiased;
     }
 
     :focus-visible {
-        @apply outline-2 outline-offset-2 outline-brand;
+        @apply outline-2 outline-offset-2 outline-focus;
+    }
+
+    code,
+    kbd,
+    pre {
+        @apply font-mono;
+    }
+}
+
+/* Temporary compatibility for pre-TF-27 pages that still use legacy slate/white utilities. */
+.dark .bg-white {
+    background-color: var(--tf-surface);
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+    background-color: var(--tf-surface-muted);
+}
+
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 {
+    color: var(--tf-text);
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500 {
+    color: var(--tf-text-muted);
+}
+
+.dark .border-slate-200,
+.dark .border-slate-300 {
+    border-color: var(--tf-border);
+}
+
+.dark .hover\:bg-slate-100:hover {
+    background-color: var(--tf-surface-elevated);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
     }
 }
 
 @source './**/*.{js,ts,vue}';
-
-@theme {
-    --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-}

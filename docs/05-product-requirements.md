@@ -148,8 +148,10 @@ added:
 - **TF-23:** provide secure automated pull-request review without replacing CI or
   independent human judgment.
 - **TF-24:** fully migrate the dashboard to a feature-oriented Vue architecture.
-- **TF-26:** establish Nuxt UI and the centralized ToggleFlow light theme in the
-  existing Vue/Vite application.
+- **TF-26:** establish Nuxt UI and centralized ToggleFlow light and dark themes with
+  a browser-local Light, Dark, or System preference in the existing Vue/Vite
+  application. Both presentations use one teal/mint primary brand family; violet is
+  Production-only and emerald remains success/Enabled.
 - **TF-27:** redesign the dashboard workflows so release state and management actions
   are clear, consistent, accessible, and responsive.
 

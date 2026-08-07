@@ -3,6 +3,27 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script>
+            // Duplicated from the app-owned theme contract so the correct presentation is applied before first paint.
+            (() => {
+                const key = 'toggleflow.theme-preference';
+                const allowed = ['light', 'dark', 'system'];
+                let preference = 'system';
+                try {
+                    const saved = localStorage.getItem(key);
+                    if (allowed.includes(saved)) preference = saved;
+                } catch {}
+                const resolved =
+                    preference === 'system'
+                        ? matchMedia('(prefers-color-scheme: dark)').matches
+                            ? 'dark'
+                            : 'light'
+                        : preference;
+                document.documentElement.classList.toggle('dark', resolved === 'dark');
+                document.documentElement.style.colorScheme = resolved;
+                document.documentElement.dataset.themePreference = preference;
+            })();
+        </script>
         <title>ToggleFlow</title>
     </head>
     <body>
