@@ -228,6 +228,15 @@ Do not introduce a conflicting local convention silently. Propose material stand
 changes through documentation review and update all affected tooling in the same
 change.
 
+## Git Branch Naming Override
+
+For this repository, never use the Codex desktop default `codex/` branch prefix.
+This is the user's explicit override of that default. Follow
+`docs/engineering/git-and-ci.md` exactly and use a ticket branch such as
+`feature/TF-29-short-description`. Before creating a branch, verify that its full
+name matches the documented type, uppercase Jira key, and lowercase kebab-case
+description. Pull-request CI enforces this convention.
+
 ## Completion Standard
 
 Work is complete only when its acceptance criteria are satisfied, relevant
