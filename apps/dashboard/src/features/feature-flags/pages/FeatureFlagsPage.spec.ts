@@ -30,13 +30,16 @@ const mountPage = async () => {
     });
     await router.push('/projects/1/flags');
     await router.isReady();
-    const wrapper = mount(FeatureFlagsPage, { global: { plugins: [router] } });
+    const wrapper = mount(FeatureFlagsPage, { attachTo: document.body, global: { plugins: [router] } });
     await flushPromises();
 
     return { wrapper, router };
 };
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+});
 
 describe('FeatureFlagsPage', () => {
     it('explains the empty state and creates a disabled-by-default flag', async () => {
@@ -59,9 +62,12 @@ describe('FeatureFlagsPage', () => {
             .findAll('button')
             .find((button) => button.text() === 'Create flag')
             ?.trigger('click');
-        await wrapper.get('#flag-name').setValue('New checkout');
-        expect((wrapper.get('#flag-key').element as HTMLInputElement).value).toBe('new-checkout');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#flag-name')!;
+        name.value = 'New checkout';
+        name.dispatchEvent(new Event('input'));
+        await flushPromises();
+        expect(document.querySelector<HTMLInputElement>('#flag-key')?.value).toBe('new-checkout');
+        document.querySelector<HTMLFormElement>('[role="dialog"] form')?.requestSubmit();
         await flushPromises();
 
         expect(featureFlagService.create).toHaveBeenCalledWith(1, {
@@ -97,12 +103,14 @@ describe('FeatureFlagsPage', () => {
             .findAll('button')
             .find((button) => button.text() === 'Create flag')
             ?.trigger('click');
-        await wrapper.get('form').trigger('submit');
+        document.querySelector<HTMLFormElement>('[role="dialog"] form')?.requestSubmit();
         await flushPromises();
 
-        expect(wrapper.get('#flag-name').attributes('aria-describedby')).toBe('flag-name-error');
-        expect(wrapper.get('#flag-key').attributes('aria-describedby')).toBe('flag-key-error');
-        expect(wrapper.get('#flag-description').attributes('aria-describedby')).toBe('flag-description-error');
+        expect(document.querySelector('#flag-name')?.getAttribute('aria-describedby')).toBe('flag-name-error');
+        expect(document.querySelector('#flag-key')?.getAttribute('aria-describedby')).toBe('flag-key-error');
+        expect(document.querySelector('#flag-description')?.getAttribute('aria-describedby')).toBe(
+            'flag-description-error',
+        );
     });
 
     it('aligns populated state cells with environment headers by identity', async () => {

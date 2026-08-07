@@ -226,14 +226,13 @@ const {
                 </RouterLink>
             </section>
 
-            <form
+            <AppDialog
                 v-if="project.status === 'active' && isEditing"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                novalidate
-                @submit.prevent="save"
+                title="Edit project"
+                description="Update the project name and description. The machine-readable slug remains unchanged."
+                @cancel="!isSaving && (isEditing = false)"
             >
-                <h2 class="text-xl font-semibold">Edit project</h2>
-                <div class="mt-5 grid gap-5">
+                <form class="grid gap-5" novalidate @submit.prevent="save">
                     <div>
                         <label class="block text-sm font-semibold" for="edit-project-name">Name</label>
                         <input
@@ -286,8 +285,8 @@ const {
                             Cancel
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </AppDialog>
 
             <section
                 v-if="project.status === 'active'"

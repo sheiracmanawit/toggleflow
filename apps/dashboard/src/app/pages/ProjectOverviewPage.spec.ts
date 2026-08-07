@@ -39,6 +39,14 @@ const mountPage = async () => {
     return { router, wrapper };
 };
 
+const setField = (selector: string, value: string): void => {
+    const field = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)!;
+    field.value = value;
+    field.dispatchEvent(new Event('input'));
+};
+
+const submitDialog = (): void => document.querySelector<HTMLFormElement>('[role="dialog"] form')!.requestSubmit();
+
 describe('ProjectOverviewPage', () => {
     const projectContextStore = useProjectContextStore(pinia);
 
@@ -65,8 +73,8 @@ describe('ProjectOverviewPage', () => {
         expect(wrapper.text()).toContain('Staging');
         expect(wrapper.text()).toContain('Production');
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#edit-project-name').setValue('Checkout API');
-        await wrapper.get('form').trigger('submit');
+        setField('#edit-project-name', 'Checkout API');
+        submitDialog();
         await flushPromises();
 
         expect(update).toHaveBeenCalledWith(1, {
@@ -154,12 +162,12 @@ describe('ProjectOverviewPage', () => {
         const { wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#edit-project-name').setValue('Unconfirmed name');
-        await wrapper.get('form').trigger('submit');
+        setField('#edit-project-name', 'Unconfirmed name');
+        submitDialog();
         await flushPromises();
 
         expect(wrapper.get('h1').text()).toBe('Checkout');
-        expect(wrapper.get('[role="alert"]').text()).toContain('last confirmed project information');
+        expect(document.querySelector('[role="alert"]')?.textContent).toContain('last confirmed project information');
     });
 
     it('renders and associates description validation errors', async () => {
@@ -172,14 +180,16 @@ describe('ProjectOverviewPage', () => {
         const { wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#edit-project-description').setValue('x'.repeat(1001));
-        await wrapper.get('form').trigger('submit');
+        setField('#edit-project-description', 'x'.repeat(1001));
+        submitDialog();
         await flushPromises();
 
-        const description = wrapper.get('#edit-project-description');
-        expect(description.attributes('aria-invalid')).toBe('true');
-        expect(description.attributes('aria-describedby')).toBe('edit-project-description-error');
-        expect(wrapper.get('#edit-project-description-error').text()).toContain('must not be greater than 1000');
+        const description = document.querySelector<HTMLTextAreaElement>('#edit-project-description')!;
+        expect(description.getAttribute('aria-invalid')).toBe('true');
+        expect(description.getAttribute('aria-describedby')).toBe('edit-project-description-error');
+        expect(document.querySelector('#edit-project-description-error')?.textContent).toContain(
+            'must not be greater than 1000',
+        );
     });
 
     it('clears project-specific edit state when the detail route changes', async () => {
@@ -197,16 +207,16 @@ describe('ProjectOverviewPage', () => {
         const { router, wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#edit-project-name').setValue('Stale checkout name');
+        setField('#edit-project-name', 'Stale checkout name');
         await router.push('/projects/2');
         await flushPromises();
 
-        expect(wrapper.find('form').exists()).toBe(false);
+        expect(document.body.querySelector('[role="dialog"]')).toBeNull();
         expect(wrapper.get('h1').text()).toBe('Payments');
 
         await wrapper.get('button').trigger('click');
-        expect((wrapper.get('#edit-project-name').element as HTMLInputElement).value).toBe('Payments');
-        expect((wrapper.get('#edit-project-description').element as HTMLTextAreaElement).value).toBe(
+        expect(document.querySelector<HTMLInputElement>('#edit-project-name')?.value).toBe('Payments');
+        expect(document.querySelector<HTMLTextAreaElement>('#edit-project-description')?.value).toBe(
             'Payments release controls',
         );
         expect(update).not.toHaveBeenCalled();

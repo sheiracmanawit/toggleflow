@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 
+import { AppDialog } from '@shared/ui';
 import { useFeatureFlagList } from '../composables/useFeatureFlagList';
 
 const {
@@ -137,22 +138,13 @@ const {
                 </ul>
             </div>
 
-            <form
+            <AppDialog
                 v-if="showCreateForm"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                novalidate
-                @submit.prevent="submit"
+                title="Create a boolean flag"
+                description="It will begin disabled in Development, Staging, and Production."
+                @cancel="!isSubmitting && (showCreateForm = false)"
             >
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold">Create a boolean flag</h2>
-                        <p class="mt-1 text-sm text-slate-600">
-                            It will begin disabled in Development, Staging, and Production.
-                        </p>
-                    </div>
-                    <button type="button" :disabled="isSubmitting" @click="showCreateForm = false">Close</button>
-                </div>
-                <div class="mt-6 grid gap-5">
+                <form class="grid gap-5" novalidate @submit.prevent="submit">
                     <div>
                         <label class="block text-sm font-semibold" for="flag-name">Display name</label>
                         <input
@@ -219,8 +211,8 @@ const {
                             Cancel
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </AppDialog>
         </template>
     </section>
 </template>
