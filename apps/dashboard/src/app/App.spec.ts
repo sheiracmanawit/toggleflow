@@ -61,6 +61,9 @@ describe('App', () => {
         expect(navigation).toContain('API keys');
         expect(navigation).not.toContain('Audit log');
         expect(navigation).not.toContain('Settings');
+        expect(wrapper.get('nav[aria-label="Primary"]').text()).not.toContain('Dashboard');
+        expect(wrapper.get('a[aria-current="page"]').text()).toContain('Project overview');
+        expect(wrapper.get('a[aria-current="page"]').text()).toContain('(current)');
     });
 
     it('switches project context and withholds links for an unknown project', async () => {
@@ -120,12 +123,12 @@ describe('App', () => {
         await openButton.trigger('click');
         await flushPromises();
         const drawer = wrapper.get('aside[aria-label="Mobile application navigation"]');
-        const closeButton = drawer.findAll('button').find((button) => button.text() === 'Close');
+        const closeButton = drawer.find('button[aria-label="Close navigation"]');
         const signOutButton = drawer.findAll('button').find((button) => button.text() === 'Sign out');
-        expect(document.activeElement).toBe(closeButton?.element);
+        expect(document.activeElement).toBe(closeButton.element);
         expect(wrapper.get('header').attributes()).toHaveProperty('inert');
 
-        await closeButton?.trigger('keydown', { key: 'Tab', shiftKey: true });
+        await closeButton.trigger('keydown', { key: 'Tab', shiftKey: true });
         expect(document.activeElement).toBe(signOutButton?.element);
         await signOutButton?.trigger('keydown', { key: 'Tab' });
         expect(document.activeElement).toBe(closeButton?.element);
@@ -150,9 +153,28 @@ describe('App', () => {
         await router.isReady();
         const wrapper = mount(App, { global: { plugins: [pinia, router] } });
 
-        await wrapper.get('button:not([aria-label])').trigger('click');
+        await wrapper.get('[data-testid="desktop-sign-out"]').trigger('click');
         await flushPromises();
         expect(authStore.logout).toHaveBeenCalledOnce();
         expect(router.currentRoute.value.path).toBe('/sign-in');
+    });
+
+    it('collapses and expands the desktop sidebar without removing navigation', async () => {
+        authStore.status = 'authenticated';
+        authStore.owner = { id: 1, name: 'Demo Owner', email: 'owner@example.test' };
+        const router = createRouter({
+            history: createMemoryHistory(),
+            routes: [{ path: '/app', component: { template: '<h1>Dashboard</h1>' } }],
+        });
+        await router.push('/app');
+        await router.isReady();
+        const wrapper = mount(App, { global: { plugins: [pinia, router] } });
+
+        await wrapper.get('button[aria-label="Hide sidebar"]').trigger('click');
+        expect(wrapper.get('button[aria-label="Show sidebar"]')).toBeTruthy();
+        expect(wrapper.get('nav[aria-label="Application"] a').attributes('title')).toBe('Overview');
+
+        await wrapper.get('button[aria-label="Show sidebar"]').trigger('click');
+        expect(wrapper.get('button[aria-label="Hide sidebar"]')).toBeTruthy();
     });
 });
