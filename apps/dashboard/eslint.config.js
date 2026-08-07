@@ -28,6 +28,12 @@ export default tseslint.config(
         },
     },
     {
+        files: ['scripts/**/*.mjs'],
+        languageOptions: {
+            globals: { console: 'readonly', process: 'readonly' },
+        },
+    },
+    {
         files: ['src/**/*.vue'],
         languageOptions: { parserOptions: { parser: tseslint.parser } },
     },

@@ -107,6 +107,11 @@ speculative layers, and do not reintroduce layer-first application directories.
 
 The approved feature-oriented frontend organization is defined in
 [Frontend Architecture and Design System](../architecture/frontend-architecture.md).
+Use only `app`, `features`, and `shared` as top-level dashboard product-code owners.
+Import another feature through `@features/<owner>` rather than its internal path;
+shared must not import features, features must not import app implementation, and the
+feature graph must remain acyclic. The `pnpm lint` boundary check enforces these
+rules. Domain concepts remain feature-owned even when another feature consumes them.
 
 ## 4. PHP Standards
 
