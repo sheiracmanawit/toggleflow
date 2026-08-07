@@ -73,7 +73,7 @@ describe('project management', () => {
         cy.contains('dt', 'Active projects').should('be.visible');
         cy.contains('dt', 'Active flags').should('be.visible');
         cy.contains('h2', 'Recent activity').should('be.visible');
-        cy.get('button[aria-label="Open navigation"]').click();
+        cy.get('button[aria-label="Open navigation"]').focus().trigger('keydown', { key: 'Enter' });
         cy.get('aside[aria-label="Mobile application navigation"]')
             .should('contain', 'Demo Owner')
             .and('contain', 'Sign out')
@@ -87,7 +87,8 @@ describe('project management', () => {
         cy.get('#flag-name').type('Mobile comparison');
         cy.get('form').contains('button', 'Create flag').click();
 
-        cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
+        cy.contains('h1', 'Mobile comparison').should('be.visible');
+        cy.get('button[aria-label="Open navigation"]').should('be.visible').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').within(() => {
             cy.get('button[aria-label="Close navigation"]').should('be.focused');
             cy.contains('a', 'Project overview').click();

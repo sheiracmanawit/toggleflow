@@ -30,12 +30,13 @@ describe('audit history', () => {
     it('remains usable from keyboard-accessible mobile navigation', () => {
         cy.viewport(390, 844);
         signIn();
-        cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
+        cy.get('button[aria-label="Open navigation"]').should('be.visible').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').contains('a', 'Projects').click();
         cy.contains('button', 'Create project').first().click();
         cy.get('#project-name').type('Mobile Audit');
         cy.get('form').contains('button', 'Create project').click();
-        cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
+        cy.contains('h1', 'Mobile Audit').should('be.visible');
+        cy.get('button[aria-label="Open navigation"]').should('be.visible').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').contains('a', 'Audit history').click();
         cy.contains('Demo Owner created project Mobile Audit').should('be.visible');
         cy.document().then((document) => {
