@@ -2,10 +2,9 @@
 
 ## 1. Status
 
-The current Vue/Vite SPA and its safety rules are accepted and implemented. TF-24 and
-TF-26 define the Committed architecture and design-system migration. This
-document must be updated with their implementation so current and target structure do
-not diverge.
+The Vue/Vite SPA, its safety rules, and the TF-24 feature-oriented source architecture
+are accepted and implemented. TF-26 defines the subsequent Committed design-system
+migration and consumes these established app/shared boundaries.
 
 ## 2. Product Experience
 
@@ -262,8 +261,8 @@ complete and accessible first.
 
 ## 9. Feature-oriented frontend architecture
 
-TF-24 replaces the current layer-first source organization with three top-level
-ownership areas. The migration must complete before TF-26 and TF-27 implementation:
+TF-24 replaced the layer-first source organization with three top-level ownership
+areas before TF-26 and TF-27 implementation:
 
 ```text
 apps/dashboard/src/
@@ -271,6 +270,12 @@ apps/dashboard/src/
 ├── features/  # authentication, projects, flags, credentials, audit, dashboard
 └── shared/    # product-agnostic API, UI, composables, types, and utilities
 ```
+
+Current feature owners are `authentication`, `projects`, `feature-flags`,
+`credentials`, `audit-history`, and `dashboard`. Each exposes intentional consumers
+through `features/<owner>/index.ts`. Project overview is app-owned because it composes
+projects and feature flags. Matching `@app`, `@features`, and `@shared` aliases are
+configured in TypeScript, Vite, and Vitest.
 
 ### Responsibilities
 
@@ -288,6 +293,11 @@ Do not wrap every Nuxt UI primitive or depend on undocumented library internals.
 
 Avoid a single global store containing all projects, flags, loading states, and form
 errors.
+
+`pnpm lint` runs both ESLint and the frontend boundary checker. It rejects shared-to-
+feature imports, feature-to-app imports, deep cross-feature imports, and cyclic
+feature dependencies. See [ADR 004](../decisions/004-feature-oriented-vue-architecture.md)
+for the complete ownership inventory and dependency matrix.
 
 ## 10. Core Screen Specifications
 

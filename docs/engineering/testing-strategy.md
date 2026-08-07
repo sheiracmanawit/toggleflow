@@ -18,6 +18,9 @@ compatibility, accessibility, and recoverability as capabilities evolve.
 - **Architecture tests** in `apps/platform-api/tests/Architecture` enforce backend
   module dependency direction, Core purity, service-provider and route ownership,
   and removal of legacy layer-first application directories.
+- **Frontend architecture checks** in `apps/dashboard/scripts/check-boundaries.mjs`
+  enforce app/feature/shared direction, public cross-feature entry points, and an
+  acyclic feature graph. Allowed and prohibited fixtures execute under `pnpm lint`.
 - **Operational exercises** validate clean installation, upgrade, backup, restore,
   and recovery before corresponding product claims are made.
 

@@ -53,6 +53,20 @@ The Vue SPA owns:
 
 It contains no authoritative authorization or feature-evaluation rules.
 
+Its product source is ownership-oriented:
+
+```text
+apps/dashboard/src/
+├── app/       # bootstrap, shell, router, providers, styles, composition
+├── features/  # authentication, projects, feature-flags, credentials, audit-history, dashboard
+├── shared/    # domain-neutral API transport, navigation safety, and UI primitives
+└── env.d.ts   # Vite declaration
+```
+
+Do not recreate layer-first product folders at `src/pages`, `src/services`,
+`src/stores`, `src/types`, or similar paths. Cross-feature consumers import the
+owner's public `index.ts`; the lint gate enforces dependency direction and cycles.
+
 ## 4. Why a Monorepo
 
 - Product, API, UI, tests, documentation, and SDK evolution remain versioned together.

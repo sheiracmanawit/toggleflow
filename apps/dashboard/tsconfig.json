@@ -4,6 +4,11 @@
         "useDefineForClassFields": true,
         "module": "ESNext",
         "moduleResolution": "Bundler",
+        "paths": {
+            "@app/*": ["./src/app/*"],
+            "@features/*": ["./src/features/*"],
+            "@shared/*": ["./src/shared/*"]
+        },
         "strict": true,
         "jsx": "preserve",
         "resolveJsonModule": true,
