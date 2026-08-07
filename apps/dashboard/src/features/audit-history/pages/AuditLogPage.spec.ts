@@ -49,7 +49,11 @@ describe('AuditLogPage', () => {
         expect(wrapper.text()).toContain(
             'Release Owner enabled feature flag New checkout for Production in project Checkout',
         );
+        expect(wrapper.text()).toContain('Enabled feature flag');
+        expect(wrapper.text()).toContain('Production environment');
+        expect(wrapper.get('a[href="/projects/1/flags/3"]').text()).toBe('New checkout');
         expect(wrapper.get('time').attributes('datetime')).toBe(event.created_at);
+        expect(wrapper.get('time').attributes('aria-label')).toBeTruthy();
         expect(wrapper.get('nav[aria-label="Audit history pages"]').text()).toContain('Page 1 of 2');
     });
 

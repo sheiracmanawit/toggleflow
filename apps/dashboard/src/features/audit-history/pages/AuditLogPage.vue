@@ -20,6 +20,39 @@ let loadedProjectId: number | null = null;
 
 const timestamp = (value: string): string =>
     new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(value));
+const relativeTime = (value: string): string => {
+    const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000);
+    const intervals: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+        ['year', 31_536_000],
+        ['month', 2_592_000],
+        ['day', 86_400],
+        ['hour', 3_600],
+        ['minute', 60],
+    ];
+    const [unit, divisor] = intervals.find(([, size]) => Math.abs(seconds) >= size) ?? ['second', 1];
+
+    return new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }).format(Math.round(seconds / divisor), unit);
+};
+const actionLabel = (action: string): string =>
+    ({
+        'project.created': 'Created project',
+        'project.updated': 'Updated project',
+        'project.archived': 'Archived project',
+        'feature_flag.created': 'Created feature flag',
+        'feature_flag.updated': 'Updated feature flag',
+        'feature_flag.archived': 'Archived feature flag',
+        'feature_flag.enabled': 'Enabled feature flag',
+        'feature_flag.disabled': 'Disabled feature flag',
+        'api_key.created': 'Issued API key',
+        'api_key.revoked': 'Revoked API key',
+    })[action] ?? 'Changed release configuration';
+const subjectDestination = (event: AuditEvent): string | null => {
+    if (event.subject.type === 'FeatureFlag') return `/projects/${event.project.id}/flags/${event.subject.id}`;
+    if (event.subject.type === 'ApiKey') return `/projects/${event.project.id}/api-keys`;
+    if (event.subject.type === 'Project') return `/projects/${event.project.id}`;
+
+    return null;
+};
 
 const pageLabel = computed(() => `Page ${page.value} of ${lastPage.value}`);
 const isInitialLoading = computed(() => isLoading.value && loadedProjectId === null);
@@ -83,8 +116,7 @@ onBeforeUnmount(() => {
             ← Project overview
         </RouterLink>
         <div class="mt-6">
-            <p v-if="project" class="text-sm font-semibold uppercase tracking-wide text-brand">{{ project.name }}</p>
-            <h1 id="audit-log-heading" class="mt-1 text-3xl font-bold">Audit history</h1>
+            <h1 id="audit-log-heading" class="text-3xl font-bold">Audit history</h1>
             <p class="mt-2 max-w-2xl text-slate-600">Release-management changes are shown newest first.</p>
         </div>
 
@@ -120,15 +152,47 @@ onBeforeUnmount(() => {
             <p class="mt-6 text-sm text-slate-600" role="status">{{ total }} events · {{ pageLabel }}</p>
             <ol class="mt-4 grid gap-4">
                 <li v-for="event in events" :key="event.id" class="rounded-xl border border-slate-200 bg-white p-5">
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <article class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                         <div class="min-w-0">
-                            <p class="break-words font-semibold">{{ auditEventDescription(event) }}</p>
-                            <p class="mt-1 text-sm text-slate-500">Project: {{ event.project.name }}</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold">
+                                    {{ actionLabel(event.action) }}
+                                </span>
+                                <span
+                                    v-if="event.environment"
+                                    class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                                    :class="
+                                        event.environment.key === 'production'
+                                            ? 'bg-environment-production/15 text-environment-production'
+                                            : 'bg-slate-100 text-slate-700'
+                                    "
+                                >
+                                    {{ event.environment.name || event.environment.key }} environment
+                                </span>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-600">
+                                <span class="font-medium text-slate-900">{{ event.actor?.name || 'System' }}</span>
+                                changed
+                                <RouterLink
+                                    v-if="subjectDestination(event)"
+                                    class="font-semibold text-brand hover:underline"
+                                    :to="subjectDestination(event)!"
+                                >
+                                    {{ event.subject.name }}
+                                </RouterLink>
+                                <span v-else class="font-semibold text-slate-900">{{ event.subject.name }}</span>
+                            </p>
+                            <p class="sr-only">{{ auditEventDescription(event) }}</p>
                         </div>
-                        <time class="shrink-0 text-sm text-slate-600" :datetime="event.created_at">{{
-                            timestamp(event.created_at)
-                        }}</time>
-                    </div>
+                        <time
+                            class="shrink-0 text-sm text-slate-600"
+                            :datetime="event.created_at"
+                            :title="timestamp(event.created_at)"
+                            :aria-label="timestamp(event.created_at)"
+                        >
+                            {{ relativeTime(event.created_at) }}
+                        </time>
+                    </article>
                 </li>
             </ol>
             <nav

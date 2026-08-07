@@ -15,13 +15,14 @@ const mountPage = async () => {
     });
     await router.push('/projects');
     await router.isReady();
-    const wrapper = mount(ProjectsPage, { global: { plugins: [router] } });
+    const wrapper = mount(ProjectsPage, { attachTo: document.body, global: { plugins: [router] } });
     await flushPromises();
     return { router, wrapper };
 };
 
 describe('ProjectsPage', () => {
     afterEach(() => {
+        document.body.innerHTML = '';
         vi.restoreAllMocks();
     });
 
@@ -38,10 +39,18 @@ describe('ProjectsPage', () => {
 
         expect(wrapper.text()).toContain('Development, Staging, and Production are added automatically');
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#project-name').setValue('Checkout Service');
-        await wrapper.get('#project-description').setValue('Controls checkout releases.');
-        await wrapper.get('form').trigger('submit');
-        await wrapper.get('form').trigger('submit');
+        expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+        expect(document.activeElement).toBe(document.querySelector('#project-name'));
+        const name = document.querySelector<HTMLInputElement>('#project-name')!;
+        const description = document.querySelector<HTMLTextAreaElement>('#project-description')!;
+        const form = document.querySelector<HTMLFormElement>('form')!;
+        name.value = 'Checkout Service';
+        name.dispatchEvent(new Event('input'));
+        description.value = 'Controls checkout releases.';
+        description.dispatchEvent(new Event('input'));
+        form.dispatchEvent(new Event('submit'));
+        form.dispatchEvent(new Event('submit'));
+        await flushPromises();
 
         expect(create).toHaveBeenCalledTimes(1);
         expect(create).toHaveBeenCalledWith({
@@ -49,7 +58,7 @@ describe('ProjectsPage', () => {
             slug: 'checkout-service',
             description: 'Controls checkout releases.',
         });
-        expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined();
+        expect(document.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
 
         finishCreate?.({
             id: 7,
@@ -71,12 +80,16 @@ describe('ProjectsPage', () => {
         const { wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#project-name').setValue('Payments');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#project-name')!;
+        name.value = 'Payments';
+        name.dispatchEvent(new Event('input'));
+        document.querySelector<HTMLFormElement>('form')?.dispatchEvent(new Event('submit'));
         await flushPromises();
 
-        expect((wrapper.get('#project-name').element as HTMLInputElement).value).toBe('Payments');
-        expect(wrapper.get('[role="alert"]').text()).toContain('entered information has been preserved');
+        expect(document.querySelector<HTMLInputElement>('#project-name')?.value).toBe('Payments');
+        expect(document.querySelector('[role="alert"]')?.textContent).toContain(
+            'entered information has been preserved',
+        );
     });
 
     it('renders only project fields supplied by the backend', async () => {

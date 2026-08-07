@@ -128,57 +128,59 @@ const {
                     </ul>
                 </section>
             </div>
-
-            <form
-                v-if="showCreate"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                novalidate
-                @submit.prevent="issue"
-            >
-                <h2 class="text-xl font-semibold">Issue an environment API key</h2>
-                <div class="mt-5 grid gap-5">
-                    <div>
-                        <label class="block text-sm font-semibold" for="api-key-name">Name</label>
-                        <input
-                            id="api-key-name"
-                            v-model="form.name"
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                            :aria-invalid="Boolean(validationErrors.name)"
-                            :aria-describedby="validationErrors.name ? 'api-key-name-error' : undefined"
-                        />
-                        <p v-if="validationErrors.name" id="api-key-name-error" class="mt-1 text-sm text-danger">
-                            {{ validationErrors.name[0] }}
-                        </p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold" for="api-key-environment">Environment</label>
-                        <select
-                            id="api-key-environment"
-                            v-model.number="form.environmentId"
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                        >
-                            <option
-                                v-for="environment in project.environments"
-                                :key="environment.id"
-                                :value="environment.id"
-                            >
-                                {{ environment.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="flex gap-3">
-                        <button
-                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
-                            :disabled="isSubmitting"
-                        >
-                            {{ isSubmitting ? 'Issuing…' : 'Issue API key' }}
-                        </button>
-                        <button type="button" :disabled="isSubmitting" @click="showCreate = false">Cancel</button>
-                    </div>
-                </div>
-            </form>
         </template>
     </section>
+
+    <AppDialog
+        v-if="showCreate && project"
+        title="Issue an environment API key"
+        description="Choose one project environment. The complete credential will be shown only once after issuance."
+        @cancel="!isSubmitting && (showCreate = false)"
+    >
+        <form class="grid gap-5" novalidate @submit.prevent="issue">
+            <div>
+                <label class="block text-sm font-semibold" for="api-key-name">Name</label>
+                <input
+                    id="api-key-name"
+                    v-model="form.name"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                    :aria-invalid="Boolean(validationErrors.name)"
+                    :aria-describedby="validationErrors.name ? 'api-key-name-error' : undefined"
+                />
+                <p v-if="validationErrors.name" id="api-key-name-error" class="mt-1 text-sm text-danger">
+                    {{ validationErrors.name[0] }}
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold" for="api-key-environment">Environment</label>
+                <select
+                    id="api-key-environment"
+                    v-model.number="form.environmentId"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                >
+                    <option v-for="environment in project.environments" :key="environment.id" :value="environment.id">
+                        {{ environment.name }}
+                    </option>
+                </select>
+                <p
+                    v-if="project.environments.find((item) => item.id === form.environmentId)?.key === 'production'"
+                    class="mt-2 text-sm text-environment-production"
+                >
+                    Production key — applications using this credential will evaluate Production release state.
+                </p>
+            </div>
+            <p v-if="mutationError" class="text-sm text-danger" role="alert">{{ mutationError }}</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" :disabled="isSubmitting" @click="showCreate = false">Cancel</button>
+                <button
+                    class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:opacity-60"
+                    :disabled="isSubmitting"
+                >
+                    {{ isSubmitting ? 'Issuing…' : 'Issue API key' }}
+                </button>
+            </div>
+        </form>
+    </AppDialog>
 
     <AppDialog
         v-if="issuedKey && issuedCredential"

@@ -91,9 +91,17 @@ describe('ApiKeysPage', () => {
         const { wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#api-key-name').setValue('Checkout production');
-        await wrapper.get('#api-key-environment').setValue('12');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#api-key-name')!;
+        const environment = document.querySelector<HTMLSelectElement>('#api-key-environment')!;
+        name.value = 'Checkout production';
+        name.dispatchEvent(new Event('input'));
+        environment.value = '12';
+        environment.dispatchEvent(new Event('change'));
+        await flushPromises();
+        expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+            'Production key — applications using this credential will evaluate Production release state.',
+        );
+        document.querySelector<HTMLFormElement>('form')?.dispatchEvent(new Event('submit'));
         await flushPromises();
 
         const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
@@ -148,8 +156,10 @@ describe('ApiKeysPage', () => {
         const { router, wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#api-key-name').setValue('Checkout production');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#api-key-name')!;
+        name.value = 'Checkout production';
+        name.dispatchEvent(new Event('input'));
+        document.querySelector<HTMLFormElement>('form')?.dispatchEvent(new Event('submit'));
         await flushPromises();
         expect(document.body.textContent).toContain('tf_env_abcd1234_complete-secret');
 
@@ -176,8 +186,10 @@ describe('ApiKeysPage', () => {
         const { router, wrapper } = await mountPage();
 
         await wrapper.get('button').trigger('click');
-        await wrapper.get('#api-key-name').setValue('Checkout production');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#api-key-name')!;
+        name.value = 'Checkout production';
+        name.dispatchEvent(new Event('input'));
+        document.querySelector<HTMLFormElement>('form')?.dispatchEvent(new Event('submit'));
         await router.push('/projects/2/api-keys');
         await flushPromises();
 
