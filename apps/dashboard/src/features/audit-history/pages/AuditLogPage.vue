@@ -150,42 +150,32 @@ onBeforeUnmount(() => {
                 Refreshing audit history. Previously loaded results remain visible.
             </p>
             <p class="mt-6 text-sm text-slate-600" role="status">{{ total }} events · {{ pageLabel }}</p>
-            <ol class="mt-4 grid gap-4">
-                <li v-for="event in events" :key="event.id" class="rounded-xl border border-slate-200 bg-white p-5">
-                    <article class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+            <ol class="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <li v-for="event in events" :key="event.id" class="px-4 py-3">
+                    <article
+                        class="grid gap-2 sm:grid-cols-[minmax(11rem,0.7fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-4"
+                    >
                         <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold">
-                                    {{ actionLabel(event.action) }}
-                                </span>
-                                <span
-                                    v-if="event.environment"
-                                    class="rounded-full px-2.5 py-1 text-xs font-semibold"
-                                    :class="
-                                        event.environment.key === 'production'
-                                            ? 'bg-environment-production/15 text-environment-production'
-                                            : 'bg-slate-100 text-slate-700'
-                                    "
-                                >
-                                    {{ event.environment.name || event.environment.key }} environment
-                                </span>
-                            </div>
-                            <p class="mt-3 text-sm text-slate-600">
-                                <span class="font-medium text-slate-900">{{ event.actor?.name || 'System' }}</span>
-                                changed
-                                <RouterLink
-                                    v-if="subjectDestination(event)"
-                                    class="font-semibold text-brand hover:underline"
-                                    :to="subjectDestination(event)!"
-                                >
-                                    {{ event.subject.name }}
-                                </RouterLink>
-                                <span v-else class="font-semibold text-slate-900">{{ event.subject.name }}</span>
-                            </p>
-                            <p class="sr-only">{{ auditEventDescription(event) }}</p>
+                            <span class="text-sm font-semibold">{{ actionLabel(event.action) }}</span>
+                            <span v-if="event.environment" class="mt-0.5 block text-xs text-slate-500">
+                                {{ event.environment.name || event.environment.key }} environment
+                            </span>
                         </div>
+                        <p class="min-w-0 text-sm text-slate-600">
+                            <span class="font-medium text-slate-900">{{ event.actor?.name || 'System' }}</span>
+                            changed
+                            <RouterLink
+                                v-if="subjectDestination(event)"
+                                class="font-semibold text-brand hover:underline"
+                                :to="subjectDestination(event)!"
+                            >
+                                {{ event.subject.name }}
+                            </RouterLink>
+                            <span v-else class="font-semibold text-slate-900">{{ event.subject.name }}</span>
+                            <span class="sr-only">. {{ auditEventDescription(event) }}</span>
+                        </p>
                         <time
-                            class="shrink-0 text-sm text-slate-600"
+                            class="shrink-0 text-xs text-slate-600 sm:text-right"
                             :datetime="event.created_at"
                             :title="timestamp(event.created_at)"
                             :aria-label="timestamp(event.created_at)"

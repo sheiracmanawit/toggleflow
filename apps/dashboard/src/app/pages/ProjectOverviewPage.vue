@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 
 import { AppDialog } from '@shared/ui';
@@ -25,6 +26,13 @@ const {
     closeArchiveDialog,
     archive,
 } = useProjectOverview();
+
+const productionEnabledCount = computed(
+    () =>
+        flags.value.filter((flag) =>
+            flag.environment_states.some((state) => state.environment.key === 'production' && state.enabled),
+        ).length,
+);
 </script>
 
 <template>
@@ -59,42 +67,73 @@ const {
                         project can no longer be edited.
                     </p>
                 </div>
-                <button
-                    v-if="project.status === 'active'"
-                    class="self-start rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
-                    type="button"
-                    @click="startEditing"
-                >
-                    Edit project
-                </button>
+                <div v-if="project.status === 'active'" class="flex flex-wrap gap-2">
+                    <RouterLink
+                        class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
+                        :to="`/projects/${project.id}/flags`"
+                    >
+                        Manage flags
+                    </RouterLink>
+                    <RouterLink
+                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
+                        :to="`/projects/${project.id}/api-keys`"
+                    >
+                        API keys
+                    </RouterLink>
+                    <button
+                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
+                        type="button"
+                        @click="startEditing"
+                    >
+                        Edit project
+                    </button>
+                </div>
             </div>
             <p v-if="successMessage" class="mt-4 text-sm font-medium text-enabled" role="status">
                 {{ successMessage }}
             </p>
 
-            <section class="mt-8" aria-labelledby="environments-heading">
-                <div>
-                    <h2 id="environments-heading" class="text-xl font-semibold">Environments</h2>
-                    <p class="mt-1 text-sm text-slate-600">Each deployment context remains separate.</p>
+            <section
+                class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white"
+                aria-labelledby="environments-heading"
+            >
+                <div
+                    class="grid divide-y divide-slate-200 sm:grid-cols-[minmax(13rem,0.7fr)_minmax(0,1.3fr)] sm:divide-x sm:divide-y-0"
+                >
+                    <div class="px-4 py-3">
+                        <h2 id="environments-heading" class="font-semibold">Release overview</h2>
+                        <dl class="mt-2 flex gap-5 text-sm">
+                            <div>
+                                <dt class="text-slate-500">Flags</dt>
+                                <dd class="font-semibold">{{ flags.length }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">Production enabled</dt>
+                                <dd class="font-semibold">{{ productionEnabledCount }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <ul class="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3" aria-label="Project environments">
+                        <li
+                            v-for="environment in project.environments"
+                            :key="environment.id"
+                            class="flex items-center gap-2"
+                        >
+                            <span
+                                class="inline-block h-2.5 w-2.5 rounded-full"
+                                :style="{ backgroundColor: environment.color }"
+                                aria-hidden="true"
+                            />
+                            <span
+                                ><strong class="text-sm">{{ environment.name }}</strong>
+                                <span class="font-mono text-xs text-slate-500">{{ environment.key }}</span></span
+                            >
+                        </li>
+                    </ul>
                 </div>
-                <ul class="mt-4 grid gap-4 sm:grid-cols-3">
-                    <li
-                        v-for="environment in project.environments"
-                        :key="environment.id"
-                        class="rounded-2xl border border-slate-200 bg-white p-5"
-                    >
-                        <span
-                            class="inline-block h-3 w-3 rounded-full"
-                            :style="{ backgroundColor: environment.color }"
-                            aria-hidden="true"
-                        />
-                        <h3 class="mt-3 font-semibold">{{ environment.name }}</h3>
-                        <p class="mt-1 font-mono text-sm text-slate-500">{{ environment.key }}</p>
-                    </li>
-                </ul>
             </section>
 
-            <section v-if="project.status === 'active'" class="mt-8" aria-labelledby="release-state-heading">
+            <section v-if="project.status === 'active'" class="mt-6" aria-labelledby="release-state-heading">
                 <div class="flex flex-wrap items-end justify-between gap-3">
                     <div>
                         <h2 id="release-state-heading" class="text-xl font-semibold">Release state</h2>
@@ -102,12 +141,6 @@ const {
                             Compare each active flag across Development, Staging, and Production.
                         </p>
                     </div>
-                    <RouterLink
-                        class="text-sm font-semibold text-brand hover:underline"
-                        :to="`/projects/${project.id}/flags`"
-                    >
-                        Manage flags
-                    </RouterLink>
                 </div>
                 <div v-if="flags.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-white p-6">
                     <h3 class="font-semibold">No feature flags yet</h3>
@@ -192,40 +225,6 @@ const {
                 </div>
             </section>
 
-            <section
-                v-if="project.status === 'active'"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                aria-labelledby="flags-heading"
-            >
-                <h2 id="flags-heading" class="text-xl font-semibold">Feature flags</h2>
-                <p class="mt-2 text-sm text-slate-600">
-                    Create boolean flags and control Development, Staging, and Production independently.
-                </p>
-                <RouterLink
-                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
-                    :to="`/projects/${project.id}/flags`"
-                >
-                    Manage feature flags
-                </RouterLink>
-            </section>
-
-            <section
-                v-if="project.status === 'active'"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                aria-labelledby="api-keys-heading"
-            >
-                <h2 id="api-keys-heading" class="text-xl font-semibold">API keys</h2>
-                <p class="mt-2 text-sm text-slate-600">
-                    Issue environment-scoped credentials for server-side flag evaluation.
-                </p>
-                <RouterLink
-                    class="mt-4 inline-flex rounded-lg border border-slate-300 px-4 py-2 font-semibold"
-                    :to="`/projects/${project.id}/api-keys`"
-                >
-                    Manage API keys
-                </RouterLink>
-            </section>
-
             <AppDialog
                 v-if="project.status === 'active' && isEditing"
                 title="Edit project"
@@ -290,16 +289,17 @@ const {
 
             <section
                 v-if="project.status === 'active'"
-                class="mt-10 rounded-2xl border border-red-200 bg-red-50 p-6"
+                class="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between"
                 aria-labelledby="archive-heading"
             >
-                <h2 id="archive-heading" class="text-lg font-semibold text-danger">Archive project</h2>
-                <p class="mt-2 text-sm text-slate-700">
-                    Archiving removes this project from active project views while retaining its environments and
-                    history.
-                </p>
+                <div>
+                    <h2 id="archive-heading" class="font-semibold">Archive project</h2>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Remove it from active views while retaining environments and history.
+                    </p>
+                </div>
                 <button
-                    class="mt-4 rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger"
+                    class="self-start rounded-lg border border-red-300 px-4 py-2 font-semibold text-danger"
                     type="button"
                     @click="showArchiveDialog = true"
                 >

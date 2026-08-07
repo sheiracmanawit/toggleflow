@@ -7,6 +7,7 @@ import { useApiKeyLifecycle } from '../composables/useApiKeyLifecycle';
 const {
     route,
     project,
+    apiKeys,
     isLoading,
     loadError,
     showCreate,
@@ -76,58 +77,97 @@ const {
                 issued or revoked.
             </p>
 
-            <div class="mt-8 grid gap-6">
-                <section
-                    v-for="environment in project.environments"
-                    :key="environment.id"
-                    class="rounded-2xl border border-slate-200 bg-white p-5"
-                    :aria-labelledby="`environment-${environment.id}`"
-                >
-                    <h2 :id="`environment-${environment.id}`" class="text-xl font-semibold">
-                        {{ environment.name }}
-                    </h2>
-                    <p class="mt-1 font-mono text-sm text-slate-500">{{ environment.key }}</p>
-                    <p v-if="keysFor(environment).length === 0" class="mt-5 text-sm text-slate-600">
-                        No credentials have been issued for this environment.
-                    </p>
-                    <ul v-else class="mt-5 grid gap-3">
+            <section
+                class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white"
+                aria-label="API key inventory"
+            >
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+                    <div>
+                        <h2 class="font-semibold">Credential inventory</h2>
+                        <p class="text-sm text-slate-600">
+                            {{ apiKeys.length }} total across {{ project.environments.length }} environments
+                        </p>
+                    </div>
+                    <ul class="flex flex-wrap gap-2" aria-label="Environment credential counts">
                         <li
-                            v-for="apiKey in keysFor(environment)"
-                            :key="apiKey.id"
-                            class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+                            v-for="environment in project.environments"
+                            :key="environment.id"
+                            class="rounded-full bg-slate-100 px-2.5 py-1 text-xs"
                         >
-                            <div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="font-semibold">{{ apiKey.name }}</h3>
-                                    <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">
-                                        {{ apiKey.state === 'active' ? 'Active' : 'Revoked' }}
-                                    </span>
-                                </div>
-                                <p class="mt-2 break-all font-mono text-sm text-slate-600">
-                                    tf_env_{{ apiKey.prefix }}_…
-                                </p>
-                                <p class="mt-1 text-xs text-slate-500">
-                                    Created {{ new Date(apiKey.created_at).toLocaleString() }}
-                                    <template v-if="apiKey.last_used_at">
-                                        · Last used {{ new Date(apiKey.last_used_at).toLocaleString() }}
-                                    </template>
-                                </p>
-                            </div>
-                            <button
-                                v-if="project.status === 'active' && apiKey.state === 'active'"
-                                class="self-start rounded-lg border border-red-300 px-3 py-2 font-semibold text-danger"
-                                type="button"
-                                @click="
-                                    mutationError = '';
-                                    keyToRevoke = apiKey;
-                                "
-                            >
-                                Revoke
-                            </button>
+                            <span class="font-semibold">{{ environment.name }}</span>
+                            {{ keysFor(environment).length }}
                         </li>
                     </ul>
-                </section>
-            </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-[46rem] w-full border-collapse text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                            <tr>
+                                <th class="px-4 py-2.5 font-semibold" scope="col">Environment</th>
+                                <th class="px-4 py-2.5 font-semibold" scope="col">Credential</th>
+                                <th class="px-4 py-2.5 font-semibold" scope="col">Status</th>
+                                <th class="px-4 py-2.5 font-semibold" scope="col">Activity</th>
+                                <th class="px-4 py-2.5 text-right font-semibold" scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <template v-for="environment in project.environments" :key="environment.id">
+                                <tr v-if="keysFor(environment).length === 0">
+                                    <th class="px-4 py-3 align-top font-semibold" scope="row">
+                                        {{ environment.name }}
+                                        <span class="block font-mono text-xs font-normal text-slate-500">{{
+                                            environment.key
+                                        }}</span>
+                                    </th>
+                                    <td class="px-4 py-3 text-slate-500" colspan="4">No credentials issued</td>
+                                </tr>
+                                <tr v-for="apiKey in keysFor(environment)" v-else :key="apiKey.id">
+                                    <th class="px-4 py-3 align-top font-semibold" scope="row">
+                                        {{ environment.name }}
+                                        <span class="block font-mono text-xs font-normal text-slate-500">{{
+                                            environment.key
+                                        }}</span>
+                                    </th>
+                                    <td class="px-4 py-3 align-top">
+                                        <span class="block font-semibold">{{ apiKey.name }}</span>
+                                        <span class="block font-mono text-xs text-slate-500"
+                                            >tf_env_{{ apiKey.prefix }}_…</span
+                                        >
+                                    </td>
+                                    <td class="px-4 py-3 align-top">
+                                        <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">
+                                            {{ apiKey.state === 'active' ? 'Active' : 'Revoked' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 align-top text-xs text-slate-600">
+                                        <span class="block"
+                                            >Created {{ new Date(apiKey.created_at).toLocaleString() }}</span
+                                        >
+                                        <span v-if="apiKey.last_used_at" class="block">
+                                            Last used {{ new Date(apiKey.last_used_at).toLocaleString() }}
+                                        </span>
+                                        <span v-else class="block">Never used</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right align-top">
+                                        <button
+                                            v-if="project.status === 'active' && apiKey.state === 'active'"
+                                            class="rounded-lg border border-red-300 px-3 py-1.5 font-semibold text-danger"
+                                            type="button"
+                                            @click="
+                                                mutationError = '';
+                                                keyToRevoke = apiKey;
+                                            "
+                                        >
+                                            Revoke
+                                        </button>
+                                        <span v-else class="text-xs text-slate-500">—</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </template>
     </section>
 
