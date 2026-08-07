@@ -63,6 +63,16 @@ apps/dashboard/src/
 └── env.d.ts   # Vite declaration
 ```
 
+Nuxt UI's Vite/plugin registration, `UApp`, AppConfig, global Tailwind/Nuxt UI CSS,
+and development-only foundation fixture are app-owned. Generated component and
+auto-import declarations remain dashboard build configuration; reusable
+domain-neutral presentation code belongs in `shared/ui`.
+
+The Light/Dark/System preference controller and selector are also app-owned because
+they affect global composition. `index.html` contains only the minimal duplicated
+pre-bootstrap resolution needed to avoid a theme flash; browser-local preference
+state is not a product feature or backend concern.
+
 Do not recreate layer-first product folders at `src/pages`, `src/services`,
 `src/stores`, `src/types`, or similar paths. Cross-feature consumers import the
 owner's public `index.ts`; the lint gate enforces dependency direction and cycles.

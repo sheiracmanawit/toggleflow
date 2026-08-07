@@ -85,7 +85,7 @@ onBeforeUnmount(() => controller?.abort());
                     A project gives you isolated Development, Staging, and Production release state.
                 </p>
                 <RouterLink
-                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                     to="/projects"
                 >
                     Create a project

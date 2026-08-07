@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { authService, useAuthStore } from '@features/authentication';
 import { pinia } from '@app/pinia';
 import { safeRedirect } from '@shared/navigation/safeRedirect';
-import { authenticationGuard, routes } from './index';
+import { authenticationGuard, createRoutes, routes } from './index';
 
 describe('dashboard routing', () => {
     const authStore = useAuthStore(pinia);
@@ -68,6 +68,11 @@ describe('dashboard routing', () => {
         await router.isReady();
 
         expect(router.currentRoute.value.path).toBe('/');
+    });
+
+    it('excludes the UI foundation showcase from production routes', () => {
+        expect(createRoutes(false).some((route) => route.path === '/__ui-foundation')).toBe(false);
+        expect(createRoutes(true).some((route) => route.path === '/__ui-foundation')).toBe(true);
     });
 
     it.each([

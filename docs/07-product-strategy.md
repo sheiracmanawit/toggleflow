@@ -115,7 +115,7 @@ guardrails, and explicit human override behavior.
 - TF-22 establishes bounded Laravel modules.
 - TF-23 provides secure automated pull-request review.
 - TF-24 establishes complete feature-oriented Vue ownership.
-- TF-26 establishes Nuxt UI, semantic tokens, an indigo-and-zinc ToggleFlow theme,
+- TF-26 establishes Nuxt UI, semantic tokens, a teal/mint-and-zinc ToggleFlow theme,
   accessible primitives, and contributor conventions.
 
 ### Dashboard experience

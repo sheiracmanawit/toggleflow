@@ -3,6 +3,7 @@
 /.fleet
 /.idea
 /.nova
+/.pnpm-store
 /.vscode
 /.zed
 /Thumbs.db

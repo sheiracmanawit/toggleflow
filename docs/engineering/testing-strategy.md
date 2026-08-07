@@ -13,6 +13,17 @@ compatibility, accessibility, and recoverability as capabilities evolve.
   audit behavior, rate limits, and API contracts.
 - **Frontend unit and component tests** cover workflow state, validation, failure
   recovery, accessible names, and reusable product components.
+- **UI-foundation tests** cover ToggleFlow's Nuxt UI configuration, semantic token
+  mappings, provider composition, non-color state labels, accessible icon names,
+  validation associations, overlays, and production exclusion. They do not retest
+  Nuxt UI internals.
+- **Theme-preference tests** cover valid and invalid persisted values, System
+  resolution and live media-query changes, listener cleanup, storage failure,
+  pre-bootstrap application, root class/color-scheme updates, and the selector's
+  accessible choice state.
+- **Theme contrast tests** verify the teal/mint primary family in both presentations,
+  solid action and focus contrast, and visual separation from emerald Enabled and
+  Production-only violet.
 - **End-to-end tests** cover critical browser and cross-application release flows.
 - **Compatibility tests** protect public evaluation responses and supported SDKs.
 - **Architecture tests** in `apps/platform-api/tests/Architecture` enforce backend

@@ -1,7 +1,9 @@
 onlyBuiltDependencies:
   - esbuild
+  - vue-demi
 confirmModulesPurge: false
 nodeLinker: hoisted
 allowBuilds:
   cypress: true
   esbuild: true
+  vue-demi: true

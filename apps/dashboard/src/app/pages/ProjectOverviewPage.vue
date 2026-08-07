@@ -202,7 +202,7 @@ const {
                     Create boolean flags and control Development, Staging, and Production independently.
                 </p>
                 <RouterLink
-                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                     :to="`/projects/${project.id}/flags`"
                 >
                     Manage feature flags
@@ -271,7 +271,7 @@ const {
                     <p v-if="saveError" class="text-sm text-danger" role="alert">{{ saveError }}</p>
                     <div class="flex gap-3">
                         <button
-                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-white disabled:opacity-60"
+                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:opacity-60"
                             type="submit"
                             :disabled="isSaving"
                         >
@@ -300,7 +300,7 @@ const {
                     history.
                 </p>
                 <button
-                    class="mt-4 rounded-lg bg-danger px-4 py-2 font-semibold text-white"
+                    class="mt-4 rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger"
                     type="button"
                     @click="showArchiveDialog = true"
                 >
@@ -326,7 +326,7 @@ const {
                     Keep project
                 </button>
                 <button
-                    class="rounded-lg bg-danger px-4 py-2 font-semibold text-white disabled:opacity-60"
+                    class="rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger disabled:opacity-60"
                     type="button"
                     :disabled="isArchiving"
                     @click="archive"
