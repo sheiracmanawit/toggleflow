@@ -13,6 +13,19 @@ describe('responsive and accessible release surfaces', () => {
     };
 
     const checkSeededReleaseSurfaces = () => {
+        cy.contains('h1', 'Dashboard').should('be.visible');
+        cy.contains('dt', 'Enabled in Production').should('be.visible');
+        cy.contains('li', 'Checkout Service').within(() => {
+            cy.contains('a', 'View release state')
+                .invoke('attr', 'href')
+                .should('match', /^\/projects\/\d+$/);
+            cy.contains('a', 'Recent changes')
+                .invoke('attr', 'href')
+                .should('match', /^\/projects\/\d+\/audit-log$/);
+        });
+        cy.contains('a[aria-label*="View Checkout Service audit history"]', 'Production').should('be.visible');
+        expectNoPageOverflow();
+
         cy.window().then((window) => {
             if (window.innerWidth < 768) {
                 cy.get('button[aria-label="Open navigation"]').click();
