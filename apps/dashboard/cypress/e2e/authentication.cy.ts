@@ -5,7 +5,7 @@ describe('dashboard authentication', () => {
         cy.get('input[name="password"]').type('toggleflow-demo', { log: false });
         cy.contains('button', 'Sign in').click();
         cy.location('pathname').should('equal', '/app');
-        cy.contains('Signed in as Demo Owner').should('be.visible');
+        cy.get('aside').contains('Demo Owner').should('be.visible');
     };
 
     const signInAndWaitForDashboard = () => {
@@ -23,8 +23,9 @@ describe('dashboard authentication', () => {
         signIn();
         cy.reload();
         cy.location('pathname').should('equal', '/app');
-        cy.contains('Signed in as Demo Owner').should('be.visible');
+        cy.get('aside').contains('Demo Owner').should('be.visible');
 
+        cy.get('summary[aria-label="Open user menu for Demo Owner"]').click();
         cy.contains('button', 'Sign out').click();
         cy.location('pathname').should('equal', '/sign-in');
         cy.go('back');
@@ -35,9 +36,7 @@ describe('dashboard authentication', () => {
     it('returns an expired session to sign in on protected navigation without reloading', () => {
         signInAndWaitForDashboard();
         cy.clearCookie('toggleflow-session');
-        cy.contains('a', 'ToggleFlow').click();
-        cy.location('pathname').should('equal', '/');
-        cy.contains('a', 'Dashboard').click();
+        cy.get('nav[aria-label="Application"]').contains('a', 'Projects').click();
 
         cy.location('pathname').should('equal', '/sign-in');
         cy.contains('session has expired').should('be.visible');
@@ -47,6 +46,7 @@ describe('dashboard authentication', () => {
     it('clears protected state when a dashboard action discovers an expired session', () => {
         signInAndWaitForDashboard();
         cy.clearCookie('toggleflow-session');
+        cy.get('summary[aria-label="Open user menu for Demo Owner"]').click();
         cy.contains('button', 'Sign out').click();
 
         cy.location('pathname').should('equal', '/sign-in');

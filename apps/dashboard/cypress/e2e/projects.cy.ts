@@ -15,7 +15,7 @@ describe('project management', () => {
             cy.get('button[aria-label="Open navigation"]').click();
             cy.get('aside[aria-label="Mobile application navigation"]').contains('a', 'Projects').click();
         } else {
-            cy.get('header').contains('a', 'Projects').click();
+            cy.get('nav[aria-label="Application"]').contains('a', 'Projects').click();
         }
         cy.location('pathname').should('equal', '/projects');
         cy.contains('button', 'Create project').first().click();
@@ -39,7 +39,7 @@ describe('project management', () => {
             cy.get('button[aria-label="Open navigation"]').click();
             cy.get('aside[aria-label="Mobile application navigation"]')
                 .should('contain', `Checkout API ${suffix}`)
-                .contains('button', 'Close')
+                .find('button[aria-label="Close navigation"]')
                 .click();
         } else {
             cy.get('nav[aria-label="Application"]').should('contain', `Checkout API ${suffix}`);
@@ -65,7 +65,7 @@ describe('project management', () => {
         cy.viewport(390, 844);
         signIn();
 
-        cy.get('header').contains('a', 'Projects').should('not.be.visible');
+        cy.get('nav[aria-label="Application"]').should('not.be.visible');
         cy.document().then((document) => {
             expect(document.documentElement.scrollWidth).to.be.at.most(document.documentElement.clientWidth);
         });
@@ -89,7 +89,7 @@ describe('project management', () => {
 
         cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').within(() => {
-            cy.contains('button', 'Close').should('be.focused');
+            cy.get('button[aria-label="Close navigation"]').should('be.focused');
             cy.contains('a', 'Project overview').click();
         });
         cy.contains('h2', 'Release state').should('be.visible');
@@ -105,9 +105,11 @@ describe('project management', () => {
 
         cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').within(() => {
-            cy.contains('button', 'Close').should('be.focused').trigger('keydown', { key: 'Tab', shiftKey: true });
+            cy.get('button[aria-label="Close navigation"]')
+                .should('be.focused')
+                .trigger('keydown', { key: 'Tab', shiftKey: true });
             cy.contains('button', 'Sign out').should('be.focused').trigger('keydown', { key: 'Tab' });
-            cy.contains('button', 'Close').should('be.focused');
+            cy.get('button[aria-label="Close navigation"]').should('be.focused');
         });
         cy.get('aside[aria-label="Mobile application navigation"]').trigger('keydown', { key: 'Escape' });
         cy.get('button[aria-label="Open navigation"]').should('be.focused');
@@ -125,7 +127,7 @@ describe('project management', () => {
 
         cy.get('aside[aria-label="Mobile application navigation"]').should('not.exist');
         cy.get('[inert]').should('not.exist');
-        cy.get('header').contains('a', 'Projects').click();
+        cy.get('nav[aria-label="Application"]').contains('a', 'Projects').click();
         cy.location('pathname').should('equal', '/projects');
     });
 });

@@ -18,7 +18,7 @@ describe('responsive and accessible release surfaces', () => {
                 cy.get('button[aria-label="Open navigation"]').click();
                 cy.get('aside[aria-label="Mobile application navigation"]').contains('a', 'Projects').click();
             } else {
-                cy.get('header').contains('a', 'Projects').click();
+                cy.get('nav[aria-label="Application"]').contains('a', 'Projects').click();
             }
         });
         cy.contains('a', 'Checkout Service').click();
@@ -44,7 +44,7 @@ describe('responsive and accessible release surfaces', () => {
         signIn();
         cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
         cy.get('aside[aria-label="Mobile application navigation"]').should('be.visible');
-        cy.focused().should('contain', 'Close');
+        cy.focused().should('have.attr', 'aria-label', 'Close navigation');
         cy.focused().type('{esc}');
         cy.get('aside[aria-label="Mobile application navigation"]').should('not.exist');
         cy.get('button[aria-label="Open navigation"]').should('have.focus');
