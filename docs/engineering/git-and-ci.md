@@ -80,6 +80,16 @@ kebab-cased. Choose the type from the ticket's primary outcome; a feature branch
 contain its necessary tests and documentation without adding `test` or `docs` to the
 name. Contributor and agent names do not belong in branch names.
 
+Repository automation and Codex agents must follow this convention directly. Do not
+prepend an agent- or tool-specific namespace such as `codex/`. The user has
+explicitly overridden the Codex desktop default branch prefix for this repository.
+
+Pull requests run the `Branch Policy / branch-name` check from
+`.github/workflows/branch-policy.yml`. It accepts exactly the documented branch
+types, an uppercase `TF-<number>` Jira key, and a lowercase kebab-case description.
+An invalid branch name must be corrected before the pull request can pass required
+checks.
+
 Do not reuse a merged branch for another ticket.
 
 ## 4. Implement and Check Locally
@@ -107,8 +117,9 @@ pnpm test:e2e
 pnpm build
 ```
 
-The checked-in workflows at `.github/workflows/backend-ci.yml` and
-`.github/workflows/frontend-ci.yml` are authoritative if these commands change.
+The checked-in workflows at `.github/workflows/branch-policy.yml`,
+`.github/workflows/backend-ci.yml`, and `.github/workflows/frontend-ci.yml` are
+authoritative if these commands or checks change.
 
 ## 5. Review and Commit Local Changes
 

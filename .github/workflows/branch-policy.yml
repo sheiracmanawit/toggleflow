@@ -1,0 +1,26 @@
+name: Branch Policy
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate ticket branch name
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        shell: bash
+        run: |
+          pattern='^(feature|fix|hotfix|refactor|docs|test|ci|chore|spike)/TF-[0-9]+-[a-z0-9]+(-[a-z0-9]+)*$'
+
+          if [[ ! "$BRANCH_NAME" =~ $pattern ]]; then
+            echo "Invalid pull-request branch: $BRANCH_NAME"
+            echo "Expected: <type>/TF-<number>-<lowercase-kebab-description>"
+            echo "Allowed types: feature, fix, hotfix, refactor, docs, test, ci, chore, spike"
+            exit 1
+          fi
+
+          echo "Valid ticket branch: $BRANCH_NAME"
