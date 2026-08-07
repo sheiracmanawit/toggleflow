@@ -1,99 +1,25 @@
 <script setup lang="ts">
-import axios from 'axios';
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink } from 'vue-router';
 
-import { FeatureFlagValidationError, featureFlagService } from '@features/feature-flags';
-import { projectService } from '@features/projects';
-import type { EnvironmentFlagState, FeatureFlag } from '@features/feature-flags';
-import type { Project, ValidationErrors } from '@features/projects';
+import { useFeatureFlagList } from '../composables/useFeatureFlagList';
 
-const route = useRoute();
-const router = useRouter();
-const project = ref<Project | null>(null);
-const flags = ref<FeatureFlag[]>([]);
-const isLoading = ref(true);
-const loadError = ref('');
-const showCreateForm = ref(false);
-const isSubmitting = ref(false);
-const submitError = ref('');
-const validationErrors = ref<ValidationErrors>({});
-const form = reactive({ name: '', key: '', description: '' });
-const keyWasEdited = ref(false);
-let controller: AbortController | null = null;
-
-const stateFor = (flag: FeatureFlag, environmentId: number): EnvironmentFlagState | undefined =>
-    flag.environment_states.find((state) => state.environment.id === environmentId);
-
-const suggestedKey = computed(() =>
-    form.name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, ''),
-);
-
-const load = async (): Promise<void> => {
-    controller?.abort();
-    controller = new AbortController();
-    const projectId = Number(route.params.projectId);
-    isLoading.value = true;
-    loadError.value = '';
-    project.value = null;
-    flags.value = [];
-    try {
-        const [loadedProject, loadedFlags] = await Promise.all([
-            projectService.get(projectId, controller.signal),
-            featureFlagService.list(projectId, controller.signal),
-        ]);
-        if (Number(route.params.projectId) === projectId) {
-            project.value = loadedProject;
-            flags.value = loadedFlags;
-        }
-    } catch (error: unknown) {
-        if (!axios.isCancel(error)) {
-            loadError.value = 'Feature flags could not be loaded or you do not have access to this project.';
-        }
-    } finally {
-        if (Number(route.params.projectId) === projectId) isLoading.value = false;
-    }
-};
-
-const openCreate = (): void => {
-    showCreateForm.value = true;
-    submitError.value = '';
-    validationErrors.value = {};
-};
-
-const submit = async (): Promise<void> => {
-    if (isSubmitting.value) return;
-    const projectId = Number(route.params.projectId);
-    isSubmitting.value = true;
-    submitError.value = '';
-    validationErrors.value = {};
-    try {
-        const created = await featureFlagService.create(projectId, {
-            name: form.name,
-            key: form.key || suggestedKey.value,
-            description: form.description,
-        });
-        await router.push(`/projects/${projectId}/flags/${created.id}`);
-    } catch (error: unknown) {
-        if (error instanceof FeatureFlagValidationError) validationErrors.value = error.errors;
-        else submitError.value = 'The flag was not created. Your entered information has been preserved.';
-    } finally {
-        isSubmitting.value = false;
-    }
-};
-
-watch(
-    () => form.name,
-    () => {
-        if (!keyWasEdited.value) form.key = suggestedKey.value;
-    },
-);
-watch(() => route.params.projectId, load, { immediate: true });
-onBeforeUnmount(() => controller?.abort());
+const {
+    route,
+    project,
+    flags,
+    isLoading,
+    loadError,
+    showCreateForm,
+    isSubmitting,
+    submitError,
+    validationErrors,
+    form,
+    keyWasEdited,
+    stateFor,
+    load,
+    openCreate,
+    submit,
+} = useFeatureFlagList();
 </script>
 
 <template>

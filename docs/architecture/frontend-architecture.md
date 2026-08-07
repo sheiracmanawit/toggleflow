@@ -281,6 +281,10 @@ configured in TypeScript, Vite, and Vitest.
 
 - Code used by one component stays with that component.
 - Code reused within one workflow stays in its owning feature.
+- A composable owns a cohesive reactive workflow when extracting it makes request,
+  mutation, cancellation, confirmation, or accessibility behavior independently
+  understandable and testable; do not create pass-through composables that merely
+  rename page-local refs.
 - Cross-feature consumption uses an intentional public feature entry point.
 - Shared contains only domain-neutral capabilities and never depends on a feature.
 - App composes features and shared foundations.

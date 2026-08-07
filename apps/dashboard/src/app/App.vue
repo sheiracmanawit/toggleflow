@@ -1,20 +1,19 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 
 import { useAuthStore } from '@features/authentication';
 import { useProjectContextStore } from '@features/projects';
+import { useNavigationDrawer } from './composables/useNavigationDrawer';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const projectContextStore = useProjectContextStore();
 const { projects, isLoading: projectsLoading, error: projectsError } = storeToRefs(projectContextStore);
-const drawerOpen = ref(false);
-const drawer = ref<HTMLElement | null>(null);
-const drawerButton = ref<HTMLElement | null>(null);
-const drawerCloseButton = ref<HTMLElement | null>(null);
+const { drawerOpen, drawer, drawerButton, drawerCloseButton, openDrawer, closeDrawer, handleDrawerKeydown } =
+    useNavigationDrawer();
 const isSigningOut = ref(false);
 const signOutError = ref('');
 
@@ -22,71 +21,22 @@ const projectId = computed(() => {
     const value = route.params.projectId;
     return typeof value === 'string' && /^\d+$/.test(value) ? value : null;
 });
-
 const currentProject = computed(() => projects.value.find((project) => String(project.id) === projectId.value) ?? null);
 
 const switchProject = async (event: globalThis.Event): Promise<void> => {
     const selectedProjectId = (event.target as globalThis.HTMLSelectElement).value;
     if (!/^\d+$/.test(selectedProjectId) || selectedProjectId === projectId.value) return;
-
     await router.push(`/projects/${selectedProjectId}`);
 };
-
-const openDrawer = async (): Promise<void> => {
-    drawerOpen.value = true;
-    await nextTick();
-    drawerCloseButton.value?.focus();
-};
-
-const closeDrawer = async (): Promise<void> => {
-    drawerOpen.value = false;
-    await nextTick();
-    drawerButton.value?.focus();
-};
-
-const closeDrawerAtDesktopBreakpoint = (): void => {
-    if (window.innerWidth >= 768) {
-        drawerOpen.value = false;
-    }
-};
-
-const handleDrawerKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape') {
-        void closeDrawer();
-        return;
-    }
-    if (event.key !== 'Tab' || !drawer.value) return;
-
-    const focusable = Array.from(
-        drawer.value.querySelectorAll<HTMLElement>(
-            'a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        ),
-    );
-    if (focusable.length === 0) return;
-
-    const first = focusable[0];
-    const last = focusable.at(-1);
-    if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-    }
-};
-
 const signOut = async (): Promise<void> => {
     if (isSigningOut.value) return;
     isSigningOut.value = true;
     signOutError.value = '';
-
     try {
         await authStore.logout();
         await router.replace('/sign-in');
     } catch {
-        if (authStore.isAuthenticated) {
-            signOutError.value = 'ToggleFlow could not sign you out. Please try again.';
-        }
+        if (authStore.isAuthenticated) signOutError.value = 'ToggleFlow could not sign you out. Please try again.';
     } finally {
         isSigningOut.value = false;
     }
@@ -95,11 +45,7 @@ const signOut = async (): Promise<void> => {
 watch([() => authStore.isAuthenticated, projectId], () => projectContextStore.load(authStore.isAuthenticated), {
     immediate: true,
 });
-onMounted(() => window.addEventListener('resize', closeDrawerAtDesktopBreakpoint));
-onBeforeUnmount(() => {
-    window.removeEventListener('resize', closeDrawerAtDesktopBreakpoint);
-    projectContextStore.cancel();
-});
+onBeforeUnmount(() => projectContextStore.cancel());
 </script>
 
 <template>

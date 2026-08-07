@@ -18,7 +18,7 @@ request-state behavior while making ownership and dependency direction explicit.
   foundation page, and cross-feature composition.
 - `features`: `authentication`, `projects`, `feature-flags`, `credentials`,
   `audit-history`, and `dashboard`. Each owns its API operations, domain types,
-  pages, stores, utilities, and tests where those artifacts exist.
+  pages, composables, stores, utilities, and tests where those artifacts exist.
 - `shared`: product-neutral HTTP transport, redirect safety, and UI primitives.
 
 The project-overview route component is app-owned because it intentionally composes
@@ -36,6 +36,8 @@ feature dependency.
 | API-key page/API/types/tests | `features/credentials` |
 | audit page/API/types/description utility/tests | `features/audit-history` |
 | dashboard page/API/types/tests | `features/dashboard` |
+| feature-specific reactive workflows | the owning feature's `composables` directory |
+| cross-feature project-overview workflow and shell navigation behavior | `app/composables` |
 | Axios transport/session-expiry registration | `shared/api` |
 | safe redirect validation | `shared/navigation` |
 | accessible dialog | `shared/ui` |
