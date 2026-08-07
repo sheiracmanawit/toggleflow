@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 
@@ -19,6 +19,8 @@ const { drawerOpen, drawer, drawerButton, drawerCloseButton, openDrawer, closeDr
 const isSigningOut = ref(false);
 const signOutError = ref('');
 const sidebarCollapsed = ref(false);
+const userMenu = ref<globalThis.HTMLDetailsElement | null>(null);
+const userMenuButton = ref<HTMLElement | null>(null);
 
 const projectId = computed(() => {
     const value = route.params.projectId;
@@ -55,10 +57,35 @@ const signOut = async (): Promise<void> => {
     }
 };
 
+const closeUserMenu = (restoreFocus = false): void => {
+    if (!userMenu.value?.open) return;
+    userMenu.value.open = false;
+    if (restoreFocus) userMenuButton.value?.focus();
+};
+
+const handleUserMenuKeydown = (event: globalThis.KeyboardEvent): void => {
+    if (event.key === 'Escape' && userMenu.value?.open) {
+        event.preventDefault();
+        closeUserMenu(true);
+    }
+};
+
+const handleUserMenuPointerdown = (event: globalThis.PointerEvent): void => {
+    if (userMenu.value?.open && !userMenu.value.contains(event.target as globalThis.Node)) closeUserMenu();
+};
+
 watch([() => authStore.isAuthenticated, projectId], () => projectContextStore.load(authStore.isAuthenticated), {
     immediate: true,
 });
-onBeforeUnmount(() => projectContextStore.cancel());
+onMounted(() => {
+    document.addEventListener('keydown', handleUserMenuKeydown);
+    document.addEventListener('pointerdown', handleUserMenuPointerdown);
+});
+onBeforeUnmount(() => {
+    projectContextStore.cancel();
+    document.removeEventListener('keydown', handleUserMenuKeydown);
+    document.removeEventListener('pointerdown', handleUserMenuPointerdown);
+});
 </script>
 
 <template>
@@ -101,8 +128,9 @@ onBeforeUnmount(() => projectContextStore.cancel());
                         @switch-project="switchProject"
                     />
                     <div class="border-t border-border p-3">
-                        <details class="relative">
+                        <details ref="userMenu" class="relative">
                             <summary
+                                ref="userMenuButton"
                                 :aria-label="`Open user menu for ${authStore.owner?.name ?? 'account'}`"
                                 class="flex cursor-pointer list-none items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-muted"
                                 :class="{ 'justify-center': sidebarCollapsed }"

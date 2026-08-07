@@ -5,8 +5,24 @@ export const useNavigationDrawer = () => {
     const drawer = ref<HTMLElement | null>(null);
     const drawerButton = ref<HTMLElement | null>(null);
     const drawerCloseButton = ref<HTMLElement | null>(null);
+    let previousBodyOverflow = '';
+    let scrollLocked = false;
+
+    const lockBackgroundScroll = (): void => {
+        if (scrollLocked) return;
+        previousBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        scrollLocked = true;
+    };
+
+    const unlockBackgroundScroll = (): void => {
+        if (!scrollLocked) return;
+        document.body.style.overflow = previousBodyOverflow;
+        scrollLocked = false;
+    };
 
     const openDrawer = async (): Promise<void> => {
+        lockBackgroundScroll();
         drawerOpen.value = true;
         await nextTick();
         drawerCloseButton.value?.focus();
@@ -14,12 +30,16 @@ export const useNavigationDrawer = () => {
 
     const closeDrawer = async (): Promise<void> => {
         drawerOpen.value = false;
+        unlockBackgroundScroll();
         await nextTick();
         drawerButton.value?.focus();
     };
 
     const closeDrawerAtDesktopBreakpoint = (): void => {
-        if (window.innerWidth >= 768) drawerOpen.value = false;
+        if (window.innerWidth >= 768 && drawerOpen.value) {
+            drawerOpen.value = false;
+            unlockBackgroundScroll();
+        }
     };
 
     const handleDrawerKeydown = (event: KeyboardEvent): void => {
@@ -48,7 +68,10 @@ export const useNavigationDrawer = () => {
     };
 
     onMounted(() => window.addEventListener('resize', closeDrawerAtDesktopBreakpoint));
-    onBeforeUnmount(() => window.removeEventListener('resize', closeDrawerAtDesktopBreakpoint));
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', closeDrawerAtDesktopBreakpoint);
+        unlockBackgroundScroll();
+    });
 
     return { drawerOpen, drawer, drawerButton, drawerCloseButton, openDrawer, closeDrawer, handleDrawerKeydown };
 };
