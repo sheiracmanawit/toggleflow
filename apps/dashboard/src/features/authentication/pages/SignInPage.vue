@@ -117,7 +117,7 @@ const submit = async (): Promise<void> => {
             </div>
 
             <button
-                class="w-full rounded-lg bg-brand px-4 py-2.5 font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+                class="w-full rounded-lg bg-brand px-4 py-2.5 font-semibold text-on-brand disabled:cursor-wait disabled:opacity-60"
                 type="submit"
                 :disabled="isSubmitting"
             >

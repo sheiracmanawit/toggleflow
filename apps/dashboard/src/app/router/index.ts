@@ -17,45 +17,52 @@ import { ProjectsPage } from '@features/projects';
 import { SignInPage } from '@features/authentication';
 import ProjectOverviewPage from '../pages/ProjectOverviewPage.vue';
 
-export const routes: RouteRecordRaw[] = [
-    { path: '/', component: FoundationPage },
-    { path: '/sign-in', component: SignInPage, meta: { guestOnly: true } },
-    { path: '/app', component: DashboardPage, meta: { requiresAuth: true } },
-    { path: '/projects', component: ProjectsPage, meta: { requiresAuth: true } },
-    {
-        path: '/projects/:projectId(\\d+)',
-        component: ProjectOverviewPage,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/projects/:projectId(\\d+)/flags',
-        component: FeatureFlagsPage,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/projects/:projectId(\\d+)/flags/:flagId(\\d+)',
-        component: FeatureFlagDetailsPage,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/projects/:projectId(\\d+)/api-keys',
-        component: ApiKeysPage,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/projects/:projectId(\\d+)/audit-log',
-        component: AuditLogPage,
-        meta: { requiresAuth: true },
-    },
-];
+export const createRoutes = (development: boolean): RouteRecordRaw[] => {
+    const appRoutes: RouteRecordRaw[] = [
+        { path: '/', component: FoundationPage },
+        { path: '/sign-in', component: SignInPage, meta: { guestOnly: true } },
+        { path: '/app', component: DashboardPage, meta: { requiresAuth: true } },
+        { path: '/projects', component: ProjectsPage, meta: { requiresAuth: true } },
+        {
+            path: '/projects/:projectId(\\d+)',
+            component: ProjectOverviewPage,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/projects/:projectId(\\d+)/flags',
+            component: FeatureFlagsPage,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/projects/:projectId(\\d+)/flags/:flagId(\\d+)',
+            component: FeatureFlagDetailsPage,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/projects/:projectId(\\d+)/api-keys',
+            component: ApiKeysPage,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/projects/:projectId(\\d+)/audit-log',
+            component: AuditLogPage,
+            meta: { requiresAuth: true },
+        },
+    ];
 
-if (import.meta.env.DEV) {
-    routes.push({
-        path: '/__ui-foundation',
-        name: 'ui-foundation',
-        component: () => import('../pages/UiFoundationPage.vue'),
-    });
-}
+    if (!development) return appRoutes;
+
+    return [
+        ...appRoutes,
+        {
+            path: '/__ui-foundation',
+            name: 'ui-foundation',
+            component: () => import('../pages/UiFoundationPage.vue'),
+        },
+    ];
+};
+
+export const routes = createRoutes(import.meta.env.DEV);
 
 export const authenticationGuard: NavigationGuard = async (to): Promise<RouteLocationRaw | undefined> => {
     const authStore = useAuthStore(pinia);

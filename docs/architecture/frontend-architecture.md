@@ -227,7 +227,7 @@ Use CSS custom properties or an equivalent token layer for semantic values:
 
 ```css
 :root {
-    --color-brand: #4f46e5;
+    --color-brand: #0f766e;
     --color-enabled: /* semantic emerald token */;
     --color-warning: /* semantic amber token */;
     --color-danger: /* semantic red token */;

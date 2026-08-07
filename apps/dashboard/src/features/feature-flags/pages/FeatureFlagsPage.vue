@@ -46,7 +46,7 @@ const {
                     <p class="mt-2 text-slate-600">Control application behavior independently in each environment.</p>
                 </div>
                 <button
-                    class="self-start rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                    class="self-start rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                     type="button"
                     @click="openCreate"
                 >
@@ -64,7 +64,7 @@ const {
                     Production.
                 </p>
                 <button
-                    class="mt-5 rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                    class="mt-5 rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                     type="button"
                     @click="openCreate"
                 >
@@ -204,7 +204,7 @@ const {
                     <p v-if="submitError" class="text-sm text-danger" role="alert">{{ submitError }}</p>
                     <div class="flex gap-3">
                         <button
-                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-white disabled:opacity-60"
+                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:opacity-60"
                             type="submit"
                             :disabled="isSubmitting"
                         >

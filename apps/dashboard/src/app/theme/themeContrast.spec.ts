@@ -42,9 +42,17 @@ describe('cross-theme contrast', () => {
     });
 
     it('uses accessible teal/mint primary treatments in both presentations', () => {
-        expect(contrast('#ffffff', token(light, 'ui-color-primary-500'))).toBeGreaterThanOrEqual(4.5);
-        expect(contrast(token(light, 'tf-brand'), '#ffffff')).toBeGreaterThanOrEqual(4.5);
-        expect(contrast('#18181b', token(dark, 'ui-color-primary-500'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(light, 'tf-on-brand'), token(light, 'tf-brand'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(dark, 'tf-on-brand'), token(dark, 'tf-brand'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(light, 'tf-on-danger'), token(light, 'tf-danger'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(dark, 'tf-on-danger'), token(dark, 'tf-danger'))).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('keeps state foregrounds readable on their actual dark surfaces', () => {
+        expect(contrast(token(dark, 'tf-enabled'), token(dark, 'tf-enabled-surface'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(dark, 'tf-warning'), token(dark, 'tf-warning-surface'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(dark, 'tf-danger'), token(dark, 'tf-danger-surface'))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(dark, 'tf-danger-border'), token(dark, 'tf-danger-surface'))).toBeGreaterThanOrEqual(3);
     });
 
     it('keeps primary, emerald Enabled, and violet Production distinct', () => {

@@ -30,7 +30,7 @@ const {
                 </p>
             </div>
             <button
-                class="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:bg-teal-800"
+                class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand hover:bg-brand-hover"
                 type="button"
                 @click="openCreate"
             >
@@ -56,7 +56,7 @@ const {
                 Development, Staging, and Production are added automatically so release contexts stay isolated.
             </p>
             <button
-                class="mt-5 rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                class="mt-5 rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                 type="button"
                 @click="openCreate"
             >
@@ -153,7 +153,7 @@ const {
                 <p v-if="submitError" class="text-sm text-danger" role="alert">{{ submitError }}</p>
                 <div class="flex flex-wrap gap-3">
                     <button
-                        class="rounded-lg bg-brand px-4 py-2 font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+                        class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:cursor-wait disabled:opacity-60"
                         type="submit"
                         :disabled="isSubmitting"
                     >

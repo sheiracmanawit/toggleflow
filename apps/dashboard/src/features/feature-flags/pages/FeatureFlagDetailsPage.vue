@@ -167,7 +167,7 @@ const {
                     <p v-if="saveError" class="text-sm text-danger" role="alert">{{ saveError }}</p>
                     <div class="flex gap-3">
                         <button
-                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-white disabled:opacity-60"
+                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:opacity-60"
                             type="submit"
                             :disabled="isSaving"
                         >
@@ -195,7 +195,7 @@ const {
                     The flag will leave active views while its environment state and history are retained.
                 </p>
                 <button
-                    class="mt-4 rounded-lg bg-danger px-4 py-2 font-semibold text-white"
+                    class="mt-4 rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger"
                     type="button"
                     @click="showArchiveDialog = true"
                 >
@@ -220,7 +220,7 @@ const {
                     Cancel
                 </button>
                 <button
-                    class="rounded-lg bg-brand px-4 py-2 font-semibold text-white disabled:opacity-60"
+                    class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:opacity-60"
                     type="button"
                     :disabled="pendingEnvironmentId !== null"
                     @click="changeState(confirmation.state, confirmation.enabled)"
@@ -247,7 +247,7 @@ const {
                     Keep flag
                 </button>
                 <button
-                    class="rounded-lg bg-danger px-4 py-2 font-semibold text-white disabled:opacity-60"
+                    class="rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger disabled:opacity-60"
                     type="button"
                     :disabled="isArchiving"
                     @click="archive"

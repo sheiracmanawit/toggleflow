@@ -58,7 +58,7 @@ const {
                 </div>
                 <button
                     v-if="project.status === 'active'"
-                    class="self-start rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+                    class="self-start rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                     type="button"
                     @click="showCreate = true"
                 >
@@ -167,7 +167,10 @@ const {
                         </select>
                     </div>
                     <div class="flex gap-3">
-                        <button class="rounded-lg bg-brand px-4 py-2 font-semibold text-white" :disabled="isSubmitting">
+                        <button
+                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
+                            :disabled="isSubmitting"
+                        >
                             {{ isSubmitting ? 'Issuing…' : 'Issue API key' }}
                         </button>
                         <button type="button" :disabled="isSubmitting" @click="showCreate = false">Cancel</button>
@@ -188,7 +191,7 @@ const {
             {{ issuedCredential }}
         </code>
         <button
-            class="mt-4 rounded-lg bg-brand px-4 py-2 font-semibold text-white"
+            class="mt-4 rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
             type="button"
             @click="copyCredential"
         >
@@ -219,7 +222,7 @@ const {
         <p v-if="mutationError" class="mb-4 text-sm text-danger" role="alert">{{ mutationError }}</p>
         <div class="flex gap-3">
             <button
-                class="rounded-lg bg-danger px-4 py-2 font-semibold text-white disabled:opacity-60"
+                class="rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger disabled:opacity-60"
                 type="button"
                 :disabled="isRevoking"
                 @click="revoke"

@@ -9,6 +9,7 @@ const modalOpen = ref(false);
 const slideoverOpen = ref(false);
 const accepted = ref(false);
 const environment = ref('development');
+const currentPage = ref(1);
 const toast = useToast();
 
 const environments = [
@@ -151,13 +152,41 @@ const rows = [
             <div class="space-y-4 rounded-(--radius-surface) border border-border bg-surface p-5">
                 <h2 class="text-xl font-semibold">Overlays and feedback</h2>
                 <div class="flex flex-wrap gap-3">
-                    <UButton label="Open confirmation" @click="modalOpen = true" />
-                    <UButton
-                        color="neutral"
-                        label="Open mobile panel"
-                        variant="outline"
-                        @click="slideoverOpen = true"
-                    />
+                    <UModal
+                        v-model:open="modalOpen"
+                        description="Applications using this Production environment key will begin receiving true."
+                        title="Enable new-checkout in Production?"
+                        :transition="false"
+                    >
+                        <UButton label="Open confirmation" />
+                        <template #body><p>This change does not deploy application code.</p></template>
+                        <template #footer
+                            ><UButton
+                                color="neutral"
+                                label="Cancel"
+                                variant="outline"
+                                @click="modalOpen = false" /><UButton
+                                class="ml-3"
+                                label="Confirm Production change"
+                                @click="modalOpen = false"
+                        /></template>
+                    </UModal>
+                    <USlideover
+                        v-model:open="slideoverOpen"
+                        description="Responsive navigation fixture"
+                        title="Project navigation"
+                        :transition="false"
+                    >
+                        <UButton color="neutral" label="Open mobile panel" variant="outline" />
+                        <template #body
+                            ><nav aria-label="Fixture navigation" class="grid gap-2">
+                                <UButton color="neutral" label="Overview" variant="ghost" /><UButton
+                                    color="neutral"
+                                    label="Feature flags"
+                                    variant="ghost"
+                                /></nav
+                        ></template>
+                    </USlideover>
                     <UButton
                         color="neutral"
                         label="Show toast"
@@ -171,38 +200,14 @@ const rows = [
                         "
                     />
                 </div>
-                <UModal
-                    v-model:open="modalOpen"
-                    description="Applications using this Production environment key will begin receiving true."
-                    title="Enable new-checkout in Production?"
-                >
-                    <template #body><p>This change does not deploy application code.</p></template>
-                    <template #footer
-                        ><UButton color="neutral" label="Cancel" variant="outline" @click="modalOpen = false" /><UButton
-                            class="ml-3"
-                            label="Confirm Production change"
-                            @click="modalOpen = false"
-                    /></template>
-                </UModal>
-                <USlideover
-                    v-model:open="slideoverOpen"
-                    description="Responsive navigation fixture"
-                    title="Project navigation"
-                    ><template #body
-                        ><nav aria-label="Fixture navigation" class="grid gap-2">
-                            <UButton color="neutral" label="Overview" variant="ghost" /><UButton
-                                color="neutral"
-                                label="Feature flags"
-                                variant="ghost"
-                            /></nav></template
-                ></USlideover>
             </div>
         </section>
 
         <section class="space-y-4" aria-labelledby="table-title">
             <h2 id="table-title" class="text-xl font-semibold">Operational data</h2>
             <UTable :data="rows" />
-            <UPagination aria-label="Feature flag pages" :page="1" :total="24" />
+            <UPagination v-model:page="currentPage" aria-label="Feature flag pages" :total="24" />
+            <p class="text-sm text-muted" role="status">Showing fixture page {{ currentPage }}.</p>
         </section>
     </main>
 </template>
