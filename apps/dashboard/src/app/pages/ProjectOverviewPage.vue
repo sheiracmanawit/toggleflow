@@ -72,13 +72,13 @@ const productionEnabledCount = computed(
                         class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
                         :to="`/projects/${project.id}/flags`"
                     >
-                        Manage flags
+                        Manage feature flags
                     </RouterLink>
                     <RouterLink
                         class="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
                         :to="`/projects/${project.id}/api-keys`"
                     >
-                        API keys
+                        Manage API keys
                     </RouterLink>
                     <button
                         class="rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
