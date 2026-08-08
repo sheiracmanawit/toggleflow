@@ -133,12 +133,17 @@ const openRevoke = (apiKey: ApiKey): void => {
                             <tr v-for="apiKey in filteredKeys" :key="apiKey.id">
                                 <th class="px-5 py-4 align-middle font-semibold" scope="row">
                                     <UBadge
+                                        :class="
+                                            apiKey.environment.key === 'production'
+                                                ? 'bg-environment-production/10 text-environment-production ring-environment-production/30'
+                                                : undefined
+                                        "
                                         :color="
                                             apiKey.environment.key === 'development'
                                                 ? 'info'
                                                 : apiKey.environment.key === 'staging'
                                                   ? 'warning'
-                                                  : 'secondary'
+                                                  : 'neutral'
                                         "
                                         variant="subtle"
                                     >

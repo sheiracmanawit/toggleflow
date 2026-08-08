@@ -3,10 +3,8 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { auditEventService, type AuditEvent } from '@features/audit-history';
-import { projectService, type Project } from '@features/projects';
 import AuditLogPage from './AuditLogPage.vue';
 
-const project = { id: 1, name: 'Checkout', environments: [] } as unknown as Project;
 const event: AuditEvent = {
     id: 8,
     action: 'feature_flag.enabled',
@@ -37,7 +35,6 @@ describe('AuditLogPage', () => {
     afterEach(() => vi.restoreAllMocks());
 
     it('renders human-readable, environment-aware history and pagination', async () => {
-        vi.spyOn(projectService, 'get').mockResolvedValue(project);
         vi.spyOn(auditEventService, 'list').mockResolvedValue({
             events: [event],
             currentPage: 1,
@@ -46,19 +43,17 @@ describe('AuditLogPage', () => {
         });
         const wrapper = await mountPage();
 
-        expect(wrapper.text()).toContain(
-            'Release Owner enabled feature flag New checkout for Production in project Checkout',
-        );
         expect(wrapper.text()).toContain('Enabled feature flag');
-        expect(wrapper.text()).toContain('Production environment');
-        expect(wrapper.get('a[href="/projects/1/flags/3"]').text()).toBe('New checkout');
-        expect(wrapper.get('time').attributes('datetime')).toBe(event.created_at);
-        expect(wrapper.get('time').attributes('aria-label')).toBeTruthy();
+        expect(wrapper.text()).toContain('Release Owner');
+        expect(wrapper.text()).toContain('Production');
+        expect(wrapper.text()).not.toContain('in project Checkout');
+        expect(wrapper.findAll('a[href="/projects/1/flags/3"]')[0]?.text()).toBe('New checkout');
+        expect(wrapper.findAll('time')[0]?.attributes('datetime')).toBe(event.created_at);
+        expect(wrapper.findAll('time')[0]?.attributes('aria-label')).toBeTruthy();
         expect(wrapper.get('nav[aria-label="Audit history pages"]').text()).toContain('Page 1 of 2');
     });
 
     it('distinguishes an empty response from a retryable initial failure', async () => {
-        vi.spyOn(projectService, 'get').mockResolvedValue(project);
         const list = vi
             .spyOn(auditEventService, 'list')
             .mockResolvedValue({ events: [], currentPage: 1, lastPage: 1, total: 0 });
@@ -70,11 +65,10 @@ describe('AuditLogPage', () => {
         await flushPromises();
         expect(wrapper.text()).toContain('Audit history unavailable');
         expect(wrapper.text()).not.toContain('No management changes yet');
-        expect(wrapper.get('button').text()).toBe('Try again');
+        expect(wrapper.get('button').text()).toContain('Try again');
     });
 
     it('keeps confirmed history visible when pagination fails', async () => {
-        vi.spyOn(projectService, 'get').mockResolvedValue(project);
         const list = vi.spyOn(auditEventService, 'list').mockResolvedValue({
             events: [event],
             currentPage: 1,
@@ -88,10 +82,9 @@ describe('AuditLogPage', () => {
         await flushPromises();
 
         expect(wrapper.text()).toContain('Audit history could not be refreshed');
-        expect(wrapper.text()).toContain(
-            'Release Owner enabled feature flag New checkout for Production in project Checkout',
-        );
+        expect(wrapper.text()).toContain('Release Owner');
+        expect(wrapper.text()).toContain('New checkout');
         expect(wrapper.text()).toContain('Page 1 of 2');
-        expect(wrapper.get('button').text()).toBe('Try again');
+        expect(wrapper.findAll('button').some((button) => button.text().includes('Try again'))).toBe(true);
     });
 });

@@ -3,11 +3,11 @@ import axios from 'axios';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import { auditEventDescription, auditEventService, type AuditEvent } from '@features/audit-history';
-import { projectService, type Project } from '@features/projects';
+import { auditEventService, type AuditEvent } from '@features/audit-history';
+
+type BadgeColor = 'error' | 'info' | 'neutral' | 'primary' | 'secondary' | 'success' | 'warning';
 
 const route = useRoute();
-const project = ref<Project | null>(null);
 const events = ref<AuditEvent[]>([]);
 const page = ref(1);
 const lastPage = ref(1);
@@ -20,6 +20,8 @@ let loadedProjectId: number | null = null;
 
 const timestamp = (value: string): string =>
     new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'long' }).format(new Date(value));
+const shortTimestamp = (value: string): string =>
+    new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 const relativeTime = (value: string): string => {
     const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000);
     const intervals: Array<[Intl.RelativeTimeFormatUnit, number]> = [
@@ -45,7 +47,28 @@ const actionLabel = (action: string): string =>
         'feature_flag.disabled': 'Disabled feature flag',
         'api_key.created': 'Issued API key',
         'api_key.revoked': 'Revoked API key',
-    })[action] ?? 'Changed release configuration';
+    })[action] ?? 'Changed configuration';
+const actionColor = (action: string): BadgeColor => {
+    if (action === 'feature_flag.enabled') return 'success';
+    if (action === 'feature_flag.disabled') return 'neutral';
+    if (action.endsWith('.archived') || action === 'api_key.revoked') return 'error';
+    if (action.endsWith('.updated')) return 'info';
+    if (action.endsWith('.created')) return 'primary';
+
+    return 'neutral';
+};
+const actionIcon = (action: string): string => {
+    if (action === 'feature_flag.enabled') return 'i-lucide-circle-check';
+    if (action === 'feature_flag.disabled') return 'i-lucide-circle-minus';
+    if (action.endsWith('.archived')) return 'i-lucide-archive';
+    if (action === 'api_key.revoked') return 'i-lucide-key-round';
+    if (action.endsWith('.created')) return 'i-lucide-plus';
+    if (action.endsWith('.updated')) return 'i-lucide-pencil';
+
+    return 'i-lucide-history';
+};
+const subjectTypeLabel = (type: string): string =>
+    ({ FeatureFlag: 'Feature flag', ApiKey: 'API key', Project: 'Project' })[type] ?? 'Release resource';
 const subjectDestination = (event: AuditEvent): string | null => {
     if (event.subject.type === 'FeatureFlag') return `/projects/${event.project.id}/flags/${event.subject.id}`;
     if (event.subject.type === 'ApiKey') return `/projects/${event.project.id}/api-keys`;
@@ -53,6 +76,19 @@ const subjectDestination = (event: AuditEvent): string | null => {
 
     return null;
 };
+const environmentLabel = (event: AuditEvent): string | null =>
+    event.environment?.name ?? event.environment?.key ?? null;
+const environmentColor = (event: AuditEvent): BadgeColor => {
+    if (event.environment?.key === 'development') return 'info';
+    if (event.environment?.key === 'staging') return 'warning';
+
+    return 'neutral';
+};
+const productionBadgeClass = (event: AuditEvent): string | undefined =>
+    event.environment?.key === 'production'
+        ? 'bg-environment-production/10 text-environment-production ring-environment-production/30'
+        : undefined;
+const actorInitial = (event: AuditEvent): string => (event.actor?.name || 'System').charAt(0).toUpperCase();
 
 const pageLabel = computed(() => `Page ${page.value} of ${lastPage.value}`);
 const isInitialLoading = computed(() => isLoading.value && loadedProjectId === null);
@@ -64,7 +100,6 @@ const load = async (requestedPage = 1): Promise<void> => {
     const projectId = Number(route.params.projectId);
     if (loadedProjectId !== null && loadedProjectId !== projectId) {
         loadedProjectId = null;
-        project.value = null;
         events.value = [];
         page.value = 1;
         lastPage.value = 1;
@@ -73,13 +108,9 @@ const load = async (requestedPage = 1): Promise<void> => {
     isLoading.value = true;
     error.value = '';
     try {
-        const [loadedProject, history] = await Promise.all([
-            projectService.get(projectId, controller.signal),
-            auditEventService.list(projectId, requestedPage, controller.signal),
-        ]);
+        const history = await auditEventService.list(projectId, requestedPage, controller.signal);
         if (requestId !== activeRequest || Number(route.params.projectId) !== projectId) return;
         loadedProjectId = projectId;
-        project.value = loadedProject;
         events.value = history.events;
         page.value = history.currentPage;
         lastPage.value = history.lastPage;
@@ -109,109 +140,238 @@ onBeforeUnmount(() => {
 
 <template>
     <section class="-mx-4 -my-6 sm:-mx-6 sm:-my-8" aria-label="Audit history">
-        <UDashboardToolbar class="border-b border-border px-4 py-3 sm:px-6">
-            <template #left>
-                <RouterLink
-                    class="text-sm font-medium text-text-muted hover:text-text"
-                    :to="`/projects/${route.params.projectId}`"
-                >
-                    ← Project overview
-                </RouterLink>
-                <span class="text-sm text-text-muted">Release changes, newest first</span>
-            </template>
-            <template #right>
-                <span v-if="!isInitialLoading" class="text-sm text-text-muted">{{ total }} events</span>
-            </template>
-        </UDashboardToolbar>
-
         <div v-if="isInitialLoading" class="grid gap-3 p-6" role="status" aria-live="polite">
             <p>Loading audit history…</p>
-            <div v-for="item in 3" :key="item" class="h-28 animate-pulse rounded-xl bg-slate-200" aria-hidden="true" />
+            <div
+                v-for="item in 4"
+                :key="item"
+                class="h-20 animate-pulse rounded-lg bg-surface-muted"
+                aria-hidden="true"
+            />
         </div>
-        <div v-else-if="error" class="m-6 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
-            <h2 class="text-lg font-semibold">Audit history unavailable</h2>
-            <p class="mt-2">{{ error }}</p>
-            <button
-                class="mt-4 rounded-lg border border-red-300 px-4 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+        <div
+            v-else-if="error && events.length === 0"
+            class="m-6 rounded-lg border border-red-200 bg-red-50 p-4"
+            role="alert"
+        >
+            <h2 class="text-base font-semibold">Audit history unavailable</h2>
+            <p class="mt-2 text-sm">{{ error }}</p>
+            <UButton
+                class="mt-4"
+                color="error"
+                icon="i-lucide-refresh-cw"
                 type="button"
+                variant="outline"
                 @click="load(page)"
             >
                 Try again
-            </button>
+            </UButton>
         </div>
         <div v-if="!isInitialLoading && !error && events.length === 0" class="p-6" role="status">
-            <h2 class="text-lg font-semibold">No management changes yet</h2>
-            <p class="mt-2 text-slate-600">
-                Events will appear after a project, feature flag, environment state, or API key changes.
-            </p>
+            <div class="rounded-lg border border-dashed border-border px-6 py-12 text-center">
+                <UIcon name="i-lucide-history" aria-hidden="true" class="mx-auto size-7 text-text-muted" />
+                <h2 class="mt-3 text-base font-semibold">No management changes yet</h2>
+                <p class="mx-auto mt-1 max-w-md text-sm text-text-muted">
+                    Project, feature flag, environment state, and API key changes will appear here.
+                </p>
+            </div>
         </div>
         <template v-if="!isInitialLoading && events.length > 0">
+            <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
+                <div>
+                    <p class="text-sm font-semibold text-text">Management activity</p>
+                    <p class="mt-0.5 text-sm text-text-muted">Newest changes first</p>
+                </div>
+                <UBadge color="neutral" icon="i-lucide-history" variant="subtle">
+                    {{ total }} {{ total === 1 ? 'event' : 'events' }}
+                </UBadge>
+            </div>
             <p
                 v-if="isLoading"
-                class="border-b border-border px-4 py-3 text-sm font-medium text-brand sm:px-6"
+                class="border-y border-border px-4 py-3 text-sm font-medium text-brand sm:px-6"
                 role="status"
                 aria-live="polite"
             >
                 Refreshing audit history. Previously loaded results remain visible.
             </p>
-            <ol class="divide-y divide-border">
-                <li v-for="event in events" :key="event.id" class="px-4 py-3 sm:px-6">
-                    <article
-                        class="grid gap-2 sm:grid-cols-[minmax(11rem,0.7fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-4"
-                    >
-                        <div class="min-w-0">
-                            <span class="text-sm font-semibold">{{ actionLabel(event.action) }}</span>
-                            <span v-if="event.environment" class="mt-0.5 block text-xs text-slate-500">
-                                {{ event.environment.name || event.environment.key }} environment
-                            </span>
-                        </div>
-                        <p class="min-w-0 text-sm text-slate-600">
-                            <span class="font-medium text-slate-900">{{ event.actor?.name || 'System' }}</span>
-                            changed
-                            <RouterLink
-                                v-if="subjectDestination(event)"
-                                class="font-semibold text-brand hover:underline"
-                                :to="subjectDestination(event)!"
-                            >
-                                {{ event.subject.name }}
-                            </RouterLink>
-                            <span v-else class="font-semibold text-slate-900">{{ event.subject.name }}</span>
-                            <span class="sr-only">. {{ auditEventDescription(event) }}</span>
-                        </p>
-                        <time
-                            class="shrink-0 text-xs text-slate-600 sm:text-right"
-                            :datetime="event.created_at"
-                            :title="timestamp(event.created_at)"
-                            :aria-label="timestamp(event.created_at)"
-                        >
-                            {{ relativeTime(event.created_at) }}
-                        </time>
-                    </article>
-                </li>
-            </ol>
-            <nav
-                v-if="lastPage > 1"
-                class="flex items-center justify-between gap-4 border-t border-border px-4 py-3 sm:px-6"
-                aria-label="Audit history pages"
+            <div
+                v-if="error"
+                class="mx-4 mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm sm:mx-6"
+                role="alert"
             >
-                <button
-                    class="rounded-lg border border-slate-300 px-4 py-2 font-semibold disabled:opacity-50"
+                <p>{{ error }}</p>
+                <UButton
+                    class="mt-3"
+                    color="error"
+                    icon="i-lucide-refresh-cw"
+                    size="sm"
                     type="button"
-                    :disabled="page <= 1 || isLoading"
-                    @click="load(page - 1)"
+                    variant="outline"
+                    @click="load(page)"
                 >
-                    Previous
-                </button>
-                <span class="text-sm">{{ pageLabel }}</span>
-                <button
-                    class="rounded-lg border border-slate-300 px-4 py-2 font-semibold disabled:opacity-50"
-                    type="button"
-                    :disabled="page >= lastPage || isLoading"
-                    @click="load(page + 1)"
+                    Try again
+                </UButton>
+            </div>
+
+            <section class="px-4 pb-6 sm:px-6" aria-label="Audit events">
+                <div class="hidden overflow-x-auto rounded-lg border border-border xl:block">
+                    <table class="min-w-[52rem] w-full border-collapse text-left text-sm">
+                        <thead class="border-b border-border bg-surface-muted text-text">
+                            <tr>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Activity</th>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Subject</th>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Actor</th>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Environment</th>
+                                <th class="px-5 py-3.5 text-right font-semibold" scope="col">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            <tr v-for="event in events" :key="event.id" class="hover:bg-surface-muted/50">
+                                <td class="px-5 py-4 align-middle">
+                                    <UBadge
+                                        :color="actionColor(event.action)"
+                                        :icon="actionIcon(event.action)"
+                                        variant="subtle"
+                                    >
+                                        {{ actionLabel(event.action) }}
+                                    </UBadge>
+                                </td>
+                                <th class="px-5 py-4 align-middle font-normal" scope="row">
+                                    <RouterLink
+                                        v-if="subjectDestination(event)"
+                                        class="font-semibold text-text hover:text-brand hover:underline"
+                                        :to="subjectDestination(event)!"
+                                    >
+                                        {{ event.subject.name }}
+                                    </RouterLink>
+                                    <span v-else class="font-semibold text-text">{{ event.subject.name }}</span>
+                                    <span class="mt-0.5 block text-xs text-text-muted">{{
+                                        subjectTypeLabel(event.subject.type)
+                                    }}</span>
+                                </th>
+                                <td class="px-5 py-4 align-middle">
+                                    <span class="flex items-center gap-2.5">
+                                        <span
+                                            class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand"
+                                        >
+                                            {{ actorInitial(event) }}
+                                        </span>
+                                        <span class="font-medium text-text">{{ event.actor?.name || 'System' }}</span>
+                                    </span>
+                                </td>
+                                <td class="px-5 py-4 align-middle">
+                                    <UBadge
+                                        v-if="environmentLabel(event)"
+                                        :class="productionBadgeClass(event)"
+                                        :color="environmentColor(event)"
+                                        variant="subtle"
+                                    >
+                                        {{ environmentLabel(event) }}
+                                    </UBadge>
+                                    <span v-else class="text-sm text-text-muted">Project-wide</span>
+                                </td>
+                                <td class="px-5 py-4 text-right align-middle text-text-muted">
+                                    <time
+                                        :datetime="event.created_at"
+                                        :title="timestamp(event.created_at)"
+                                        :aria-label="timestamp(event.created_at)"
+                                    >
+                                        <span class="block font-medium text-text">{{
+                                            relativeTime(event.created_at)
+                                        }}</span>
+                                        <span class="mt-0.5 block text-xs">{{ shortTimestamp(event.created_at) }}</span>
+                                    </time>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <ol class="divide-y divide-border overflow-hidden rounded-lg border border-border xl:hidden">
+                    <li v-for="event in events" :key="event.id" class="p-4">
+                        <article>
+                            <div class="flex items-start justify-between gap-3">
+                                <UBadge
+                                    :color="actionColor(event.action)"
+                                    :icon="actionIcon(event.action)"
+                                    variant="subtle"
+                                >
+                                    {{ actionLabel(event.action) }}
+                                </UBadge>
+                                <time
+                                    class="shrink-0 text-xs text-text-muted"
+                                    :datetime="event.created_at"
+                                    :title="timestamp(event.created_at)"
+                                    :aria-label="timestamp(event.created_at)"
+                                >
+                                    {{ relativeTime(event.created_at) }}
+                                </time>
+                            </div>
+                            <div class="mt-4">
+                                <RouterLink
+                                    v-if="subjectDestination(event)"
+                                    class="font-semibold text-text hover:text-brand hover:underline"
+                                    :to="subjectDestination(event)!"
+                                >
+                                    {{ event.subject.name }}
+                                </RouterLink>
+                                <span v-else class="font-semibold text-text">{{ event.subject.name }}</span>
+                                <span class="mt-0.5 block text-xs text-text-muted">{{
+                                    subjectTypeLabel(event.subject.type)
+                                }}</span>
+                            </div>
+                            <div class="mt-4 flex flex-wrap items-center gap-2 text-sm text-text-muted">
+                                <span class="flex items-center gap-2">
+                                    <span
+                                        class="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand"
+                                    >
+                                        {{ actorInitial(event) }}
+                                    </span>
+                                    {{ event.actor?.name || 'System' }}
+                                </span>
+                                <span aria-hidden="true">·</span>
+                                <UBadge
+                                    v-if="environmentLabel(event)"
+                                    :class="productionBadgeClass(event)"
+                                    :color="environmentColor(event)"
+                                    size="sm"
+                                    variant="subtle"
+                                >
+                                    {{ environmentLabel(event) }}
+                                </UBadge>
+                                <span v-else>Project-wide</span>
+                            </div>
+                        </article>
+                    </li>
+                </ol>
+
+                <nav
+                    v-if="lastPage > 1"
+                    class="mt-4 flex items-center justify-between gap-4"
+                    aria-label="Audit history pages"
                 >
-                    Next
-                </button>
-            </nav>
+                    <UButton
+                        icon="i-lucide-chevron-left"
+                        type="button"
+                        variant="outline"
+                        :disabled="page <= 1 || isLoading"
+                        @click="load(page - 1)"
+                    >
+                        Previous
+                    </UButton>
+                    <span class="text-sm text-text-muted">{{ pageLabel }}</span>
+                    <UButton
+                        icon="i-lucide-chevron-right"
+                        trailing
+                        type="button"
+                        variant="outline"
+                        :disabled="page >= lastPage || isLoading"
+                        @click="load(page + 1)"
+                    >
+                        Next
+                    </UButton>
+                </nav>
+            </section>
         </template>
     </section>
 </template>
