@@ -45,16 +45,16 @@ describe('boolean feature flag management', () => {
             .and('contain', 'Staging')
             .and('contain', 'Production')
             .and('contain', 'Enabled');
-        cy.get('a[aria-label="Manage New checkout"]').should('be.visible');
-        cy.contains('a', 'New checkout').click();
+        cy.get('a[aria-label="Manage New checkout"]:visible').should('be.visible');
+        cy.contains('a:visible', 'New checkout').click();
 
         cy.viewport(1280, 800);
         cy.contains('a', '← Feature flags').click();
         cy.contains('Controls the new checkout experience.').should('be.visible');
         cy.get('thead').should('contain', 'Development').and('contain', 'Staging').and('contain', 'Production');
         cy.contains('tr', 'New checkout').should('contain', 'Active').and('contain', 'Enabled');
-        cy.get('a[aria-label="Manage New checkout"]').should('be.visible');
-        cy.contains('a', 'New checkout').click();
+        cy.get('a[aria-label="Manage New checkout"]:visible').should('be.visible');
+        cy.contains('a:visible', 'New checkout').click();
         cy.get('[aria-label="Flag lifecycle: Active"]').should('contain', 'Active');
 
         cy.viewport(390, 844);
