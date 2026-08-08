@@ -190,10 +190,9 @@ onBeforeUnmount(() => {
                                 >
                                     <UIcon name="i-lucide-menu" aria-hidden="true" class="block size-5" />
                                 </button>
-                                <RouterLink class="font-semibold text-brand md:hidden" to="/app">ToggleFlow</RouterLink>
-                                <div class="hidden min-w-0 items-center gap-3 md:flex">
+                                <div class="flex min-w-0 items-center gap-3">
                                     <button
-                                        class="flex size-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text"
+                                        class="hidden size-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text md:flex"
                                         type="button"
                                         :aria-expanded="!sidebarCollapsed"
                                         :aria-label="sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'"
