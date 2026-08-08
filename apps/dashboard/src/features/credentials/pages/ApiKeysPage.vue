@@ -169,13 +169,15 @@ const openRevoke = (apiKey: ApiKey): void => {
                                     <UButton
                                         v-if="project.status === 'active' && apiKey.state === 'active'"
                                         :aria-label="`Revoke ${apiKey.name}`"
-                                        color="neutral"
-                                        icon="i-lucide-ellipsis-vertical"
+                                        color="error"
+                                        icon="i-lucide-key-round"
                                         size="sm"
                                         type="button"
                                         variant="ghost"
                                         @click="openRevoke(apiKey)"
-                                    />
+                                    >
+                                        Revoke
+                                    </UButton>
                                     <span v-else class="text-xs text-text-muted">—</span>
                                 </td>
                             </tr>
