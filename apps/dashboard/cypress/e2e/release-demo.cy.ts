@@ -73,8 +73,14 @@ describe('MVP release demonstration', () => {
         evaluateProduction(false);
 
         cy.get('nav[aria-label="Application"]').contains('a', 'Audit history').click();
-        cy.contains('Demo Owner enabled feature flag New checkout for Production').should('be.visible');
-        cy.contains('Demo Owner disabled feature flag New checkout for Production').should('be.visible');
+        cy.contains('tr', 'Enabled feature flag')
+            .should('contain', 'New checkout')
+            .and('contain', 'Demo Owner')
+            .and('contain', 'Production');
+        cy.contains('tr', 'Disabled feature flag')
+            .should('contain', 'New checkout')
+            .and('contain', 'Demo Owner')
+            .and('contain', 'Production');
 
         cy.get('nav[aria-label="Application"]').contains('a', 'API keys').click();
         cy.contains('Release demo Production')
