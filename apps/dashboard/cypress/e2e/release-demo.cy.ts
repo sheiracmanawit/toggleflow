@@ -79,7 +79,7 @@ describe('MVP release demonstration', () => {
         cy.get('nav[aria-label="Application"]').contains('a', 'API keys').click();
         cy.contains('Release demo Production')
             .parents('tr')
-            .within(() => cy.contains('button', 'Revoke').click());
+            .within(() => cy.get('button[aria-label="Revoke Release demo Production"]').click());
         cy.get('[role="dialog"]').contains('button', 'Revoke API key').click();
         cy.contains('Release demo Production').parents('tr').should('contain', 'Revoked');
 

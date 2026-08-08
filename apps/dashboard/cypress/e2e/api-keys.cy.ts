@@ -40,7 +40,7 @@ describe('environment API key management', () => {
 
         cy.contains('Production primary')
             .parents('tr')
-            .within(() => cy.contains('button', 'Revoke').click());
+            .within(() => cy.get('button[aria-label="Revoke Production primary"]').click());
         cy.get('[role="dialog"]')
             .should('contain', 'immediately lose evaluation access')
             .contains('button', 'Revoke API key')

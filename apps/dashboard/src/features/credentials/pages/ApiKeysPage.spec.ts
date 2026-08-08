@@ -45,6 +45,9 @@ const secondProject: Project = {
 };
 
 const mountPage = async () => {
+    const headerActions = document.createElement('div');
+    headerActions.id = 'page-header-actions';
+    document.body.append(headerActions);
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -74,9 +77,11 @@ describe('ApiKeysPage', () => {
         vi.spyOn(apiKeyService, 'list').mockResolvedValue([activeKey]);
         const { wrapper } = await mountPage();
 
-        expect(wrapper.text()).toContain('Development');
-        expect(wrapper.text()).toContain('Staging');
         expect(wrapper.text()).toContain('Production');
+        expect(wrapper.get('[aria-label="Filter API keys"]').attributes('aria-label')).toBe('Filter API keys');
+        expect(wrapper.get('[aria-label="Filter by environment"]').attributes('aria-label')).toBe(
+            'Filter by environment',
+        );
         expect(wrapper.text()).toContain('tf_env_abcd1234_…');
         expect(wrapper.text()).not.toContain('complete-secret');
     });
@@ -90,7 +95,8 @@ describe('ApiKeysPage', () => {
         });
         const { wrapper } = await mountPage();
 
-        await wrapper.get('button').trigger('click');
+        document.querySelector<HTMLButtonElement>('#page-header-actions button')?.click();
+        await flushPromises();
         const name = document.querySelector<HTMLInputElement>('#api-key-name')!;
         const environment = document.querySelector<HTMLSelectElement>('#api-key-environment')!;
         name.value = 'Checkout production';
@@ -128,10 +134,7 @@ describe('ApiKeysPage', () => {
         vi.spyOn(apiKeyService, 'revoke').mockRejectedValue(new Error('Unavailable'));
         const { wrapper } = await mountPage();
 
-        await wrapper
-            .findAll('button')
-            .find((button) => button.text() === 'Revoke')
-            ?.trigger('click');
+        await wrapper.get('button[aria-label="Revoke Checkout production"]').trigger('click');
         await flushPromises();
         const confirm = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
             (button) => button.textContent === 'Revoke API key',
@@ -155,7 +158,8 @@ describe('ApiKeysPage', () => {
         });
         const { router, wrapper } = await mountPage();
 
-        await wrapper.get('button').trigger('click');
+        document.querySelector<HTMLButtonElement>('#page-header-actions button')?.click();
+        await flushPromises();
         const name = document.querySelector<HTMLInputElement>('#api-key-name')!;
         name.value = 'Checkout production';
         name.dispatchEvent(new Event('input'));
@@ -166,7 +170,7 @@ describe('ApiKeysPage', () => {
         await router.push('/projects/2/api-keys');
         await flushPromises();
 
-        expect(wrapper.text()).toContain('Payments');
+        expect(wrapper.text()).toContain('No credentials match the current filters.');
         expect(document.body.textContent).not.toContain('tf_env_abcd1234_complete-secret');
         expect(document.body.querySelector('[role="dialog"]')).toBeNull();
     });
@@ -185,7 +189,8 @@ describe('ApiKeysPage', () => {
         );
         const { router, wrapper } = await mountPage();
 
-        await wrapper.get('button').trigger('click');
+        document.querySelector<HTMLButtonElement>('#page-header-actions button')?.click();
+        await flushPromises();
         const name = document.querySelector<HTMLInputElement>('#api-key-name')!;
         name.value = 'Checkout production';
         name.dispatchEvent(new Event('input'));
@@ -199,7 +204,7 @@ describe('ApiKeysPage', () => {
         });
         await flushPromises();
 
-        expect(wrapper.text()).toContain('Payments');
+        expect(wrapper.text()).toContain('No credentials match the current filters.');
         expect(document.body.textContent).not.toContain('tf_env_abcd1234_late-secret');
         expect(wrapper.text()).not.toContain('Checkout production');
     });

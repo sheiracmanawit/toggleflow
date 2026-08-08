@@ -219,6 +219,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <div class="flex items-center gap-2">
+                                <div id="page-header-actions" class="flex items-center gap-2" />
                                 <ThemePreferenceSelector />
                             </div>
                         </nav>
