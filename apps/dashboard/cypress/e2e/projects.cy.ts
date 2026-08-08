@@ -120,7 +120,7 @@ describe('project management', () => {
         cy.viewport(390, 844);
         signIn();
 
-        cy.get('button[aria-label="Open navigation"]').click();
+        cy.get('button[aria-label="Open navigation"]').should('be.visible').focus().type(' ');
         cy.get('aside[aria-label="Mobile application navigation"]').should('be.visible');
         cy.get('header').should('have.attr', 'inert');
 
