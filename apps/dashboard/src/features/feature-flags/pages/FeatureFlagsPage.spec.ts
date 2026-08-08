@@ -21,6 +21,9 @@ const project: Project = {
 };
 
 const mountPage = async () => {
+    const headerActions = document.createElement('div');
+    headerActions.id = 'page-header-actions';
+    document.body.append(headerActions);
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -147,18 +150,53 @@ describe('FeatureFlagsPage', () => {
 
         expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual([
             'Flag',
+            'Lifecycle',
             'Development',
             'Staging',
             'Production',
+            'Actions',
         ]);
-        expect(wrapper.findAll('tbody td').map((cell) => cell.text())).toEqual([
-            'New checkoutnew-checkoutControls the new checkout experience.',
+        const row = wrapper.get('tbody tr');
+        expect(row.text()).toContain('New checkout');
+        expect(row.text()).toContain('new-checkout');
+        expect(row.text()).toContain('Active');
+        expect(row.findAll('td').map((cell) => cell.text())).toEqual([
+            'Active',
             'Disabled',
             'Enabled',
             'Enabled',
+            'Manage',
         ]);
+        expect(wrapper.get('a[aria-label="Manage New checkout"]').attributes('href')).toBe('/projects/1/flags/2');
         expect(
             wrapper.findAll('p').filter((paragraph) => paragraph.text() === 'Controls the new checkout experience.'),
-        ).toHaveLength(2);
+        ).toHaveLength(1);
+    });
+
+    it('does not report a missing environment state as disabled', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        vi.spyOn(featureFlagService, 'list').mockResolvedValue([
+            {
+                id: 2,
+                project_id: 1,
+                name: 'Incomplete flag',
+                key: 'incomplete-flag',
+                description: null,
+                status: 'archived',
+                updated_at: '2026-07-26T00:00:00Z',
+                environment_states: [
+                    {
+                        environment: project.environments[0]!,
+                        enabled: false,
+                        updated_at: '2026-07-26T00:00:00Z',
+                    },
+                ],
+            },
+        ]);
+        const { wrapper } = await mountPage();
+
+        expect(wrapper.get('tbody tr').text()).toContain('Archived');
+        expect(wrapper.get('tbody tr').text()).toContain('Disabled');
+        expect(wrapper.findAll('tbody tr td').filter((cell) => cell.text() === 'Unavailable')).toHaveLength(2);
     });
 });
