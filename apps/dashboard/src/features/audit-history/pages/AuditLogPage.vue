@@ -108,23 +108,27 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section aria-labelledby="audit-log-heading">
-        <RouterLink
-            class="text-sm font-semibold text-brand hover:underline"
-            :to="`/projects/${route.params.projectId}`"
-        >
-            ← Project overview
-        </RouterLink>
-        <div class="mt-6">
-            <h1 id="audit-log-heading" class="text-3xl font-bold">Audit history</h1>
-            <p class="mt-2 max-w-2xl text-slate-600">Release-management changes are shown newest first.</p>
-        </div>
+    <section class="-mx-4 -my-6 sm:-mx-6 sm:-my-8" aria-label="Audit history">
+        <UDashboardToolbar class="border-b border-border px-4 py-3 sm:px-6">
+            <template #left>
+                <RouterLink
+                    class="text-sm font-medium text-text-muted hover:text-text"
+                    :to="`/projects/${route.params.projectId}`"
+                >
+                    ← Project overview
+                </RouterLink>
+                <span class="text-sm text-text-muted">Release changes, newest first</span>
+            </template>
+            <template #right>
+                <span v-if="!isInitialLoading" class="text-sm text-text-muted">{{ total }} events</span>
+            </template>
+        </UDashboardToolbar>
 
-        <div v-if="isInitialLoading" class="mt-8 grid gap-3" role="status" aria-live="polite">
+        <div v-if="isInitialLoading" class="grid gap-3 p-6" role="status" aria-live="polite">
             <p>Loading audit history…</p>
             <div v-for="item in 3" :key="item" class="h-28 animate-pulse rounded-xl bg-slate-200" aria-hidden="true" />
         </div>
-        <div v-else-if="error" class="mt-8 rounded-xl border border-red-200 bg-red-50 p-6" role="alert">
+        <div v-else-if="error" class="m-6 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
             <h2 class="text-lg font-semibold">Audit history unavailable</h2>
             <p class="mt-2">{{ error }}</p>
             <button
@@ -135,23 +139,23 @@ onBeforeUnmount(() => {
                 Try again
             </button>
         </div>
-        <div
-            v-if="!isInitialLoading && !error && events.length === 0"
-            class="mt-8 rounded-xl border border-slate-200 bg-white p-6"
-            role="status"
-        >
+        <div v-if="!isInitialLoading && !error && events.length === 0" class="p-6" role="status">
             <h2 class="text-lg font-semibold">No management changes yet</h2>
             <p class="mt-2 text-slate-600">
                 Events will appear after a project, feature flag, environment state, or API key changes.
             </p>
         </div>
         <template v-if="!isInitialLoading && events.length > 0">
-            <p v-if="isLoading" class="mt-6 text-sm font-medium text-brand" role="status" aria-live="polite">
+            <p
+                v-if="isLoading"
+                class="border-b border-border px-4 py-3 text-sm font-medium text-brand sm:px-6"
+                role="status"
+                aria-live="polite"
+            >
                 Refreshing audit history. Previously loaded results remain visible.
             </p>
-            <p class="mt-6 text-sm text-slate-600" role="status">{{ total }} events · {{ pageLabel }}</p>
-            <ol class="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <li v-for="event in events" :key="event.id" class="px-4 py-3">
+            <ol class="divide-y divide-border">
+                <li v-for="event in events" :key="event.id" class="px-4 py-3 sm:px-6">
                     <article
                         class="grid gap-2 sm:grid-cols-[minmax(11rem,0.7fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-4"
                     >
@@ -187,7 +191,7 @@ onBeforeUnmount(() => {
             </ol>
             <nav
                 v-if="lastPage > 1"
-                class="mt-6 flex items-center justify-between gap-4"
+                class="flex items-center justify-between gap-4 border-t border-border px-4 py-3 sm:px-6"
                 aria-label="Audit history pages"
             >
                 <button

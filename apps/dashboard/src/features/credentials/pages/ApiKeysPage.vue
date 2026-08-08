@@ -33,66 +33,68 @@ const {
 </script>
 
 <template>
-    <section aria-labelledby="api-keys-heading">
-        <RouterLink
-            class="text-sm font-semibold text-brand hover:underline"
-            :to="`/projects/${route.params.projectId}`"
-        >
-            ← Project overview
-        </RouterLink>
-        <p v-if="isLoading" class="mt-8 rounded-xl border border-slate-200 bg-white p-6" role="status">
-            Loading API keys…
-        </p>
-        <div v-else-if="loadError" class="mt-8 rounded-xl border border-red-200 bg-red-50 p-6" role="alert">
-            <h1 id="api-keys-heading" class="text-xl font-semibold">API keys unavailable</h1>
+    <section class="-mx-4 -my-6 sm:-mx-6 sm:-my-8" aria-label="API keys">
+        <p v-if="isLoading" class="p-6" role="status">Loading API keys…</p>
+        <div v-else-if="loadError" class="m-6 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
+            <h1 class="text-base font-semibold">API keys unavailable</h1>
             <p class="mt-2">{{ loadError }}</p>
             <button class="mt-3 font-semibold text-danger underline" type="button" @click="load">Try again</button>
         </div>
         <template v-else-if="project">
-            <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <p class="text-sm font-semibold uppercase tracking-wide text-brand">{{ project.name }}</p>
-                    <h1 id="api-keys-heading" class="mt-1 text-3xl font-bold">API keys</h1>
-                    <p class="mt-2 max-w-2xl text-slate-600">
-                        Server-side applications use a key for exactly one environment. Complete keys are shown once.
-                    </p>
-                </div>
-                <button
-                    v-if="project.status === 'active'"
-                    class="self-start rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
-                    type="button"
-                    @click="showCreate = true"
-                >
-                    Issue API key
-                </button>
-            </div>
-            <p v-if="successMessage" class="mt-4 text-sm font-semibold text-enabled" role="status">
+            <UDashboardToolbar class="border-b border-border px-4 py-3 sm:px-6">
+                <template #left>
+                    <RouterLink
+                        class="text-sm font-medium text-text-muted hover:text-text"
+                        :to="`/projects/${route.params.projectId}`"
+                    >
+                        ← Project overview
+                    </RouterLink>
+                    <span class="text-sm font-semibold text-text">{{ project.name }}</span>
+                    <span class="hidden text-sm text-text-muted sm:inline">
+                        {{ apiKeys.length }} credentials across {{ project.environments.length }} environments
+                    </span>
+                </template>
+                <template #right>
+                    <UButton
+                        v-if="project.status === 'active'"
+                        icon="i-lucide-plus"
+                        size="sm"
+                        type="button"
+                        @click="showCreate = true"
+                    >
+                        Issue API key
+                    </UButton>
+                </template>
+            </UDashboardToolbar>
+            <p
+                v-if="successMessage"
+                class="border-b border-border px-4 py-3 text-sm font-semibold text-enabled sm:px-6"
+                role="status"
+            >
                 {{ successMessage }}
             </p>
-            <p v-if="mutationError" class="mt-4 text-sm font-semibold text-danger" role="alert">
+            <p
+                v-if="mutationError"
+                class="border-b border-border px-4 py-3 text-sm font-semibold text-danger sm:px-6"
+                role="alert"
+            >
                 {{ mutationError }}
             </p>
-            <p v-if="project.status === 'archived'" class="mt-4 text-sm text-slate-600">
+            <p
+                v-if="project.status === 'archived'"
+                class="border-b border-border px-4 py-3 text-sm text-text-muted sm:px-6"
+            >
                 This project is archived. Credential metadata remains available for reference, but credentials cannot be
                 issued or revoked.
             </p>
 
-            <section
-                class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white"
-                aria-label="API key inventory"
-            >
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-                    <div>
-                        <h2 class="font-semibold">Credential inventory</h2>
-                        <p class="text-sm text-slate-600">
-                            {{ apiKeys.length }} total across {{ project.environments.length }} environments
-                        </p>
-                    </div>
+            <section aria-label="API key inventory">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-2 sm:px-6">
                     <ul class="flex flex-wrap gap-2" aria-label="Environment credential counts">
                         <li
                             v-for="environment in project.environments"
                             :key="environment.id"
-                            class="rounded-full bg-slate-100 px-2.5 py-1 text-xs"
+                            class="rounded-md bg-surface-muted px-2 py-1 text-xs"
                         >
                             <span class="font-semibold">{{ environment.name }}</span>
                             {{ keysFor(environment).length }}
@@ -101,7 +103,7 @@ const {
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-[46rem] w-full border-collapse text-left text-sm">
-                        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                        <thead class="border-b border-border bg-surface-muted/50 text-xs text-text-muted">
                             <tr>
                                 <th class="px-4 py-2.5 font-semibold" scope="col">Environment</th>
                                 <th class="px-4 py-2.5 font-semibold" scope="col">Credential</th>
@@ -110,7 +112,7 @@ const {
                                 <th class="px-4 py-2.5 text-right font-semibold" scope="col">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200">
+                        <tbody class="divide-y divide-border">
                             <template v-for="environment in project.environments" :key="environment.id">
                                 <tr v-if="keysFor(environment).length === 0">
                                     <th class="px-4 py-3 align-top font-semibold" scope="row">
@@ -149,17 +151,21 @@ const {
                                         <span v-else class="block">Never used</span>
                                     </td>
                                     <td class="px-4 py-3 text-right align-top">
-                                        <button
+                                        <UButton
                                             v-if="project.status === 'active' && apiKey.state === 'active'"
-                                            class="rounded-lg border border-red-300 px-3 py-1.5 font-semibold text-danger"
+                                            aria-label="Revoke API key"
+                                            color="error"
+                                            icon="i-lucide-key-round"
+                                            size="xs"
                                             type="button"
+                                            variant="ghost"
                                             @click="
                                                 mutationError = '';
                                                 keyToRevoke = apiKey;
                                             "
                                         >
                                             Revoke
-                                        </button>
+                                        </UButton>
                                         <span v-else class="text-xs text-slate-500">—</span>
                                     </td>
                                 </tr>
