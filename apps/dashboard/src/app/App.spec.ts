@@ -120,7 +120,7 @@ describe('App', () => {
         const wrapper = mount(App, { attachTo: document.body, global: { plugins: [pinia, router] } });
 
         const openButton = wrapper.get('button[aria-label="Open navigation"]');
-        await openButton.trigger('click');
+        await openButton.trigger('keydown', { key: 'Enter' });
         await flushPromises();
         const drawer = wrapper.get('aside[aria-label="Mobile application navigation"]');
         const closeButton = drawer.find('button[aria-label="Close navigation"]');

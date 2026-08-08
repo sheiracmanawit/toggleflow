@@ -185,6 +185,8 @@ onBeforeUnmount(() => {
                                     type="button"
                                     :aria-expanded="drawerOpen"
                                     @click="openDrawer"
+                                    @keydown.enter.prevent="openDrawer"
+                                    @keydown.space.prevent="openDrawer"
                                 >
                                     <UIcon name="i-lucide-menu" aria-hidden="true" class="block size-5" />
                                 </button>

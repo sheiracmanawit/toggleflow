@@ -88,7 +88,7 @@ describe('project management', () => {
         cy.get('form').contains('button', 'Create flag').click();
 
         cy.contains('h1', 'Mobile comparison').should('be.visible');
-        cy.get('button[aria-label="Open navigation"]').should('be.visible').focus().type('{enter}');
+        cy.get('button[aria-label="Open navigation"]').focus().trigger('keydown', { key: 'Enter' });
         cy.get('aside[aria-label="Mobile application navigation"]').within(() => {
             cy.get('button[aria-label="Close navigation"]').should('be.focused');
             cy.contains('a', 'Project overview').click();
@@ -104,7 +104,7 @@ describe('project management', () => {
                 cy.contains('dd', 'Disabled').should('be.visible');
             });
 
-        cy.get('button[aria-label="Open navigation"]').focus().type('{enter}');
+        cy.get('button[aria-label="Open navigation"]').focus().trigger('keydown', { key: 'Enter' });
         cy.get('aside[aria-label="Mobile application navigation"]').within(() => {
             cy.get('button[aria-label="Close navigation"]')
                 .should('be.focused')
@@ -120,7 +120,7 @@ describe('project management', () => {
         cy.viewport(390, 844);
         signIn();
 
-        cy.get('button[aria-label="Open navigation"]').should('be.visible').focus().type(' ');
+        cy.get('button[aria-label="Open navigation"]').focus().trigger('keydown', { key: ' ' });
         cy.get('aside[aria-label="Mobile application navigation"]').should('be.visible');
         cy.get('header').should('have.attr', 'inert');
 
