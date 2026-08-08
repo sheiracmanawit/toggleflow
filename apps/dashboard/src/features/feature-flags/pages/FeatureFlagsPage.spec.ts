@@ -21,6 +21,9 @@ const project: Project = {
 };
 
 const mountPage = async () => {
+    const headerActions = document.createElement('div');
+    headerActions.id = 'page-header-actions';
+    document.body.append(headerActions);
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -30,13 +33,16 @@ const mountPage = async () => {
     });
     await router.push('/projects/1/flags');
     await router.isReady();
-    const wrapper = mount(FeatureFlagsPage, { global: { plugins: [router] } });
+    const wrapper = mount(FeatureFlagsPage, { attachTo: document.body, global: { plugins: [router] } });
     await flushPromises();
 
     return { wrapper, router };
 };
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+});
 
 describe('FeatureFlagsPage', () => {
     it('explains the empty state and creates a disabled-by-default flag', async () => {
@@ -59,9 +65,12 @@ describe('FeatureFlagsPage', () => {
             .findAll('button')
             .find((button) => button.text() === 'Create flag')
             ?.trigger('click');
-        await wrapper.get('#flag-name').setValue('New checkout');
-        expect((wrapper.get('#flag-key').element as HTMLInputElement).value).toBe('new-checkout');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#flag-name')!;
+        name.value = 'New checkout';
+        name.dispatchEvent(new Event('input'));
+        await flushPromises();
+        expect(document.querySelector<HTMLInputElement>('#flag-key')?.value).toBe('new-checkout');
+        document.querySelector<HTMLFormElement>('[role="dialog"] form')?.requestSubmit();
         await flushPromises();
 
         expect(featureFlagService.create).toHaveBeenCalledWith(1, {
@@ -97,12 +106,14 @@ describe('FeatureFlagsPage', () => {
             .findAll('button')
             .find((button) => button.text() === 'Create flag')
             ?.trigger('click');
-        await wrapper.get('form').trigger('submit');
+        document.querySelector<HTMLFormElement>('[role="dialog"] form')?.requestSubmit();
         await flushPromises();
 
-        expect(wrapper.get('#flag-name').attributes('aria-describedby')).toBe('flag-name-error');
-        expect(wrapper.get('#flag-key').attributes('aria-describedby')).toBe('flag-key-error');
-        expect(wrapper.get('#flag-description').attributes('aria-describedby')).toBe('flag-description-error');
+        expect(document.querySelector('#flag-name')?.getAttribute('aria-describedby')).toBe('flag-name-error');
+        expect(document.querySelector('#flag-key')?.getAttribute('aria-describedby')).toBe('flag-key-error');
+        expect(document.querySelector('#flag-description')?.getAttribute('aria-describedby')).toBe(
+            'flag-description-error',
+        );
     });
 
     it('aligns populated state cells with environment headers by identity', async () => {
@@ -139,18 +150,53 @@ describe('FeatureFlagsPage', () => {
 
         expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual([
             'Flag',
+            'Lifecycle',
             'Development',
             'Staging',
             'Production',
+            'Actions',
         ]);
-        expect(wrapper.findAll('tbody td').map((cell) => cell.text())).toEqual([
-            'New checkoutnew-checkoutControls the new checkout experience.',
+        const row = wrapper.get('tbody tr');
+        expect(row.text()).toContain('New checkout');
+        expect(row.text()).toContain('new-checkout');
+        expect(row.text()).toContain('Active');
+        expect(row.findAll('td').map((cell) => cell.text())).toEqual([
+            'Active',
             'Disabled',
             'Enabled',
             'Enabled',
+            'Manage',
         ]);
+        expect(wrapper.get('a[aria-label="Manage New checkout"]').attributes('href')).toBe('/projects/1/flags/2');
         expect(
             wrapper.findAll('p').filter((paragraph) => paragraph.text() === 'Controls the new checkout experience.'),
-        ).toHaveLength(2);
+        ).toHaveLength(1);
+    });
+
+    it('does not report a missing environment state as disabled', async () => {
+        vi.spyOn(projectService, 'get').mockResolvedValue(project);
+        vi.spyOn(featureFlagService, 'list').mockResolvedValue([
+            {
+                id: 2,
+                project_id: 1,
+                name: 'Incomplete flag',
+                key: 'incomplete-flag',
+                description: null,
+                status: 'archived',
+                updated_at: '2026-07-26T00:00:00Z',
+                environment_states: [
+                    {
+                        environment: project.environments[0]!,
+                        enabled: false,
+                        updated_at: '2026-07-26T00:00:00Z',
+                    },
+                ],
+            },
+        ]);
+        const { wrapper } = await mountPage();
+
+        expect(wrapper.get('tbody tr').text()).toContain('Archived');
+        expect(wrapper.get('tbody tr').text()).toContain('Disabled');
+        expect(wrapper.findAll('tbody tr td').filter((cell) => cell.text() === 'Unavailable')).toHaveLength(2);
     });
 });

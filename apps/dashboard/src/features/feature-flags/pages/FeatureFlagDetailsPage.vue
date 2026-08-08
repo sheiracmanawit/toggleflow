@@ -120,18 +120,13 @@ const {
                 </ul>
             </section>
 
-            <form
+            <AppDialog
                 v-if="flag.status === 'active' && isEditing"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                novalidate
-                @submit.prevent="save"
+                title="Edit flag details"
+                :description="`Update the display name or description. The immutable key remains ${flag.key}.`"
+                @cancel="!isSaving && (isEditing = false)"
             >
-                <h2 class="text-xl font-semibold">Edit flag details</h2>
-                <p class="mt-1 text-sm text-slate-600">
-                    The immutable key remains <code class="font-mono">{{ flag.key }}</code
-                    >.
-                </p>
-                <div class="mt-5 grid gap-5">
+                <form class="grid gap-5" novalidate @submit.prevent="save">
                     <div>
                         <label class="block text-sm font-semibold" for="edit-flag-name">Name</label>
                         <input
@@ -182,8 +177,8 @@ const {
                             Cancel
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </AppDialog>
 
             <section
                 v-if="flag.status === 'active'"

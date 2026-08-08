@@ -185,13 +185,14 @@ onBeforeUnmount(() => {
                                     type="button"
                                     :aria-expanded="drawerOpen"
                                     @click="openDrawer"
+                                    @keydown.enter.prevent="openDrawer"
+                                    @keydown.space.prevent="openDrawer"
                                 >
                                     <UIcon name="i-lucide-menu" aria-hidden="true" class="block size-5" />
                                 </button>
-                                <RouterLink class="font-semibold text-brand md:hidden" to="/app">ToggleFlow</RouterLink>
-                                <div class="hidden min-w-0 items-center gap-3 md:flex">
+                                <div class="flex min-w-0 items-center gap-3">
                                     <button
-                                        class="flex size-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text"
+                                        class="hidden size-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted hover:text-text md:flex"
                                         type="button"
                                         :aria-expanded="!sidebarCollapsed"
                                         :aria-label="sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'"
@@ -208,7 +209,7 @@ onBeforeUnmount(() => {
                                         />
                                     </button>
                                     <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-text">{{ currentSection }}</p>
+                                        <h1 class="truncate text-sm font-semibold text-text">{{ currentSection }}</h1>
                                         <p v-if="currentProject" class="truncate text-xs text-text-muted">
                                             {{ currentProject.name }}
                                         </p>
@@ -217,6 +218,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <div class="flex items-center gap-2">
+                                <div id="page-header-actions" class="flex items-center gap-2" />
                                 <ThemePreferenceSelector />
                             </div>
                         </nav>

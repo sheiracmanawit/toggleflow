@@ -39,14 +39,14 @@ describe('environment API key management', () => {
         cy.get('[role="dialog"]').contains('button', 'Done').click();
 
         cy.contains('Production primary')
-            .parents('li')
-            .within(() => cy.contains('button', 'Revoke').click());
+            .parents('tr')
+            .within(() => cy.get('button[aria-label="Revoke Production primary"]').click());
         cy.get('[role="dialog"]')
             .should('contain', 'immediately lose evaluation access')
             .contains('button', 'Revoke API key')
             .click();
 
-        cy.contains('Production primary').parents('li').should('contain', 'Revoked');
-        cy.contains('Production replacement').parents('li').should('contain', 'Active');
+        cy.contains('Production primary').parents('tr').should('contain', 'Revoked');
+        cy.contains('Production replacement').parents('tr').should('contain', 'Active');
     });
 });

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 
 import { AppDialog } from '@shared/ui';
@@ -25,100 +26,138 @@ const {
     closeArchiveDialog,
     archive,
 } = useProjectOverview();
+
+const productionEnabledCount = computed(
+    () =>
+        flags.value.filter((flag) =>
+            flag.environment_states.some((state) => state.environment.key === 'production' && state.enabled),
+        ).length,
+);
 </script>
 
 <template>
-    <section aria-labelledby="project-heading">
-        <RouterLink class="text-sm font-semibold text-brand hover:underline" to="/projects">← All projects</RouterLink>
-        <p v-if="isLoading" class="mt-8 rounded-xl border border-slate-200 bg-white p-6" role="status">
-            Loading project…
-        </p>
-        <div v-else-if="loadError" class="mt-8 rounded-xl border border-red-200 bg-red-50 p-6" role="alert">
+    <section class="-mx-4 -my-6 sm:-mx-6 sm:-my-8" aria-labelledby="project-heading">
+        <p v-if="isLoading" class="p-6" role="status">Loading project…</p>
+        <div v-else-if="loadError" class="m-6 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
             <h1 id="project-heading" class="text-xl font-semibold">Project unavailable</h1>
             <p class="mt-2">{{ loadError }}</p>
             <button class="mt-3 font-semibold text-danger underline" type="button" @click="load">Try again</button>
         </div>
         <template v-else-if="project">
-            <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <p class="font-mono text-sm text-slate-500">{{ project.slug }}</p>
-                    <div class="mt-1 flex flex-wrap items-center gap-3">
-                        <h1 id="project-heading" class="text-3xl font-bold">{{ project.name }}</h1>
+            <UDashboardToolbar class="border-b border-border px-4 py-3 sm:px-6">
+                <template #left>
+                    <RouterLink class="text-sm font-medium text-text-muted hover:text-text" to="/projects"
+                        >← All projects</RouterLink
+                    >
+                    <div class="flex min-w-0 items-center gap-2">
+                        <h1 id="project-heading" class="truncate text-sm font-semibold">{{ project.name }}</h1>
+                        <span class="hidden font-mono text-xs text-text-muted sm:inline">{{ project.slug }}</span>
                         <span
                             v-if="project.status === 'archived'"
-                            class="rounded-full bg-slate-200 px-3 py-1 text-sm font-semibold text-slate-700"
+                            class="rounded-md bg-surface-muted px-2 py-1 text-xs font-semibold"
                         >
                             Archived
                         </span>
                     </div>
-                    <p class="mt-2 max-w-2xl text-slate-600">
-                        {{ project.description || 'No project description yet.' }}
-                    </p>
-                    <p v-if="project.status === 'archived'" class="mt-3 max-w-2xl text-sm text-slate-600">
-                        This project is archived. Its environments and history remain available for reference, but the
-                        project can no longer be edited.
-                    </p>
-                </div>
-                <button
-                    v-if="project.status === 'active'"
-                    class="self-start rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold"
-                    type="button"
-                    @click="startEditing"
-                >
-                    Edit project
-                </button>
+                </template>
+                <template #right>
+                    <div v-if="project.status === 'active'" class="flex flex-wrap gap-2">
+                        <UButton :to="`/projects/${project.id}/flags`" icon="i-lucide-toggle-right" size="sm"
+                            >Manage feature flags</UButton
+                        >
+                        <UButton
+                            :to="`/projects/${project.id}/api-keys`"
+                            color="neutral"
+                            icon="i-lucide-key-round"
+                            size="sm"
+                            variant="outline"
+                            >Manage API keys</UButton
+                        >
+                        <UButton
+                            aria-label="Edit project"
+                            color="neutral"
+                            icon="i-lucide-pencil"
+                            size="sm"
+                            type="button"
+                            variant="ghost"
+                            @click="startEditing"
+                        >
+                            <span class="sr-only">Edit project</span>
+                        </UButton>
+                    </div>
+                </template>
+            </UDashboardToolbar>
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+                <p class="max-w-3xl text-sm text-text-muted">
+                    {{ project.description || 'No project description yet.' }}
+                </p>
+                <p v-if="project.status === 'archived'" class="mt-2 max-w-3xl text-sm text-text-muted">
+                    This project is archived. Its environments and history remain available for reference.
+                </p>
             </div>
-            <p v-if="successMessage" class="mt-4 text-sm font-medium text-enabled" role="status">
+            <p
+                v-if="successMessage"
+                class="border-b border-border px-4 py-3 text-sm font-medium text-enabled sm:px-6"
+                role="status"
+            >
                 {{ successMessage }}
             </p>
 
-            <section class="mt-8" aria-labelledby="environments-heading">
-                <div>
-                    <h2 id="environments-heading" class="text-xl font-semibold">Environments</h2>
-                    <p class="mt-1 text-sm text-slate-600">Each deployment context remains separate.</p>
-                </div>
-                <ul class="mt-4 grid gap-4 sm:grid-cols-3">
-                    <li
-                        v-for="environment in project.environments"
-                        :key="environment.id"
-                        class="rounded-2xl border border-slate-200 bg-white p-5"
+            <section class="border-b border-border" aria-labelledby="environments-heading">
+                <div
+                    class="grid divide-y divide-slate-200 sm:grid-cols-[minmax(13rem,0.7fr)_minmax(0,1.3fr)] sm:divide-x sm:divide-y-0"
+                >
+                    <div class="px-4 py-3 sm:px-6">
+                        <h2 id="environments-heading" class="font-semibold">Release overview</h2>
+                        <dl class="mt-2 flex gap-5 text-sm">
+                            <div>
+                                <dt class="text-slate-500">Flags</dt>
+                                <dd class="font-semibold">{{ flags.length }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">Production enabled</dt>
+                                <dd class="font-semibold">{{ productionEnabledCount }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <ul
+                        class="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6"
+                        aria-label="Project environments"
                     >
-                        <span
-                            class="inline-block h-3 w-3 rounded-full"
-                            :style="{ backgroundColor: environment.color }"
-                            aria-hidden="true"
-                        />
-                        <h3 class="mt-3 font-semibold">{{ environment.name }}</h3>
-                        <p class="mt-1 font-mono text-sm text-slate-500">{{ environment.key }}</p>
-                    </li>
-                </ul>
+                        <li
+                            v-for="environment in project.environments"
+                            :key="environment.id"
+                            class="flex items-center gap-2"
+                        >
+                            <span
+                                class="inline-block h-2.5 w-2.5 rounded-full"
+                                :style="{ backgroundColor: environment.color }"
+                                aria-hidden="true"
+                            />
+                            <span
+                                ><strong class="text-sm">{{ environment.name }}</strong>
+                                <span class="font-mono text-xs text-slate-500">{{ environment.key }}</span></span
+                            >
+                        </li>
+                    </ul>
+                </div>
             </section>
 
-            <section v-if="project.status === 'active'" class="mt-8" aria-labelledby="release-state-heading">
-                <div class="flex flex-wrap items-end justify-between gap-3">
+            <section v-if="project.status === 'active'" aria-labelledby="release-state-heading">
+                <div class="flex flex-wrap items-end justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
                     <div>
-                        <h2 id="release-state-heading" class="text-xl font-semibold">Release state</h2>
+                        <h2 id="release-state-heading" class="text-sm font-semibold">Release state</h2>
                         <p class="mt-1 text-sm text-slate-600">
                             Compare each active flag across Development, Staging, and Production.
                         </p>
                     </div>
-                    <RouterLink
-                        class="text-sm font-semibold text-brand hover:underline"
-                        :to="`/projects/${project.id}/flags`"
-                    >
-                        Manage flags
-                    </RouterLink>
                 </div>
-                <div v-if="flags.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-white p-6">
+                <div v-if="flags.length === 0" class="p-6">
                     <h3 class="font-semibold">No feature flags yet</h3>
                     <p class="mt-2 text-sm text-slate-600">Create a flag to begin comparing environment state.</p>
                 </div>
-                <ul v-else class="mt-4 grid gap-4 sm:hidden" aria-label="Mobile release state">
-                    <li
-                        v-for="row in releaseStateRows"
-                        :key="row.flag.id"
-                        class="rounded-2xl border border-slate-200 bg-white p-5"
-                    >
+                <ul v-else class="divide-y divide-border sm:hidden" aria-label="Mobile release state">
+                    <li v-for="row in releaseStateRows" :key="row.flag.id" class="p-4">
                         <RouterLink
                             class="font-semibold text-brand hover:underline"
                             :to="`/projects/${project.id}/flags/${row.flag.id}`"
@@ -146,12 +185,9 @@ const {
                         </dl>
                     </li>
                 </ul>
-                <div
-                    v-if="flags.length > 0"
-                    class="mt-4 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white sm:block"
-                >
+                <div v-if="flags.length > 0" class="hidden overflow-x-auto sm:block">
                     <table class="min-w-full border-collapse text-left text-sm">
-                        <thead class="bg-slate-50">
+                        <thead class="border-b border-border bg-surface-muted/50">
                             <tr>
                                 <th class="px-4 py-3 font-semibold" scope="col">Flag</th>
                                 <th
@@ -164,7 +200,7 @@ const {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200">
+                        <tbody class="divide-y divide-border">
                             <tr v-for="row in releaseStateRows" :key="row.flag.id">
                                 <th class="px-4 py-4 font-medium" scope="row">
                                     <RouterLink
@@ -192,48 +228,13 @@ const {
                 </div>
             </section>
 
-            <section
-                v-if="project.status === 'active'"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                aria-labelledby="flags-heading"
-            >
-                <h2 id="flags-heading" class="text-xl font-semibold">Feature flags</h2>
-                <p class="mt-2 text-sm text-slate-600">
-                    Create boolean flags and control Development, Staging, and Production independently.
-                </p>
-                <RouterLink
-                    class="mt-4 inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
-                    :to="`/projects/${project.id}/flags`"
-                >
-                    Manage feature flags
-                </RouterLink>
-            </section>
-
-            <section
-                v-if="project.status === 'active'"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                aria-labelledby="api-keys-heading"
-            >
-                <h2 id="api-keys-heading" class="text-xl font-semibold">API keys</h2>
-                <p class="mt-2 text-sm text-slate-600">
-                    Issue environment-scoped credentials for server-side flag evaluation.
-                </p>
-                <RouterLink
-                    class="mt-4 inline-flex rounded-lg border border-slate-300 px-4 py-2 font-semibold"
-                    :to="`/projects/${project.id}/api-keys`"
-                >
-                    Manage API keys
-                </RouterLink>
-            </section>
-
-            <form
+            <AppDialog
                 v-if="project.status === 'active' && isEditing"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                novalidate
-                @submit.prevent="save"
+                title="Edit project"
+                description="Update the project name and description. The machine-readable slug remains unchanged."
+                @cancel="!isSaving && (isEditing = false)"
             >
-                <h2 class="text-xl font-semibold">Edit project</h2>
-                <div class="mt-5 grid gap-5">
+                <form class="grid gap-5" novalidate @submit.prevent="save">
                     <div>
                         <label class="block text-sm font-semibold" for="edit-project-name">Name</label>
                         <input
@@ -286,21 +287,22 @@ const {
                             Cancel
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </AppDialog>
 
             <section
                 v-if="project.status === 'active'"
-                class="mt-10 rounded-2xl border border-red-200 bg-red-50 p-6"
+                class="flex flex-col gap-3 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
                 aria-labelledby="archive-heading"
             >
-                <h2 id="archive-heading" class="text-lg font-semibold text-danger">Archive project</h2>
-                <p class="mt-2 text-sm text-slate-700">
-                    Archiving removes this project from active project views while retaining its environments and
-                    history.
-                </p>
+                <div>
+                    <h2 id="archive-heading" class="font-semibold">Archive project</h2>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Remove it from active views while retaining environments and history.
+                    </p>
+                </div>
                 <button
-                    class="mt-4 rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger"
+                    class="self-start rounded-lg border border-red-300 px-4 py-2 font-semibold text-danger"
                     type="button"
                     @click="showArchiveDialog = true"
                 >

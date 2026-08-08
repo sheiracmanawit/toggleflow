@@ -73,15 +73,21 @@ describe('MVP release demonstration', () => {
         evaluateProduction(false);
 
         cy.get('nav[aria-label="Application"]').contains('a', 'Audit history').click();
-        cy.contains('Demo Owner enabled feature flag New checkout for Production').should('be.visible');
-        cy.contains('Demo Owner disabled feature flag New checkout for Production').should('be.visible');
+        cy.contains('tr', 'Enabled feature flag')
+            .should('contain', 'New checkout')
+            .and('contain', 'Demo Owner')
+            .and('contain', 'Production');
+        cy.contains('tr', 'Disabled feature flag')
+            .should('contain', 'New checkout')
+            .and('contain', 'Demo Owner')
+            .and('contain', 'Production');
 
         cy.get('nav[aria-label="Application"]').contains('a', 'API keys').click();
         cy.contains('Release demo Production')
-            .parents('li')
-            .within(() => cy.contains('button', 'Revoke').click());
+            .parents('tr')
+            .within(() => cy.get('button[aria-label="Revoke Release demo Production"]').click());
         cy.get('[role="dialog"]').contains('button', 'Revoke API key').click();
-        cy.contains('Release demo Production').parents('li').should('contain', 'Revoked');
+        cy.contains('Release demo Production').parents('tr').should('contain', 'Revoked');
 
         cy.then({ log: false }, () =>
             cy.request({

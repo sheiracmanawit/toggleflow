@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 
+import { AppDialog } from '@shared/ui';
 import { useProjectCreation } from '../composables/useProjectCreation';
 
 const {
@@ -86,89 +87,78 @@ const {
                 </RouterLink>
             </li>
         </ul>
+    </section>
 
-        <div v-if="showCreateForm" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-semibold">Create a project</h2>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Development, Staging, and Production will be created in the same successful operation.
-                    </p>
-                </div>
-                <button class="rounded px-2 py-1 text-sm font-medium" type="button" @click="showCreateForm = false">
-                    Close
+    <AppDialog
+        v-if="showCreateForm"
+        title="Create a project"
+        description="Development, Staging, and Production will be created in the same successful operation."
+        @cancel="!isSubmitting && (showCreateForm = false)"
+    >
+        <form class="grid gap-5" novalidate @submit.prevent="submit">
+            <div>
+                <label class="block text-sm font-semibold" for="project-name">Name</label>
+                <input
+                    id="project-name"
+                    v-model="form.name"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                    :aria-describedby="validationErrors.name ? 'project-name-error' : undefined"
+                    :aria-invalid="Boolean(validationErrors.name)"
+                    autocomplete="off"
+                />
+                <p v-if="validationErrors.name" id="project-name-error" class="mt-1 text-sm text-danger">
+                    {{ validationErrors.name[0] }}
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold" for="project-slug">Machine-readable slug</label>
+                <input
+                    id="project-slug"
+                    v-model="form.slug"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
+                    :placeholder="suggestedSlug || 'checkout-service'"
+                    :aria-describedby="validationErrors.slug ? 'project-slug-error' : 'project-slug-help'"
+                    :aria-invalid="Boolean(validationErrors.slug)"
+                    autocomplete="off"
+                />
+                <p id="project-slug-help" class="mt-1 text-xs text-slate-500">
+                    Lowercase letters, numbers, and hyphens. The slug cannot be changed later.
+                </p>
+                <p v-if="validationErrors.slug" id="project-slug-error" class="mt-1 text-sm text-danger">
+                    {{ validationErrors.slug[0] }}
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold" for="project-description">Description (optional)</label>
+                <textarea
+                    id="project-description"
+                    v-model="form.description"
+                    class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2"
+                    :aria-describedby="validationErrors.description ? 'project-description-error' : undefined"
+                    :aria-invalid="Boolean(validationErrors.description)"
+                />
+                <p v-if="validationErrors.description" id="project-description-error" class="mt-1 text-sm text-danger">
+                    {{ validationErrors.description[0] }}
+                </p>
+            </div>
+            <p v-if="submitError" class="text-sm text-danger" role="alert">{{ submitError }}</p>
+            <div class="flex flex-wrap gap-3">
+                <button
+                    class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:cursor-wait disabled:opacity-60"
+                    type="submit"
+                    :disabled="isSubmitting"
+                >
+                    {{ isSubmitting ? 'Creating project…' : 'Create project' }}
+                </button>
+                <button
+                    class="rounded-lg border border-slate-300 px-4 py-2 font-semibold"
+                    type="button"
+                    :disabled="isSubmitting"
+                    @click="showCreateForm = false"
+                >
+                    Cancel
                 </button>
             </div>
-
-            <form class="mt-6 grid gap-5" novalidate @submit.prevent="submit">
-                <div>
-                    <label class="block text-sm font-semibold" for="project-name">Name</label>
-                    <input
-                        id="project-name"
-                        v-model="form.name"
-                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                        :aria-describedby="validationErrors.name ? 'project-name-error' : undefined"
-                        :aria-invalid="Boolean(validationErrors.name)"
-                        autocomplete="off"
-                    />
-                    <p v-if="validationErrors.name" id="project-name-error" class="mt-1 text-sm text-danger">
-                        {{ validationErrors.name[0] }}
-                    </p>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold" for="project-slug">Machine-readable slug</label>
-                    <input
-                        id="project-slug"
-                        v-model="form.slug"
-                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
-                        :placeholder="suggestedSlug || 'checkout-service'"
-                        :aria-describedby="validationErrors.slug ? 'project-slug-error' : 'project-slug-help'"
-                        :aria-invalid="Boolean(validationErrors.slug)"
-                        autocomplete="off"
-                    />
-                    <p id="project-slug-help" class="mt-1 text-xs text-slate-500">
-                        Lowercase letters, numbers, and hyphens. The slug cannot be changed later.
-                    </p>
-                    <p v-if="validationErrors.slug" id="project-slug-error" class="mt-1 text-sm text-danger">
-                        {{ validationErrors.slug[0] }}
-                    </p>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold" for="project-description">Description (optional)</label>
-                    <textarea
-                        id="project-description"
-                        v-model="form.description"
-                        class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2"
-                        :aria-describedby="validationErrors.description ? 'project-description-error' : undefined"
-                        :aria-invalid="Boolean(validationErrors.description)"
-                    />
-                    <p
-                        v-if="validationErrors.description"
-                        id="project-description-error"
-                        class="mt-1 text-sm text-danger"
-                    >
-                        {{ validationErrors.description[0] }}
-                    </p>
-                </div>
-                <p v-if="submitError" class="text-sm text-danger" role="alert">{{ submitError }}</p>
-                <div class="flex flex-wrap gap-3">
-                    <button
-                        class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:cursor-wait disabled:opacity-60"
-                        type="submit"
-                        :disabled="isSubmitting"
-                    >
-                        {{ isSubmitting ? 'Creating project…' : 'Create project' }}
-                    </button>
-                    <button
-                        class="rounded-lg border border-slate-300 px-4 py-2 font-semibold"
-                        type="button"
-                        :disabled="isSubmitting"
-                        @click="showCreateForm = false"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </section>
+        </form>
+    </AppDialog>
 </template>

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router';
+import { computed, ref } from 'vue';
 
 import { AppDialog } from '@shared/ui';
 import { useApiKeyLifecycle } from '../composables/useApiKeyLifecycle';
+import type { ApiKey } from '../types/apiKeys';
 
 const {
-    route,
     project,
+    apiKeys,
     isLoading,
     loadError,
     showCreate,
@@ -21,7 +22,6 @@ const {
     copyMessage,
     keyToRevoke,
     isRevoking,
-    keysFor,
     environmentExample,
     load,
     issue,
@@ -29,156 +29,225 @@ const {
     dismissIssued,
     revoke,
 } = useApiKeyLifecycle();
+
+const query = ref('');
+const environmentFilter = ref('all');
+const pageHeaderTarget = '#page-header-actions';
+const environmentOptions = computed(() => [
+    { label: 'All environments', value: 'all' },
+    ...(project.value?.environments.map((environment) => ({
+        label: environment.name,
+        value: environment.key,
+    })) ?? []),
+]);
+const filteredKeys = computed(() => {
+    const normalizedQuery = query.value.trim().toLowerCase();
+
+    return apiKeys.value.filter(
+        (apiKey) =>
+            (environmentFilter.value === 'all' || apiKey.environment.key === environmentFilter.value) &&
+            (!normalizedQuery ||
+                apiKey.name.toLowerCase().includes(normalizedQuery) ||
+                apiKey.prefix.toLowerCase().includes(normalizedQuery)),
+    );
+});
+const openRevoke = (apiKey: ApiKey): void => {
+    mutationError.value = '';
+    keyToRevoke.value = apiKey;
+};
 </script>
 
 <template>
-    <section aria-labelledby="api-keys-heading">
-        <RouterLink
-            class="text-sm font-semibold text-brand hover:underline"
-            :to="`/projects/${route.params.projectId}`"
-        >
-            ← Project overview
-        </RouterLink>
-        <p v-if="isLoading" class="mt-8 rounded-xl border border-slate-200 bg-white p-6" role="status">
-            Loading API keys…
-        </p>
-        <div v-else-if="loadError" class="mt-8 rounded-xl border border-red-200 bg-red-50 p-6" role="alert">
-            <h1 id="api-keys-heading" class="text-xl font-semibold">API keys unavailable</h1>
+    <section class="-mx-4 -my-6 sm:-mx-6 sm:-my-8" aria-label="API keys">
+        <Teleport :to="pageHeaderTarget">
+            <UButton v-if="project?.status === 'active'" icon="i-lucide-plus" type="button" @click="showCreate = true">
+                Issue API key
+            </UButton>
+        </Teleport>
+        <p v-if="isLoading" class="p-6" role="status">Loading API keys…</p>
+        <div v-else-if="loadError" class="m-6 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
+            <h1 class="text-base font-semibold">API keys unavailable</h1>
             <p class="mt-2">{{ loadError }}</p>
             <button class="mt-3 font-semibold text-danger underline" type="button" @click="load">Try again</button>
         </div>
         <template v-else-if="project">
-            <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <p class="text-sm font-semibold uppercase tracking-wide text-brand">{{ project.name }}</p>
-                    <h1 id="api-keys-heading" class="mt-1 text-3xl font-bold">API keys</h1>
-                    <p class="mt-2 max-w-2xl text-slate-600">
-                        Server-side applications use a key for exactly one environment. Complete keys are shown once.
-                    </p>
-                </div>
-                <button
-                    v-if="project.status === 'active'"
-                    class="self-start rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
-                    type="button"
-                    @click="showCreate = true"
-                >
-                    Issue API key
-                </button>
-            </div>
-            <p v-if="successMessage" class="mt-4 text-sm font-semibold text-enabled" role="status">
+            <UDashboardToolbar class="px-4 py-5 sm:px-6">
+                <template #left>
+                    <UInput
+                        v-model="query"
+                        aria-label="Filter API keys"
+                        class="w-full sm:w-72"
+                        icon="i-lucide-search"
+                        placeholder="Filter credentials…"
+                    />
+                </template>
+                <template #right>
+                    <select
+                        v-model="environmentFilter"
+                        aria-label="Filter by environment"
+                        class="h-9 w-44 rounded-md border border-border bg-surface px-3 text-sm text-text shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    >
+                        <option v-for="option in environmentOptions" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </template>
+            </UDashboardToolbar>
+            <p
+                v-if="successMessage"
+                class="border-b border-border px-4 py-3 text-sm font-semibold text-enabled sm:px-6"
+                role="status"
+            >
                 {{ successMessage }}
             </p>
-            <p v-if="mutationError" class="mt-4 text-sm font-semibold text-danger" role="alert">
+            <p
+                v-if="mutationError"
+                class="border-b border-border px-4 py-3 text-sm font-semibold text-danger sm:px-6"
+                role="alert"
+            >
                 {{ mutationError }}
             </p>
-            <p v-if="project.status === 'archived'" class="mt-4 text-sm text-slate-600">
+            <p
+                v-if="project.status === 'archived'"
+                class="border-b border-border px-4 py-3 text-sm text-text-muted sm:px-6"
+            >
                 This project is archived. Credential metadata remains available for reference, but credentials cannot be
                 issued or revoked.
             </p>
 
-            <div class="mt-8 grid gap-6">
-                <section
-                    v-for="environment in project.environments"
-                    :key="environment.id"
-                    class="rounded-2xl border border-slate-200 bg-white p-5"
-                    :aria-labelledby="`environment-${environment.id}`"
-                >
-                    <h2 :id="`environment-${environment.id}`" class="text-xl font-semibold">
-                        {{ environment.name }}
-                    </h2>
-                    <p class="mt-1 font-mono text-sm text-slate-500">{{ environment.key }}</p>
-                    <p v-if="keysFor(environment).length === 0" class="mt-5 text-sm text-slate-600">
-                        No credentials have been issued for this environment.
-                    </p>
-                    <ul v-else class="mt-5 grid gap-3">
-                        <li
-                            v-for="apiKey in keysFor(environment)"
-                            :key="apiKey.id"
-                            class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                            <div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="font-semibold">{{ apiKey.name }}</h3>
-                                    <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">
+            <section class="px-4 pb-6 sm:px-6" aria-label="API key inventory">
+                <div class="overflow-x-auto rounded-lg border border-border">
+                    <table class="min-w-[46rem] w-full border-collapse text-left text-sm">
+                        <thead class="border-b border-border bg-surface-muted text-sm text-text">
+                            <tr>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Environment</th>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Credential</th>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Status</th>
+                                <th class="px-5 py-3.5 font-semibold" scope="col">Activity</th>
+                                <th class="w-14 px-5 py-3.5 text-right font-semibold" scope="col">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            <tr v-for="apiKey in filteredKeys" :key="apiKey.id">
+                                <th class="px-5 py-4 align-middle font-semibold" scope="row">
+                                    <UBadge
+                                        :class="
+                                            apiKey.environment.key === 'production'
+                                                ? 'bg-environment-production/10 text-environment-production ring-environment-production/30'
+                                                : undefined
+                                        "
+                                        :color="
+                                            apiKey.environment.key === 'development'
+                                                ? 'info'
+                                                : apiKey.environment.key === 'staging'
+                                                  ? 'warning'
+                                                  : 'neutral'
+                                        "
+                                        variant="subtle"
+                                    >
+                                        {{ apiKey.environment.name }}
+                                    </UBadge>
+                                </th>
+                                <td class="px-5 py-4 align-middle">
+                                    <span class="block font-semibold">{{ apiKey.name }}</span>
+                                    <span class="mt-0.5 block font-mono text-xs text-text-muted"
+                                        >tf_env_{{ apiKey.prefix }}_…</span
+                                    >
+                                </td>
+                                <td class="px-5 py-4 align-middle">
+                                    <UBadge :color="apiKey.state === 'active' ? 'success' : 'neutral'" variant="subtle">
                                         {{ apiKey.state === 'active' ? 'Active' : 'Revoked' }}
+                                    </UBadge>
+                                </td>
+                                <td class="px-5 py-4 align-middle text-sm text-text-muted">
+                                    <span class="block"
+                                        >Created {{ new Date(apiKey.created_at).toLocaleString() }}</span
+                                    >
+                                    <span v-if="apiKey.last_used_at" class="block">
+                                        Last used {{ new Date(apiKey.last_used_at).toLocaleString() }}
                                     </span>
-                                </div>
-                                <p class="mt-2 break-all font-mono text-sm text-slate-600">
-                                    tf_env_{{ apiKey.prefix }}_…
-                                </p>
-                                <p class="mt-1 text-xs text-slate-500">
-                                    Created {{ new Date(apiKey.created_at).toLocaleString() }}
-                                    <template v-if="apiKey.last_used_at">
-                                        · Last used {{ new Date(apiKey.last_used_at).toLocaleString() }}
-                                    </template>
-                                </p>
-                            </div>
-                            <button
-                                v-if="project.status === 'active' && apiKey.state === 'active'"
-                                class="self-start rounded-lg border border-red-300 px-3 py-2 font-semibold text-danger"
-                                type="button"
-                                @click="
-                                    mutationError = '';
-                                    keyToRevoke = apiKey;
-                                "
-                            >
-                                Revoke
-                            </button>
-                        </li>
-                    </ul>
-                </section>
-            </div>
-
-            <form
-                v-if="showCreate"
-                class="mt-8 rounded-2xl border border-slate-200 bg-white p-6"
-                novalidate
-                @submit.prevent="issue"
-            >
-                <h2 class="text-xl font-semibold">Issue an environment API key</h2>
-                <div class="mt-5 grid gap-5">
-                    <div>
-                        <label class="block text-sm font-semibold" for="api-key-name">Name</label>
-                        <input
-                            id="api-key-name"
-                            v-model="form.name"
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                            :aria-invalid="Boolean(validationErrors.name)"
-                            :aria-describedby="validationErrors.name ? 'api-key-name-error' : undefined"
-                        />
-                        <p v-if="validationErrors.name" id="api-key-name-error" class="mt-1 text-sm text-danger">
-                            {{ validationErrors.name[0] }}
-                        </p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold" for="api-key-environment">Environment</label>
-                        <select
-                            id="api-key-environment"
-                            v-model.number="form.environmentId"
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                        >
-                            <option
-                                v-for="environment in project.environments"
-                                :key="environment.id"
-                                :value="environment.id"
-                            >
-                                {{ environment.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="flex gap-3">
-                        <button
-                            class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand"
-                            :disabled="isSubmitting"
-                        >
-                            {{ isSubmitting ? 'Issuing…' : 'Issue API key' }}
-                        </button>
-                        <button type="button" :disabled="isSubmitting" @click="showCreate = false">Cancel</button>
-                    </div>
+                                    <span v-else class="block">Never used</span>
+                                </td>
+                                <td class="px-5 py-4 text-right align-middle">
+                                    <UButton
+                                        v-if="project.status === 'active' && apiKey.state === 'active'"
+                                        :aria-label="`Revoke ${apiKey.name}`"
+                                        color="error"
+                                        icon="i-lucide-key-round"
+                                        size="sm"
+                                        type="button"
+                                        variant="ghost"
+                                        @click="openRevoke(apiKey)"
+                                    >
+                                        Revoke
+                                    </UButton>
+                                    <span v-else class="text-xs text-text-muted">—</span>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredKeys.length === 0">
+                                <td class="px-5 py-10 text-center text-text-muted" colspan="5">
+                                    No credentials match the current filters.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-            </form>
+            </section>
         </template>
     </section>
+
+    <AppDialog
+        v-if="showCreate && project"
+        title="Issue an environment API key"
+        description="Choose one project environment. The complete credential will be shown only once after issuance."
+        @cancel="!isSubmitting && (showCreate = false)"
+    >
+        <form class="grid gap-5" novalidate @submit.prevent="issue">
+            <div>
+                <label class="block text-sm font-semibold" for="api-key-name">Name</label>
+                <input
+                    id="api-key-name"
+                    v-model="form.name"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                    :aria-invalid="Boolean(validationErrors.name)"
+                    :aria-describedby="validationErrors.name ? 'api-key-name-error' : undefined"
+                />
+                <p v-if="validationErrors.name" id="api-key-name-error" class="mt-1 text-sm text-danger">
+                    {{ validationErrors.name[0] }}
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold" for="api-key-environment">Environment</label>
+                <select
+                    id="api-key-environment"
+                    v-model.number="form.environmentId"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                >
+                    <option v-for="environment in project.environments" :key="environment.id" :value="environment.id">
+                        {{ environment.name }}
+                    </option>
+                </select>
+                <p
+                    v-if="project.environments.find((item) => item.id === form.environmentId)?.key === 'production'"
+                    class="mt-2 text-sm text-environment-production"
+                >
+                    Production key — applications using this credential will evaluate Production release state.
+                </p>
+            </div>
+            <p v-if="mutationError" class="text-sm text-danger" role="alert">{{ mutationError }}</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" :disabled="isSubmitting" @click="showCreate = false">Cancel</button>
+                <button
+                    class="rounded-lg bg-brand px-4 py-2 font-semibold text-on-brand disabled:opacity-60"
+                    :disabled="isSubmitting"
+                >
+                    {{ isSubmitting ? 'Issuing…' : 'Issue API key' }}
+                </button>
+            </div>
+        </form>
+    </AppDialog>
 
     <AppDialog
         v-if="issuedKey && issuedCredential"

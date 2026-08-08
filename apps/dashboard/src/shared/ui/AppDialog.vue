@@ -16,7 +16,7 @@ const previousFocus = document.activeElement instanceof HTMLElement ? document.a
 const focusable = (): HTMLElement[] =>
     Array.from(
         panel.value?.querySelectorAll<HTMLElement>(
-            'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
         ) ?? [],
     );
 
@@ -59,10 +59,14 @@ onBeforeUnmount(() => previousFocus?.focus());
 
 <template>
     <Teleport to="body">
-        <div class="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4" @click.self="emit('cancel')">
+        <div
+            class="fixed inset-0 z-50 flex justify-end bg-slate-950/50"
+            data-presentation="slideover"
+            @click.self="emit('cancel')"
+        >
             <section
                 ref="panel"
-                class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+                class="h-full w-full max-w-xl overflow-y-auto border-l border-slate-200 bg-white p-6 shadow-2xl sm:rounded-l-2xl"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="dialog-title"

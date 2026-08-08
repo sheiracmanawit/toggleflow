@@ -168,12 +168,16 @@ describe('FeatureFlagDetailsPage', () => {
         const { wrapper } = await mountPage();
 
         await wrapper.get('button:nth-of-type(1)').trigger('click');
-        await wrapper.get('#edit-flag-name').setValue('');
-        await wrapper.get('form').trigger('submit');
+        const name = document.querySelector<HTMLInputElement>('#edit-flag-name')!;
+        name.value = '';
+        name.dispatchEvent(new Event('input'));
+        document.querySelector<HTMLFormElement>('[role="dialog"] form')?.requestSubmit();
         await flushPromises();
 
-        expect(wrapper.get('#edit-flag-name').attributes('aria-describedby')).toBe('edit-flag-name-error');
-        expect(wrapper.get('#edit-flag-description').attributes('aria-describedby')).toBe(
+        expect(document.querySelector('#edit-flag-name')?.getAttribute('aria-describedby')).toBe(
+            'edit-flag-name-error',
+        );
+        expect(document.querySelector('#edit-flag-description')?.getAttribute('aria-describedby')).toBe(
             'edit-flag-description-error',
         );
         expect(wrapper.get('h1').text()).toBe('New checkout');
@@ -226,13 +230,13 @@ describe('FeatureFlagDetailsPage', () => {
         await wrapper.get('[aria-label="Enable New checkout in Production"]').trigger('click');
         await flushPromises();
         expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
-        expect(wrapper.find('#edit-flag-name').exists()).toBe(true);
+        expect(document.body.querySelector('#edit-flag-name')).not.toBeNull();
 
         await router.push('/projects/1/flags/3');
         await flushPromises();
 
         expect(wrapper.get('h1').text()).toBe('Search recommendations');
-        expect(wrapper.find('#edit-flag-name').exists()).toBe(false);
+        expect(document.body.querySelector('#edit-flag-name')).toBeNull();
         expect(document.body.querySelector('[role="dialog"]')).toBeNull();
     });
 

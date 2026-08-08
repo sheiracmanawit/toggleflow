@@ -24,6 +24,8 @@ describe('AppDialog', () => {
         });
         await flushPromises();
 
+        expect(document.querySelector('[data-presentation="slideover"]')).not.toBeNull();
+        expect(document.querySelector('[role="dialog"]')?.className).toContain('h-full');
         const keep = document.querySelector<HTMLButtonElement>('#keep');
         const archive = document.querySelector<HTMLButtonElement>('#archive');
         expect(document.activeElement).toBe(keep);
