@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
                                         />
                                     </button>
                                     <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-text">{{ currentSection }}</p>
+                                        <h1 class="truncate text-sm font-semibold text-text">{{ currentSection }}</h1>
                                         <p v-if="currentProject" class="truncate text-xs text-text-muted">
                                             {{ currentProject.name }}
                                         </p>
